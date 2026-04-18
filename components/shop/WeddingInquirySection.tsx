@@ -1,0 +1,268 @@
+"use client";
+
+import * as Dialog from "@radix-ui/react-dialog";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X } from "lucide-react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import {
+  decorInquirySchema,
+  type DecorInquiryInput,
+} from "@/lib/validators";
+
+type Props = {
+  imageSrc: string;
+  imageAlt: string;
+};
+
+function FieldError({
+  message,
+  tWedding,
+  tVal,
+}: {
+  message: string | undefined;
+  tWedding: (key: string) => string;
+  tVal: (key: "nameRequired" | "phoneUa") => string;
+}) {
+  if (!message) return null;
+  if (message === "decorRequestRequired") {
+    return (
+      <p className="text-sm text-red-800">{tWedding("requestRequired")}</p>
+    );
+  }
+  if (message === "nameRequired" || message === "phoneUa") {
+    return <p className="text-sm text-red-800">{tVal(message)}</p>;
+  }
+  return <p className="text-sm text-red-800">{message}</p>;
+}
+
+export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
+  const t = useTranslations("wedding");
+  const tVal = useTranslations("order.validation");
+  const [open, setOpen] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DecorInquiryInput>({
+    resolver: zodResolver(decorInquirySchema),
+    defaultValues: {
+      request: "",
+      customer_name: "",
+      customer_phone: "",
+      contact_preference: "telegram",
+    },
+    mode: "onBlur",
+  });
+
+  const onOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      setSent(false);
+      setFormError(null);
+      reset();
+    }
+  };
+
+  const onSubmit = async (values: DecorInquiryInput) => {
+    setFormError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/wedding-inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        setFormError(t("formError"));
+        setLoading(false);
+        return;
+      }
+      setSent(true);
+      reset();
+    } catch {
+      setFormError(t("formError"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const req = (
+    <span className="text-rose" aria-hidden>
+      {" "}
+      *
+    </span>
+  );
+
+  return (
+    <section className="border-t border-ink/10 py-20 md:py-28">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 md:grid-cols-2 md:px-10">
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-bg">
+          <Image
+            src={imageSrc}
+            alt={imageAlt}
+            fill
+            className="object-cover object-center"
+            sizes="(max-width:768px) 100vw, 50vw"
+            priority
+          />
+        </div>
+        <div>
+          <h1 className="h-section">{t("title")}</h1>
+          <p className="mt-6 text-base leading-relaxed text-muted">{t("intro")}</p>
+
+          <Dialog.Root open={open} onOpenChange={onOpenChange}>
+            <Dialog.Trigger asChild>
+              <button type="button" className="btn-pill mt-8 inline-flex">
+                {t("ctaOpenForm")}
+              </button>
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 z-[100] bg-ink/40" />
+              <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] max-h-[min(90vh,720px)] w-[min(calc(100vw-2rem),28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-ink/10 bg-bg p-6 shadow-xl focus:outline-none">
+                <div className="flex items-start justify-between gap-4">
+                  <Dialog.Title className="h-section text-2xl">
+                    {t("formTitle")}
+                  </Dialog.Title>
+                  <Dialog.Close
+                    type="button"
+                    className="rounded border border-transparent p-1 text-muted transition-colors hover:border-ink/20 hover:text-ink"
+                    aria-label={t("formClose")}
+                  >
+                    <X className="h-5 w-5" strokeWidth={1.5} />
+                  </Dialog.Close>
+                </div>
+                <Dialog.Description className="sr-only">
+                  {t("formRequest")}
+                </Dialog.Description>
+
+                {sent ? (
+                  <p className="mt-8 text-base leading-relaxed text-muted">
+                    {t("formSuccess")}
+                  </p>
+                ) : (
+                  <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="mt-8 space-y-6"
+                  >
+                    <div className="space-y-2">
+                      <label className="block text-sm text-muted">
+                        <span className="mb-1 block uppercase tracking-wider">
+                          {t("formRequest")}
+                          {req}
+                        </span>
+                        <textarea
+                          rows={4}
+                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-sm"
+                          {...register("request")}
+                        />
+                      </label>
+                      <FieldError
+                        message={errors.request?.message}
+                        tWedding={t}
+                        tVal={tVal}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm text-muted">
+                        <span className="mb-1 block uppercase tracking-wider">
+                          {t("formName")}
+                          {req}
+                        </span>
+                        <input
+                          type="text"
+                          autoComplete="name"
+                          className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                          {...register("customer_name")}
+                        />
+                      </label>
+                      <FieldError
+                        message={errors.customer_name?.message}
+                        tWedding={t}
+                        tVal={tVal}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm text-muted">
+                        <span className="mb-1 block uppercase tracking-wider">
+                          {t("formPhone")}
+                          {req}
+                        </span>
+                        <input
+                          type="tel"
+                          autoComplete="tel"
+                          inputMode="tel"
+                          className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                          {...register("customer_phone")}
+                        />
+                      </label>
+                      <FieldError
+                        message={errors.customer_phone?.message}
+                        tWedding={t}
+                        tVal={tVal}
+                      />
+                    </div>
+
+                    <fieldset>
+                      <legend className="mb-3 text-sm uppercase tracking-wider text-muted">
+                        {t("formContactPref")}
+                        {req}
+                      </legend>
+                      <div className="flex flex-col gap-3 text-sm">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            value="viber"
+                            {...register("contact_preference")}
+                          />
+                          {t("contactViber")}
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            value="telegram"
+                            {...register("contact_preference")}
+                          />
+                          {t("contactTelegram")}
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            value="call"
+                            {...register("contact_preference")}
+                          />
+                          {t("contactCall")}
+                        </label>
+                      </div>
+                    </fieldset>
+
+                    {formError ? (
+                      <p className="text-sm text-red-800">{formError}</p>
+                    ) : null}
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn-pill w-full justify-center disabled:opacity-50"
+                    >
+                      {loading ? t("formSending") : t("formSubmit")}
+                    </button>
+                  </form>
+                )}
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>
+      </div>
+    </section>
+  );
+}

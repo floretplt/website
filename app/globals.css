@@ -4,24 +4,46 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground: #1c1c1a;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer components {
+  .h-display {
+    @apply font-display text-4xl font-normal tracking-tight text-ink md:text-5xl lg:text-6xl;
+  }
+
+  .h-section {
+    @apply font-display text-3xl font-normal tracking-tight text-ink md:text-4xl;
+  }
+
+  .eyebrow {
+    @apply text-xs font-medium uppercase tracking-[0.2em] text-muted;
+  }
+
+  .btn-pill {
+    @apply inline-flex items-center justify-center rounded-full border border-ink bg-transparent px-6 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-bg;
+  }
+
+  .btn-pill-inverse {
+    @apply inline-flex items-center justify-center rounded-full border border-bg bg-transparent px-6 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-bg transition-colors hover:bg-bg hover:text-ink;
+  }
+
+  .btn-square {
+    @apply inline-flex items-center justify-center border border-ink bg-transparent px-5 py-2.5 text-xs font-medium uppercase tracking-[0.12em] text-ink transition-colors hover:bg-ink hover:text-bg;
+  }
+
+  .link-subtle {
+    @apply text-ink underline-offset-4 transition-colors hover:text-rose;
   }
 }
