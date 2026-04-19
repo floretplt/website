@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/routing";
 import type { SiteSettingsRow } from "@/lib/types/database";
+import { cache } from "react";
 
 const defaults: SiteSettingsRow = {
   id: "00000000-0000-0000-0000-000000000001",
@@ -25,10 +26,11 @@ const defaults: SiteSettingsRow = {
     "Floret був створений у 2016 році в самому серці Полтави.\n\nЗ того часу ми створюємо букети для особливих моментів — з увагою до деталей і відчуттям стилю.\n\nМи про красу, витонченість та небанальний підхід. Саме тому нас обирають.",
   about_short_en:
     "Floret was founded in 2016 in the heart of Poltava.\n\nSince then, we’ve been making bouquets for special moments — with attention to detail and a sense of style.\n\nWe’re about beauty, refinement, and an approach that isn’t ordinary. That’s why people choose us.",
+  delivery_pricing: { bands: [] },
   updated_at: new Date().toISOString(),
 };
 
-export async function getSiteSettings(): Promise<SiteSettingsRow> {
+export const getSiteSettings = cache(async (): Promise<SiteSettingsRow> => {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -45,11 +47,15 @@ export async function getSiteSettings(): Promise<SiteSettingsRow> {
       ...row,
       same_day_delivery_end_time:
         row.same_day_delivery_end_time ?? defaults.same_day_delivery_end_time,
+      delivery_pricing:
+        row.delivery_pricing != null
+          ? (row.delivery_pricing as SiteSettingsRow["delivery_pricing"])
+          : defaults.delivery_pricing,
     };
   } catch {
     return defaults;
   }
-}
+});
 
 export function announcementForLocale(
   row: SiteSettingsRow,

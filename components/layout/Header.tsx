@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Logo } from "@/components/layout/Logo";
-import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { InstagramIcon } from "@/components/icons/Instagram";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -40,18 +39,21 @@ export function Header() {
           <span className="mt-1.5 block h-0.5 w-6 bg-ink" />
         </button>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden flex-1 items-center gap-6 lg:gap-8 md:flex">
+          <Link href="/" className={linkClass}>
+            {t("home")}
+          </Link>
           <Link href="/catalog" className={linkClass}>
             {t("catalog")}
           </Link>
-          <Link href="/about" className={linkClass}>
-            {t("about")}
+          <Link href="/#studio-team" className={linkClass}>
+            {t("studioTeam")}
           </Link>
           <Link href="/contact" className={linkClass}>
             {t("contact")}
           </Link>
-          <Link href="/order-status" className={linkClass}>
-            {t("orderStatus")}
+          <Link href="/order" className={linkClass}>
+            {t("order")}
           </Link>
         </nav>
 
@@ -63,8 +65,10 @@ export function Header() {
           <Logo height={48} />
         </Link>
 
-        <div className="flex items-center gap-5">
-          <LanguageToggle />
+        <div className="flex flex-1 items-center justify-end gap-4 sm:gap-5">
+          <Link href="/order-status" className={cn(linkClass, "max-w-[9rem] truncate text-right text-[10px] sm:max-w-none sm:text-[11px]")}>
+            {t("orderStatus")}
+          </Link>
           <a
             href="https://www.instagram.com/floret_poltava/"
             target="_blank"
@@ -80,20 +84,23 @@ export function Header() {
       {open ? (
         <div className="border-t border-ink/10 bg-bg px-6 py-4 md:hidden">
           <div className="flex flex-col gap-4">
+            <Link href="/" className={linkClass} onClick={() => setOpen(false)}>
+              {t("home")}
+            </Link>
             <Link href="/catalog" className={linkClass} onClick={() => setOpen(false)}>
               {t("catalog")}
             </Link>
-            <Link href="/about" className={linkClass} onClick={() => setOpen(false)}>
-              {t("about")}
+            <Link href="/#studio-team" className={linkClass} onClick={() => setOpen(false)}>
+              {t("studioTeam")}
             </Link>
             <Link href="/contact" className={linkClass} onClick={() => setOpen(false)}>
               {t("contact")}
             </Link>
-            <Link href="/order-status" className={linkClass} onClick={() => setOpen(false)}>
-              {t("orderStatus")}
-            </Link>
             <Link href="/order" className={linkClass} onClick={() => setOpen(false)}>
               {t("order")}
+            </Link>
+            <Link href="/order-status" className={linkClass} onClick={() => setOpen(false)}>
+              {t("orderStatus")}
             </Link>
           </div>
         </div>

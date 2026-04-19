@@ -36,7 +36,7 @@ export function StyleGallery({ items, title, subtitle, cta }: Props) {
           {items.map((item, index) => (
             <div
               key={`${item.src}-${index}`}
-              className="mb-10 break-inside-avoid"
+              className="mb-10 break-inside-avoid [content-visibility:auto] [contain-intrinsic-size:auto_420px]"
             >
               <div
                 className={`relative w-full overflow-hidden bg-ink/[0.04] ${aspectClass(index)}`}
@@ -50,7 +50,6 @@ export function StyleGallery({ items, title, subtitle, cta }: Props) {
                   loading="lazy"
                   fetchPriority="low"
                   decoding="async"
-                  unoptimized
                 />
               </div>
             </div>

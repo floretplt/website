@@ -78,7 +78,7 @@ export function HomeFeatured({
           })}
         </div>
         <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {filtered.map((p) => (
+          {filtered.map((p, index) => (
             <ProductCard
               key={p.id}
               product={p}
@@ -90,6 +90,7 @@ export function HomeFeatured({
               priceFromPrefix={labels.priceFrom}
               showOrderCta
               showSizeTiers
+              deferredImage={index >= 2}
             />
           ))}
         </div>

@@ -4,16 +4,17 @@
     "description": "Floret flower studio in Poltava — bouquets, decor, wedding florals."
   },
   "nav": {
+    "home": "Home",
     "catalog": "Catalog",
-    "about": "About",
+    "studioTeam": "The studio",
     "contact": "Contact",
     "order": "Order",
-    "orderStatus": "Order status",
+    "orderStatus": "My orders",
     "instagram": "Instagram"
   },
   "home": {
-    "heroTagline": "Flowers with character for your moments",
-    "heroCta": "Choose a bouquet style",
+    "heroTagline": "We create bouquets you’ll love to give and receive",
+    "heroCta": "Order a bouquet",
     "aboutTitle": "The studio",
     "aboutBody": "Floret was founded in 2016 in the heart of Poltava.\n\nSince then, we’ve been making bouquets for special moments — with attention to detail and a sense of style.\n\nWe’re about beauty, refinement, and an approach that isn’t ordinary. That’s why people choose us.",
     "teamTitle": "The Floret team",
@@ -26,7 +27,7 @@
     "teamBioYana": "Our dreamy introvert with a very fine sense of style. She creates refined, aesthetic bouquets. And if you ever lost someone fluffy on the street — chances are Yana has already taken care of them.",
     "categoriesTitle": "Categories",
     "featuredTitle": "Choose a bouquet style",
-    "featuredSubtitle": "Catalog styles — flowers change quickly; we’ll match fresh stems to your chosen mood when you order.",
+    "featuredSubtitle": "Flower selection may vary with season and availability while keeping the chosen style and mood.",
     "featuredTabAll": "All",
     "featuredCta": "Full catalog",
     "editorialTitle": "Venues & events",
@@ -50,7 +51,8 @@
     "ctaButton": "Order",
     "galleryTitle": "Our style",
     "gallerySubtitle": "A glimpse of our mood and composition — stems may vary with the season.",
-    "galleryCta": "Browse catalog"
+    "galleryCta": "Browse catalog",
+    "studioTeamTitle": "The studio & team"
   },
   "categories": {
     "all": "All bouquets",
@@ -85,7 +87,7 @@
   "catalog": {
     "title": "Catalog",
     "allCategoriesTitle": "Bouquet catalog",
-    "styleDisclaimer": "These are bouquet styles, not a live inventory — our flower selection changes quickly with the season. You choose the mood and shape; we’ll use the freshest blooms available for your order.",
+    "styleDisclaimer": "Flower selection may vary with season and availability while keeping the chosen style and mood. The catalog shows styles, not a fixed stem list.",
     "filters": "Filters",
     "size": "Size",
     "colorMood": "Color mood",
@@ -106,7 +108,9 @@
     "size": "Size",
     "mood": "Mood",
     "from": "from",
-    "styleNote": "Photos show the style; we’ll use fresh stems that are available now in the same mood."
+    "styleNote": "Stems may change with season and availability; we’ll build the arrangement in the same mood and style as in the photo.",
+    "lightboxZoom": "Enlarge photo",
+    "lightboxClose": "Close"
   },
   "sizes": {
     "small": "small",
@@ -124,7 +128,8 @@
   "order": {
     "title": "Order",
     "bouquetSize": "Bouquet size",
-    "priceFloorHint": "Not below the minimum tier price for this style: {min}",
+    "priceFloorHint": "Minimum for the selected size is {min}. You can enter a higher amount — that’s your agreed bouquet budget.",
+    "agreedAmountHint": "Suggested amount for the selected size; increase it if you want a more generous composition.",
     "product": "Selected item",
     "productNameManual": "Order name or description",
     "agreedAmount": "Amount",
@@ -135,6 +140,9 @@
     "delivery": "Delivery",
     "pickup": "Pickup",
     "deliveryOption": "Delivery in Poltava",
+    "deliveryPricingTitle": "Estimated delivery by distance",
+    "deliveryPricingNote": "We confirm the final fee after the address is clear (taxi rates may vary).",
+    "deliveryPricingKm": "up to {km} km",
     "deliveryDate": "Delivery date",
     "deliveryTime": "Time",
     "dateFormatHint": "Pick a date from the calendar (how it looks depends on your browser).",
@@ -176,7 +184,7 @@
       "deliveryAddressRequired": "Enter a delivery address.",
       "recipientPhoneRequired": "Enter the recipient’s phone number.",
       "recipientPhoneInvalid": "Invalid phone number (use +380…).",
-      "priceTooLow": "The amount cannot be below the minimum price for this style."
+      "priceTooLow": "The amount cannot be below the minimum for the selected size (S/M/L)."
     }
   },
   "orderStatus": {

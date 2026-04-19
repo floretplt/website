@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/shop/SectionHeading";
 import { getFeaturedProducts } from "@/lib/data/products";
 import { STYLE_GALLERY_ITEMS } from "@/lib/style-gallery";
 import { TEAM_MEMBERS } from "@/lib/team";
-import { TeamSection } from "@/components/shop/TeamSection";
+import { StudioTeamSection } from "@/components/shop/StudioTeamSection";
 import {
   aboutShortForLocale,
   getSiteSettings,
@@ -37,9 +37,11 @@ export default async function HomePage({
   const tm = await getTranslations({ locale, namespace: "moods" });
   const tp = await getTranslations({ locale, namespace: "product" });
 
-  const settings = await getSiteSettings();
+  const [settings, featured] = await Promise.all([
+    getSiteSettings(),
+    getFeaturedProducts(),
+  ]);
   const about = aboutShortForLocale(settings, locale);
-  const featured = await getFeaturedProducts();
 
   const moodKeys = ["pink", "blue", "yellow", "red", "white", "bright"] as const;
   const moods = Object.fromEntries(moodKeys.map((k) => [k, tm(k)]));
@@ -87,15 +89,6 @@ export default async function HomePage({
         }}
       />
 
-      <section className="py-20 md:py-28">
-        <div className="mx-auto max-w-3xl px-6 text-center md:px-10">
-          <SectionHeading title={t("aboutTitle")} />
-          <p className="mt-8 whitespace-pre-line font-display text-xl leading-relaxed text-muted md:text-2xl">
-            {about ?? t("aboutBody")}
-          </p>
-        </div>
-      </section>
-
       <section className="border-t border-ink/10 bg-bg py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6 md:px-10">
           <SectionHeading title={t("categoriesTitle")} />
@@ -124,26 +117,10 @@ export default async function HomePage({
         imageAlt={t("editorialTitle")}
       />
 
-      <section className="bg-sage/40 py-20 md:py-28">
-        <div className="mx-auto max-w-3xl px-6 text-center md:px-10">
-          <p className="font-display text-2xl leading-snug text-ink md:text-3xl">
-            {t("ctaStrip")}
-          </p>
-          <Link href="/order" className="btn-pill mt-10 inline-flex">
-            {t("ctaButton")}
-          </Link>
-        </div>
-      </section>
-
-      <StyleGallery
-        items={STYLE_GALLERY_ITEMS}
-        title={t("galleryTitle")}
-        subtitle={t("gallerySubtitle")}
-        cta={t("galleryCta")}
-      />
-
-      <TeamSection
-        title={t("teamTitle")}
+      <StudioTeamSection
+        sectionTitle={t("studioTeamTitle")}
+        aboutText={about ?? t("aboutBody")}
+        teamTitle={t("teamTitle")}
         placeholderLabel={t("teamPhotoPlaceholder")}
         names={{
           tanya: t("teamTanya"),
@@ -157,6 +134,24 @@ export default async function HomePage({
         }}
         members={TEAM_MEMBERS}
       />
+
+      <StyleGallery
+        items={STYLE_GALLERY_ITEMS}
+        title={t("galleryTitle")}
+        subtitle={t("gallerySubtitle")}
+        cta={t("galleryCta")}
+      />
+
+      <section className="bg-sage/40 py-20 md:py-28">
+        <div className="mx-auto max-w-3xl px-6 text-center md:px-10">
+          <p className="font-display text-2xl leading-snug text-ink md:text-3xl">
+            {t("ctaStrip")}
+          </p>
+          <Link href="/order" className="btn-pill mt-10 inline-flex">
+            {t("ctaButton")}
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

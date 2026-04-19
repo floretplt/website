@@ -11,6 +11,7 @@ import {
   PageHeader,
   Textarea,
 } from "@/components/admin/ui";
+import { DeliveryBandsEditor } from "@/components/admin/DeliveryBandsEditor";
 
 export default async function AdminSettingsPage() {
   await requireAdmin();
@@ -158,6 +159,18 @@ export default async function AdminSettingsPage() {
                   placeholder="19:00"
                 />
               </Field>
+            </CardBody>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader
+              title="Орієнтовна доставка за відстанню"
+              description="Показується клієнту при виборі доставки. Фінальну суму узгоджуйте окремо (таксі)."
+            />
+            <CardBody>
+              <DeliveryBandsEditor
+                initialBands={settings.delivery_pricing?.bands ?? []}
+              />
             </CardBody>
           </Card>
         </div>

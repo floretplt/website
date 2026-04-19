@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 import { useMemo, useState } from "react";
-import type { ProductRow } from "@/lib/types/database";
+import type { DeliveryPricingBand, ProductRow } from "@/lib/types/database";
 import type { Locale } from "@/i18n/routing";
 import type { Size } from "@/lib/constants";
 import {
@@ -14,11 +14,13 @@ import {
 } from "@/lib/validators";
 import {
   offeredSizes,
+  primaryImage,
   productCurrency,
   productMinPrice,
   productName,
   productPriceForSize,
 } from "@/lib/product-display";
+import { ProductImageLightbox } from "@/components/shop/ProductImageLightbox";
 import { formatMoney } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/shop/AddressAutocomplete";
 import { normalizeUaPhone } from "@/lib/phone";
@@ -32,6 +34,8 @@ type Props = {
   minDeliveryDate: string;
   sameDayOrderCutoff?: string;
   sameDayDeliveryEnd?: string;
+  /** Distance tiers from site settings — shown when delivery is selected. */
+  deliveryBands?: DeliveryPricingBand[];
 };
 
 const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -69,6 +73,7 @@ export function OrderForm({
   minDeliveryDate,
   sameDayOrderCutoff,
   sameDayDeliveryEnd,
+  deliveryBands = [],
 }: Props) {
   const t = useTranslations("order");
   const ts = useTranslations("sizes");
@@ -78,12 +83,12 @@ export function OrderForm({
 
   const currency = productCurrency(locale);
 
-  const { resolvedDefaultSize, minPriceFloor, defaultPriceForSize, defaultName } =
+  const { resolvedDefaultSize, catalogMinPrice, defaultPriceForSize, defaultName } =
     useMemo(() => {
       if (!initialProduct) {
         return {
           resolvedDefaultSize: "medium" as Size,
-          minPriceFloor: 0,
+          catalogMinPrice: 0,
           defaultPriceForSize: 0,
           defaultName: "",
         };
@@ -97,11 +102,16 @@ export function OrderForm({
       const tier = productPriceForSize(initialProduct, locale, rs);
       return {
         resolvedDefaultSize: rs,
-        minPriceFloor: minP,
+        catalogMinPrice: minP,
         defaultPriceForSize: tier ?? minP,
         defaultName: productName(initialProduct, locale),
       };
     }, [initialProduct, locale, defaultProductSize]);
+
+  const previewSrc = useMemo(
+    () => (initialProduct ? primaryImage(initialProduct) : null),
+    [initialProduct],
+  );
 
   const defaultValues = useMemo(
     () =>
@@ -109,7 +119,7 @@ export function OrderForm({
         product_id: initialProduct?.id ?? null,
         product_name: defaultName,
         price_paid: initialProduct
-          ? Math.max(defaultPriceForSize || 1, minPriceFloor || 0.01)
+          ? Math.max(defaultPriceForSize || 1, catalogMinPrice || 0.01)
           : 1,
         currency,
         product_size: resolvedDefaultSize,
@@ -131,7 +141,7 @@ export function OrderForm({
       initialProduct,
       defaultName,
       defaultPriceForSize,
-      minPriceFloor,
+      catalogMinPrice,
       currency,
       resolvedDefaultSize,
     ],
@@ -152,6 +162,14 @@ export function OrderForm({
 
   const deliveryType = watch("delivery_type");
   const paymentMethod = watch("payment_method");
+  const watchedSize = watch("product_size");
+
+  const tierFloor = useMemo(() => {
+    if (!initialProduct) return 0.01;
+    const pr = productPriceForSize(initialProduct, locale, watchedSize);
+    if (pr != null && pr > 0) return pr;
+    return Math.max(catalogMinPrice || 0.01, 0.01);
+  }, [initialProduct, locale, watchedSize, catalogMinPrice]);
 
   const sizeOptions = initialProduct ? offeredSizes(initialProduct, locale) : [];
 
@@ -267,6 +285,16 @@ export function OrderForm({
 
       <section className="space-y-4 border-b border-ink/10 pb-8">
         <h2 className="eyebrow">{t("product")}</h2>
+        {previewSrc ? (
+          <div className="max-w-[280px]">
+            <ProductImageLightbox
+              images={[previewSrc]}
+              alt={defaultName}
+              sizes="(max-width: 640px) 100vw, 320px"
+              aspectClassName="aspect-[4/5] w-full"
+            />
+          </div>
+        ) : null}
         {initialProduct ? (
           <>
             <p className="font-display text-2xl">{defaultName}</p>
@@ -322,7 +350,7 @@ export function OrderForm({
                         const pr = productPriceForSize(initialProduct, locale, s);
                         setValue(
                           "price_paid",
-                          pr ?? minPriceFloor,
+                          pr ?? catalogMinPrice,
                           { shouldValidate: true, shouldDirty: true },
                         );
                       }
@@ -351,17 +379,22 @@ export function OrderForm({
             <input
               type="number"
               step="0.01"
-              min={initialProduct ? minPriceFloor : 0.01}
+              min={initialProduct ? tierFloor : 0.01}
               className="w-full border border-ink/20 bg-transparent px-3 py-2"
               {...register("price_paid", { valueAsNumber: true })}
             />
           </label>
           {initialProduct ? (
-            <p className="mt-1 text-[11px] leading-relaxed text-muted">
-              {t("priceFloorHint", {
-                min: formatMoney(minPriceFloor, currency, locale),
-              })}
-            </p>
+            <>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                {t("agreedAmountHint")}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                {t("priceFloorHint", {
+                  min: formatMoney(tierFloor, currency, locale),
+                })}
+              </p>
+            </>
           ) : null}
           <FieldError messageKey={errors.price_paid?.message} />
           <input type="hidden" {...register("currency")} value={currency} />
@@ -409,6 +442,33 @@ export function OrderForm({
 
         {deliveryType === "delivery" ? (
           <div className="grid gap-4 md:grid-cols-2">
+            {deliveryBands.length > 0 ? (
+              <div className="rounded-lg border border-ink/15 bg-ink/[0.02] p-4 md:col-span-2">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                  {t("deliveryPricingTitle")}
+                </p>
+                <table className="mt-3 w-full max-w-md text-sm">
+                  <tbody>
+                    {deliveryBands.map((b) => (
+                      <tr
+                        key={`${b.max_km}-${b.price_uah}`}
+                        className="border-t border-ink/10 first:border-t-0"
+                      >
+                        <td className="py-2 pr-4 text-muted">
+                          {t("deliveryPricingKm", { km: b.max_km })}
+                        </td>
+                        <td className="py-2 tabular-nums text-ink">
+                          {formatMoney(b.price_uah, currency, locale)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-3 text-[11px] leading-relaxed text-muted">
+                  {t("deliveryPricingNote")}
+                </p>
+              </div>
+            ) : null}
             <div className="text-sm text-muted">
               <label className="block">
                 <span className="mb-1 block uppercase tracking-wider">

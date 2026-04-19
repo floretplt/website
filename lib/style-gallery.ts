@@ -1,10 +1,9 @@
 /**
  * Home page mood board. Files live in `public/gallery/`.
  *
- * Some iPhone shots (Display P3) were damaged by an aggressive JPEG pass — if a
- * photo shows as black, re-export from the original and run e.g.:
+ * If any gallery shot renders black after optimization, re-export from the
+ * original (Display P3 JPEGs can break): e.g.
  *   sips -Z 1600 your.jpg --out public/gallery/your.jpg
- * (avoid very low JPEG quality in one step on P3 images.)
  */
 export type StyleGalleryItem = {
   src: string;

@@ -6,7 +6,6 @@ import type { ProductRow } from "@/lib/types/database";
 import type { Locale } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { productMaxPrice, productMinPrice } from "@/lib/product-display";
-import Image from "next/image";
 
 function filterProducts(
   products: ProductRow[],
@@ -49,20 +48,8 @@ export default async function CatalogAllPage({
 
   return (
     <div className="bg-bg">
-      <div className="relative h-40 overflow-hidden md:h-48">
-        <Image
-          src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=2000&q=80"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink/50 to-ink/25" />
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl items-end px-6 pb-8 md:px-10">
-          <h1 className="h-section max-w-xl text-balance text-white">
-            {t("allCategoriesTitle")}
-          </h1>
-        </div>
+      <div className="mx-auto max-w-7xl border-b border-ink/10 px-6 pb-8 pt-12 md:px-10 md:pb-10 md:pt-16">
+        <h1 className="h-section max-w-2xl text-balance">{t("allCategoriesTitle")}</h1>
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
@@ -99,6 +86,8 @@ export default async function CatalogAllPage({
                       orderLabel={tp("order")}
                       variant="catalog"
                       priceFromPrefix={tp("from")}
+                      showOrderCta
+                      showSizeTiers
                     />
                   </div>
                 ))}

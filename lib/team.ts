@@ -7,7 +7,7 @@ export type TeamMemberConfig = {
 };
 
 export const TEAM_MEMBERS: TeamMemberConfig[] = [
-  { id: "tanya", photoSrc: null },
-  { id: "zhenya", photoSrc: null },
-  { id: "yana", photoSrc: null },
+  { id: "tanya", photoSrc: "/images/team/tanya.jpg" },
+  { id: "zhenya", photoSrc: "/images/team/zhenya.jpg" },
+  { id: "yana", photoSrc: "/images/team/yana.jpg" },
 ];

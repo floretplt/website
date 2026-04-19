@@ -26,6 +26,8 @@ export function CategoryTile({
           fill
           className="object-cover"
           sizes="(max-width:768px) 100vw, 33vw"
+          loading="lazy"
+          fetchPriority="low"
         />
       </div>
       <div className="mt-3 flex items-center justify-between border border-ink px-4 py-3 text-[11px] font-medium uppercase tracking-[0.18em]">

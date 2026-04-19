@@ -12,11 +12,7 @@ import {
   kyivMinutesSinceMidnight,
   parseClockToMinutes,
 } from "@/lib/delivery-kyiv";
-import {
-  offeredSizes,
-  productMinPrice,
-  productPriceForSize,
-} from "@/lib/product-display";
+import { offeredSizes, productPriceForSize } from "@/lib/product-display";
 
 function isTooLateForSameDayKyiv(
   deliveryDate: string,
@@ -138,12 +134,11 @@ export async function POST(req: Request) {
       if (!sizes.includes(data.product_size)) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
       }
-      const minPaid = productMinPrice(p, locale);
       const tierPrice = productPriceForSize(p, locale, data.product_size);
       if (tierPrice == null) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
       }
-      if (data.price_paid + 1e-6 < minPaid) {
+      if (data.price_paid + 1e-6 < tierPrice) {
         return NextResponse.json({ error: "PRICE_TOO_LOW" }, { status: 400 });
       }
     }

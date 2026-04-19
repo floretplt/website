@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Link } from "@/i18n/navigation";
+import { ProductImageLightbox } from "@/components/shop/ProductImageLightbox";
 import type { ProductRow } from "@/lib/types/database";
 import type { Locale } from "@/i18n/routing";
 import type { Size } from "@/lib/constants";
@@ -26,10 +26,12 @@ type CardProps = {
   variant?: "default" | "catalog";
   /** e.g. «від» / «from» — prepended to the smallest-tier price */
   priceFromPrefix?: string;
-  /** With `variant="catalog"`: show «Замовити» under the card (e.g. home featured). */
+  /** With `variant="catalog"`: show «Замовити» inside the card footer (e.g. home featured, catalog grid). */
   showOrderCta?: boolean;
   /** With `variant="catalog"`: compact S / M / L prices under the title row. */
   showSizeTiers?: boolean;
+  /** Softer network priority so the hero and first grid slots win (e.g. home featured). */
+  deferredImage?: boolean;
 };
 
 export function ProductCard({
@@ -42,6 +44,7 @@ export function ProductCard({
   priceFromPrefix,
   showOrderCta = false,
   showSizeTiers = false,
+  deferredImage = false,
 }: CardProps) {
   const img = primaryImage(product);
   const listPrice = productMinPrice(product, locale);
@@ -56,27 +59,27 @@ export function ProductCard({
     const tiers = offeredSizes(product, locale);
 
     return (
-      <article className="flex h-full flex-col gap-4 animate-fadeIn">
-        <Link href={href} className="group flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm ring-1 ring-ink/[0.04]">
-            {/* 4:5 — same proportion as typical Instagram feed posts (e.g. 1080×1350) */}
-            <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-bg">
-              {img ? (
-                <Image
-                  src={img}
-                  alt={name}
-                  fill
-                  className="object-cover transition-opacity duration-200 group-hover:opacity-95"
-                  sizes="(max-width:768px) 100vw, 33vw"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs uppercase tracking-widest text-muted">
-                  Floret
-                </div>
-              )}
+      <article className="flex h-full min-h-0 flex-col animate-fadeIn">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm ring-1 ring-ink/[0.04]">
+          {/* 4:5 — same proportion as typical Instagram feed posts (e.g. 1080×1350) */}
+          {img ? (
+            <ProductImageLightbox
+              images={[img]}
+              alt={name}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              aspectClassName="aspect-[4/5] w-full shrink-0"
+              quality={68}
+              loading={deferredImage ? "lazy" : undefined}
+              fetchPriority={deferredImage ? "low" : undefined}
+            />
+          ) : (
+            <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
+              Floret
             </div>
-            <div className="flex flex-1 flex-col border-t border-ink/10 px-3 py-3">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 text-left">
+          )}
+          <div className="flex min-h-0 flex-1 flex-col border-t border-ink/10 px-3 pb-3 pt-3">
+            <Link href={href} className="group block text-left">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
                 <span className="line-clamp-2 min-h-[2.75rem] font-display text-lg leading-snug text-ink group-hover:text-rose">
                   {name}
                 </span>
@@ -89,53 +92,53 @@ export function ProductCard({
                   {formatMoney(listPrice, cur, locale)}
                 </span>
               </div>
-              {showSizeTiers ? (
-                <p className="mt-2 min-h-[2.25rem] text-left text-[10px] leading-snug text-muted">
-                  {tiers.map((s, i) => {
-                    const pr = productPriceForSize(product, locale, s);
-                    if (pr == null) return null;
-                    return (
-                      <span key={s}>
-                        {i > 0 ? " · " : null}
-                        {tierLetter(s)}{" "}
-                        {formatMoney(pr, cur, locale)}
-                      </span>
-                    );
-                  })}
-                </p>
-              ) : null}
-            </div>
+            </Link>
+            {showSizeTiers ? (
+              <p className="mt-2 min-h-[2.25rem] text-left text-[10px] leading-snug text-muted">
+                {tiers.map((s, i) => {
+                  const pr = productPriceForSize(product, locale, s);
+                  if (pr == null) return null;
+                  return (
+                    <span key={s}>
+                      {i > 0 ? " · " : null}
+                      {tierLetter(s)}{" "}
+                      {formatMoney(pr, cur, locale)}
+                    </span>
+                  );
+                })}
+              </p>
+            ) : null}
+            {showOrderCta ? (
+              <Link
+                href={orderHref}
+                className="btn-square mt-3 block w-full shrink-0 text-center"
+              >
+                {orderLabel}
+              </Link>
+            ) : null}
           </div>
-        </Link>
-        {showOrderCta ? (
-          <Link
-            href={orderHref}
-            className="btn-square block w-full max-w-none shrink-0 text-center"
-          >
-            {orderLabel}
-          </Link>
-        ) : null}
+        </div>
       </article>
     );
   }
 
   return (
     <article className="group flex flex-col animate-fadeIn">
-      <Link href={href} className="relative aspect-square w-full overflow-hidden bg-white">
-        {img ? (
-          <Image
-            src={img}
-            alt={name}
-            fill
-            className="object-cover transition-opacity duration-200 group-hover:opacity-95"
-            sizes="(max-width:768px) 100vw, 33vw"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
-            Floret
-          </div>
-        )}
-      </Link>
+      {img ? (
+        <ProductImageLightbox
+          images={[img]}
+          alt={name}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          aspectClassName="aspect-square w-full"
+          quality={68}
+          loading={deferredImage ? "lazy" : undefined}
+          fetchPriority={deferredImage ? "low" : undefined}
+        />
+      ) : (
+        <div className="flex aspect-square w-full items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
+          Floret
+        </div>
+      )}
       <div className="mt-4 flex flex-col items-center text-center">
         <Link href={href} className="font-display text-lg text-ink hover:text-rose">
           {name}

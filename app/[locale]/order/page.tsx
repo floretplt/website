@@ -52,6 +52,7 @@ export default async function OrderPage({
       minDeliveryDate={minDeliveryDate}
       sameDayOrderCutoff={cutoffStr}
       sameDayDeliveryEnd={deliveryEndStr}
+      deliveryBands={settings.delivery_pricing?.bands ?? []}
     />
   );
 }

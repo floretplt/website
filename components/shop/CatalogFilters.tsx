@@ -56,7 +56,6 @@ export function CatalogFilters({ minPrice, maxPrice }: Props) {
         <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.15em] text-muted">
           {t("colorMood")}
         </p>
-        <p className="mb-3 text-[11px] leading-snug text-muted">{t("colorMoodHint")}</p>
         <div className="flex flex-wrap gap-3">
           {COLOR_MOODS.map((m) => {
             const chip = MOOD_CHIP[m];

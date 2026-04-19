@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { Link } from "@/i18n/navigation";
+import { ProductDetailGallery } from "@/components/shop/ProductDetailGallery";
 import { ProductStickyCta } from "@/components/shop/ProductStickyCta";
 import { ProductCard } from "@/components/shop/ProductCard";
 import {
@@ -83,32 +83,11 @@ export default async function ProductPage({
         <p className="eyebrow mb-2">{tc(category)}</p>
         <div className="grid gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
           <div className="space-y-4">
-            {/*
-              Bounded frame + object-contain: show the whole bouquet without cropping.
-              Not full-viewport — max height keeps title/prices visible on most screens.
-            */}
-            <div className="relative mx-auto w-full max-w-xl md:mx-0">
-              <div className="relative h-[min(58vh,560px)] w-full sm:h-[min(52vh,520px)] md:h-[min(62vh,640px)]">
-                {gallery[0] ? (
-                  <Image
-                    src={gallery[0]}
-                    alt={productName(product, locale)}
-                    fill
-                    className="object-contain object-center"
-                    priority
-                    sizes="(max-width:768px) 100vw, 45vw"
-                  />
-                ) : null}
-              </div>
-            </div>
-            {gallery.length > 1 ? (
-              <div className="grid grid-cols-4 gap-2">
-                {gallery.slice(1, 5).map((src, i) => (
-                  <div key={src + i} className="relative aspect-square overflow-hidden bg-bg">
-                    <Image src={src} alt="" fill className="object-cover" sizes="120px" />
-                  </div>
-                ))}
-              </div>
+            {gallery.length > 0 ? (
+              <ProductDetailGallery
+                images={gallery}
+                productName={productName(product, locale)}
+              />
             ) : null}
           </div>
 

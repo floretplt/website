@@ -54,6 +54,16 @@ export type OrderRow = {
   updated_at: string;
 };
 
+/** One row: max distance (km) inclusive and price in UAH for storefront hint table. */
+export type DeliveryPricingBand = {
+  max_km: number;
+  price_uah: number;
+};
+
+export type DeliveryPricingConfig = {
+  bands: DeliveryPricingBand[];
+};
+
 export type SiteSettingsRow = {
   id: string;
   working_hours: Record<string, unknown> | null;
@@ -70,5 +80,7 @@ export type SiteSettingsRow = {
   hero_image_url: string | null;
   about_short_uk: string | null;
   about_short_en: string | null;
+  /** Optional distance tiers for delivery fee hints (admin-edited). */
+  delivery_pricing: DeliveryPricingConfig | null;
   updated_at: string;
 };

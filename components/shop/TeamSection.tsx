@@ -8,6 +8,8 @@ type Props = {
   names: Record<TeamMemberId, string>;
   bios: Record<TeamMemberId, string>;
   members: TeamMemberConfig[];
+  /** When true, no outer border — for use inside `StudioTeamSection`. */
+  embedded?: boolean;
 };
 
 export function TeamSection({
@@ -16,9 +18,14 @@ export function TeamSection({
   names,
   bios,
   members,
+  embedded = false,
 }: Props) {
+  const outerClass = embedded
+    ? "pt-16 md:pt-20"
+    : "border-t border-ink/10 py-20 md:py-28";
+  const Tag = embedded ? "div" : "section";
   return (
-    <section className="border-t border-ink/10 py-20 md:py-28">
+    <Tag className={outerClass}>
       <div className="mx-auto max-w-6xl px-6 md:px-10">
         <SectionHeading title={title} />
 
@@ -33,7 +40,8 @@ export function TeamSection({
                     fill
                     className="object-cover object-top"
                     sizes="(max-width:640px) 90vw, 280px"
-                    unoptimized
+                    loading="lazy"
+                    fetchPriority="low"
                   />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4">
@@ -56,6 +64,6 @@ export function TeamSection({
           ))}
         </div>
       </div>
-    </section>
+    </Tag>
   );
 }
