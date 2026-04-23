@@ -2,7 +2,8 @@ import { getSiteSettings } from "@/lib/data/settings";
 import type { Locale } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { formatWorkingHours } from "@/lib/format";
-import { normalizeUaPhone } from "@/lib/phone";
+import { googleMapsEmbedSrc } from "@/lib/maps-embed";
+import { voiceDialHref } from "@/lib/phone";
 
 export default async function ContactPage({
   params,
@@ -15,6 +16,7 @@ export default async function ContactPage({
   const address =
     locale === "uk" ? settings.pickup_address_uk : settings.pickup_address_en;
   const hours = formatWorkingHours(settings.working_hours, locale);
+  const mapSrc = googleMapsEmbedSrc(address, locale);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
@@ -23,10 +25,18 @@ export default async function ContactPage({
         <div className="space-y-8 text-sm leading-relaxed text-muted">
           <div>
             <p className="eyebrow mb-2">{t("phone")}</p>
-            <a href={`tel:${normalizeUaPhone(settings.phone)}`} className="text-ink hover:text-rose">
+            <a href={voiceDialHref(settings.phone)} className="text-ink hover:text-rose">
               {settings.phone}
             </a>
           </div>
+          {settings.email?.trim() ? (
+            <div>
+              <p className="eyebrow mb-2">{t("email")}</p>
+              <a href={`mailto:${settings.email.trim()}`} className="text-ink hover:text-rose">
+                {settings.email.trim()}
+              </a>
+            </div>
+          ) : null}
           <div>
             <p className="eyebrow mb-2">{t("address")}</p>
             <p>{address}</p>
@@ -53,7 +63,7 @@ export default async function ContactPage({
             className="absolute inset-0 h-full w-full"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d82344.7!2d34.53!3d49.59!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40d825e5c4b8b8b9%3A0x1!2z0J_QvtC70Y_QutCwLCDQn9C10YDQvtCx0LvQtdC90LjRjyDQo9C60YDQsNC40LzQsA!5e0!3m2!1suk!2sua!4v1"
+            src={mapSrc}
           />
         </div>
       </div>

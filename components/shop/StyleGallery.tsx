@@ -17,7 +17,7 @@ function aspectClass(i: number) {
 type Props = {
   items: StyleGalleryItem[];
   title: string;
-  subtitle: string;
+  subtitle?: string;
   cta: string;
 };
 
@@ -28,9 +28,11 @@ export function StyleGallery({ items, title, subtitle, cta }: Props) {
     <section className="border-t border-ink/10 bg-bg py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6 md:px-10">
         <h2 className="h-section text-center">{title}</h2>
-        <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-relaxed text-muted md:text-[15px]">
-          {subtitle}
-        </p>
+        {subtitle?.trim() ? (
+          <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-relaxed text-muted md:text-[15px]">
+            {subtitle}
+          </p>
+        ) : null}
 
         <div className="mt-14 columns-1 gap-x-6 sm:columns-2 lg:columns-3 lg:[column-gap:1.75rem]">
           {items.map((item, index) => (

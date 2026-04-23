@@ -3,16 +3,28 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { OrderStatus } from "@/lib/constants";
+import type { DeliveryType, OrderStatus } from "@/lib/constants";
+import { assertOrderStatusAllowedForDelivery } from "@/lib/order-status-policy";
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
   await requireAdmin();
   const admin = createAdminClient();
+  const { data: row, error: fetchErr } = await admin
+    .from("orders")
+    .select("delivery_type")
+    .eq("id", id)
+    .maybeSingle();
+  if (fetchErr || !row) throw new Error(fetchErr?.message ?? "Замовлення не знайдено");
+  assertOrderStatusAllowedForDelivery(
+    row.delivery_type as DeliveryType,
+    status,
+  );
   const { error } = await admin
     .from("orders")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  revalidatePath("/admin");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
 }
@@ -25,6 +37,7 @@ export async function updateOrderPaid(id: string, paid: boolean) {
     .update({ paid, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  revalidatePath("/admin");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
 }

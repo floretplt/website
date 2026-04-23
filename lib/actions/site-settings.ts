@@ -4,35 +4,11 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DeliveryPricingConfig } from "@/lib/types/database";
-
-function parseDeliveryBandsJson(raw: FormDataEntryValue | null): DeliveryPricingConfig {
-  const s = typeof raw === "string" ? raw : "";
-  if (!s.trim()) return { bands: [] };
-  try {
-    const j = JSON.parse(s) as { bands?: unknown };
-    if (!j?.bands || !Array.isArray(j.bands)) return { bands: [] };
-    const bands = j.bands
-      .map((b) => {
-        const o = b as { max_km?: unknown; price_uah?: unknown };
-        const max_km = Number(o.max_km);
-        const price_uah = Number(o.price_uah);
-        if (
-          !Number.isFinite(max_km) ||
-          !Number.isFinite(price_uah) ||
-          max_km <= 0 ||
-          price_uah < 0
-        ) {
-          return null;
-        }
-        return { max_km, price_uah };
-      })
-      .filter((x): x is NonNullable<typeof x> => x != null)
-      .sort((a, b) => a.max_km - b.max_km);
-    return { bands };
-  } catch {
-    return { bands: [] };
-  }
-}
+import {
+  parseDeliveryBandsFormJson,
+  parseDeliveryDistrictsFormJson,
+  parseDeliveryZonesFormJson,
+} from "@/lib/delivery-pricing";
 
 export async function updateSiteSettings(formData: FormData) {
   await requireAdmin();
@@ -53,7 +29,13 @@ export async function updateSiteSettings(formData: FormData) {
   const same_day_delivery_end_time = String(
     formData.get("same_day_delivery_end_time") ?? "19:00",
   );
-  const delivery_pricing = parseDeliveryBandsJson(formData.get("delivery_bands_json"));
+  const delivery_pricing: DeliveryPricingConfig = {
+    bands: parseDeliveryBandsFormJson(formData.get("delivery_bands_json")),
+    districts: parseDeliveryDistrictsFormJson(
+      formData.get("delivery_districts_json"),
+    ),
+    zones: parseDeliveryZonesFormJson(formData.get("delivery_zones_json")),
+  };
 
   const payload = {
     announcement_uk,

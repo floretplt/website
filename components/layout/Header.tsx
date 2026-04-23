@@ -46,14 +46,11 @@ export function Header() {
           <Link href="/catalog" className={linkClass}>
             {t("catalog")}
           </Link>
-          <Link href="/#studio-team" className={linkClass}>
-            {t("studioTeam")}
+          <Link href="/delivery" className={linkClass}>
+            {t("delivery")}
           </Link>
           <Link href="/contact" className={linkClass}>
             {t("contact")}
-          </Link>
-          <Link href="/order" className={linkClass}>
-            {t("order")}
           </Link>
         </nav>
 
@@ -90,14 +87,11 @@ export function Header() {
             <Link href="/catalog" className={linkClass} onClick={() => setOpen(false)}>
               {t("catalog")}
             </Link>
-            <Link href="/#studio-team" className={linkClass} onClick={() => setOpen(false)}>
-              {t("studioTeam")}
+            <Link href="/delivery" className={linkClass} onClick={() => setOpen(false)}>
+              {t("delivery")}
             </Link>
             <Link href="/contact" className={linkClass} onClick={() => setOpen(false)}>
               {t("contact")}
-            </Link>
-            <Link href="/order" className={linkClass} onClick={() => setOpen(false)}>
-              {t("order")}
             </Link>
             <Link href="/order-status" className={linkClass} onClick={() => setOpen(false)}>
               {t("orderStatus")}

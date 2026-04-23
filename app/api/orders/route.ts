@@ -2,16 +2,32 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orderCreateSchema } from "@/lib/validators";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
-import { sendTelegramMessage } from "@/lib/telegram";
-import { mergeDeliveryAddressParts } from "@/lib/delivery-address";
+import { sendTelegramOrderCreated } from "@/lib/telegram";
+import { buildNewOrderTelegramCaptionUk } from "@/lib/order-telegram-caption";
+import { publicAssetAbsoluteUrl } from "@/lib/public-asset-url";
+import { primaryProductImageUrl } from "@/lib/product-image";
+import { telegramOrderInlineKeyboard } from "@/lib/telegram-order-keyboard";
+import {
+  DELIVERY_ADDRESS_PENDING_WITH_RECIPIENT_UK,
+  mergeDeliveryAddressParts,
+} from "@/lib/delivery-address";
 import { normalizeUaPhone } from "@/lib/phone";
 import type { ProductRow } from "@/lib/types/database";
 import type { Locale } from "@/i18n/routing";
 import {
+  addCalendarDaysYYYYMMDD,
   kyivCalendarDateString,
   kyivMinutesSinceMidnight,
   parseClockToMinutes,
 } from "@/lib/delivery-kyiv";
+import {
+  bandDeliveryFeeUah,
+  districtDeliveryFeeUah,
+  namedZoneDeliveryFeeUah,
+  parseDeliveryPricingConfig,
+} from "@/lib/delivery-pricing";
+import { getEffectiveNamedZones } from "@/lib/default-delivery-zones";
+import { POSTCARD_FEE_UAH } from "@/lib/constants";
 import { offeredSizes, productPriceForSize } from "@/lib/product-display";
 
 function isTooLateForSameDayKyiv(
@@ -32,10 +48,22 @@ function coerceOrderEmptyStrings(input: Record<string, unknown>) {
     "delivery_floor",
     "delivery_apartment",
     "recipient_phone",
+    "delivery_district_id",
+    "delivery_zone_id",
+    "gift_message",
   ] as const;
   for (const k of keys) {
     if (input[k] === "") input[k] = null;
   }
+  if (input["coordinate_address_with_recipient"] === undefined) {
+    input["coordinate_address_with_recipient"] = false;
+  }
+}
+
+function isPickupDateInWeekWindow(ymd: string): boolean {
+  const today = kyivCalendarDateString();
+  const last = addCalendarDaysYYYYMMDD(today, 6);
+  return ymd >= today && ymd <= last;
 }
 
 export async function POST(req: Request) {
@@ -71,14 +99,16 @@ export async function POST(req: Request) {
   }
 
   const data = parsed.data;
-
+  const coordinate = data.coordinate_address_with_recipient === true;
   const mergedAddress =
     data.delivery_type === "delivery"
-      ? mergeDeliveryAddressParts(
-          data.delivery_address,
-          data.delivery_floor,
-          data.delivery_apartment,
-        )
+      ? coordinate
+        ? DELIVERY_ADDRESS_PENDING_WITH_RECIPIENT_UK
+        : mergeDeliveryAddressParts(
+            data.delivery_address,
+            data.delivery_floor,
+            data.delivery_apartment,
+          )
       : null;
 
   let admin;
@@ -94,13 +124,27 @@ export async function POST(req: Request) {
   try {
     const { data: stRow, error: settingsErr } = await admin
       .from("site_settings")
-      .select("same_day_cutoff_time")
+      .select("same_day_cutoff_time, delivery_pricing")
       .limit(1)
       .maybeSingle();
     if (settingsErr) {
       console.warn("site_settings:", settingsErr.message);
     }
     const orderCutoff = String(stRow?.same_day_cutoff_time ?? "18:10:00");
+    const deliveryPricing = parseDeliveryPricingConfig(
+      stRow?.delivery_pricing ?? {},
+    );
+
+    if (
+      data.delivery_type === "pickup" &&
+      data.delivery_date &&
+      !isPickupDateInWeekWindow(data.delivery_date)
+    ) {
+      return NextResponse.json(
+        { error: "PICKUP_DATE_INVALID" },
+        { status: 400 },
+      );
+    }
 
     if (
       data.delivery_type === "delivery" &&
@@ -113,13 +157,101 @@ export async function POST(req: Request) {
       );
     }
 
+    const districts = deliveryPricing.districts ?? [];
+    const bands = deliveryPricing.bands ?? [];
+    const namedZones = getEffectiveNamedZones(deliveryPricing);
+    const useNamedZones =
+      data.delivery_type === "delivery" &&
+      data.currency === "UAH" &&
+      !coordinate &&
+      namedZones.length > 0;
+    const useDistrictMatrix =
+      !useNamedZones &&
+      data.delivery_type === "delivery" &&
+      data.currency === "UAH" &&
+      !coordinate &&
+      districts.length > 0;
+    const useBandTiers =
+      !useNamedZones &&
+      data.delivery_type === "delivery" &&
+      data.currency === "UAH" &&
+      !coordinate &&
+      districts.length === 0 &&
+      bands.length > 0;
+
+    if (useNamedZones && !data.delivery_zone_id?.trim()) {
+      return NextResponse.json(
+        { error: "DELIVERY_ZONE_REQUIRED" },
+        { status: 400 },
+      );
+    }
+
+    if (useDistrictMatrix && !data.delivery_district_id?.trim()) {
+      return NextResponse.json(
+        { error: "DELIVERY_DISTRICT_REQUIRED" },
+        { status: 400 },
+      );
+    }
+
+    if (useBandTiers && data.delivery_band_max_km == null) {
+      return NextResponse.json(
+        { error: "DELIVERY_TIER_REQUIRED" },
+        { status: 400 },
+      );
+    }
+
+    let deliveryFeeUah: number | null = null;
+    if (data.delivery_type === "delivery" && data.currency === "UAH") {
+      if (coordinate) {
+        deliveryFeeUah = null;
+      } else if (useNamedZones) {
+        const fee = namedZoneDeliveryFeeUah(namedZones, data.delivery_zone_id);
+        if (fee == null) {
+          return NextResponse.json(
+            { error: "INVALID_DELIVERY_ZONE" },
+            { status: 400 },
+          );
+        }
+        deliveryFeeUah = fee;
+      } else if (useDistrictMatrix) {
+        const fee = districtDeliveryFeeUah(
+          districts,
+          data.delivery_district_id,
+          data.delivery_time,
+        );
+        if (fee == null) {
+          return NextResponse.json(
+            { error: "INVALID_DELIVERY_DISTRICT" },
+            { status: 400 },
+          );
+        }
+        deliveryFeeUah = fee;
+      } else if (useBandTiers) {
+        const fee = bandDeliveryFeeUah(bands, data.delivery_band_max_km);
+        if (fee == null) {
+          return NextResponse.json(
+            { error: "INVALID_DELIVERY_TIER" },
+            { status: 400 },
+          );
+        }
+        deliveryFeeUah = fee;
+      }
+    }
+
+    const postcardFeeUah =
+      data.currency === "UAH" && data.gift_message?.trim()
+        ? POSTCARD_FEE_UAH
+        : null;
+
     const locale: Locale = data.currency === "UAH" ? "uk" : "en";
+
+    let productImageSnapshot: string | null = null;
 
     if (data.product_id) {
       const { data: prod, error: prodErr } = await admin
         .from("products")
         .select(
-          "id, price_uah_small, price_uah_medium, price_uah_large, price_eur_small, price_eur_medium, price_eur_large",
+          "id, price_uah_small, price_uah_medium, price_uah_large, price_eur_small, price_eur_medium, price_eur_large, image_url, images",
         )
         .eq("id", data.product_id)
         .maybeSingle();
@@ -130,6 +262,10 @@ export async function POST(req: Request) {
         );
       }
       const p = prod as ProductRow;
+      productImageSnapshot = primaryProductImageUrl({
+        image_url: p.image_url ?? null,
+        images: p.images,
+      });
       const sizes = offeredSizes(p, locale);
       if (!sizes.includes(data.product_size)) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
@@ -167,6 +303,9 @@ export async function POST(req: Request) {
         payment_method: data.payment_method,
         status: "new",
         paid: false,
+        delivery_fee_uah: deliveryFeeUah,
+        postcard_fee_uah: postcardFeeUah,
+        product_image_url: productImageSnapshot,
       })
       .select("id, order_number")
       .single();
@@ -186,23 +325,28 @@ export async function POST(req: Request) {
       );
     }
 
-    const msg = [
-      `<b>Нове замовлення #${row.order_number}</b>`,
-      data.payment_method === "reserve" ? "(бронь)" : "(передоплата)",
-      `Товар: ${data.product_name}`,
-      `Розмір: ${data.product_size}`,
-      `Сума: ${data.price_paid} ${data.currency}`,
-      `Клієнт: ${data.customer_name} ${data.customer_phone}`,
-      `Доставка: ${data.delivery_type}`,
-      data.delivery_type === "delivery"
-        ? `Дата: ${data.delivery_date} ${data.delivery_time}\nАдреса: ${mergedAddress}\nТел. отримувача: ${data.recipient_phone}`
-        : "Самовивіз",
-      data.notes ? `Нотатки: ${data.notes}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const pc = postcardFeeUah ?? 0;
+    const del = deliveryFeeUah ?? 0;
+    const totalDue = Number(data.price_paid) + del + pc;
 
-    await sendTelegramMessage(msg);
+    const caption = buildNewOrderTelegramCaptionUk({
+      data,
+      orderNumber: row.order_number,
+      mergedAddress: data.delivery_type === "delivery" ? mergedAddress : null,
+      deliveryFeeUah,
+      postcardFeeUah,
+      totalDueUah: totalDue,
+    });
+
+    await sendTelegramOrderCreated({
+      caption,
+      photoUrl: publicAssetAbsoluteUrl(productImageSnapshot),
+      replyMarkup: telegramOrderInlineKeyboard({
+        order_number: row.order_number,
+        status: "new",
+        delivery_type: data.delivery_type,
+      }),
+    });
 
     return NextResponse.json({
       id: row.id,

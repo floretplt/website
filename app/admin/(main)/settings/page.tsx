@@ -12,6 +12,8 @@ import {
   Textarea,
 } from "@/components/admin/ui";
 import { DeliveryBandsEditor } from "@/components/admin/DeliveryBandsEditor";
+import { DeliveryDistrictsEditor } from "@/components/admin/DeliveryDistrictsEditor";
+import { DeliveryZonesEditor } from "@/components/admin/DeliveryZonesEditor";
 
 export default async function AdminSettingsPage() {
   await requireAdmin();
@@ -164,12 +166,36 @@ export default async function AdminSettingsPage() {
 
           <Card className="lg:col-span-2">
             <CardHeader
+              title="Зони доставки (назва + ціна)"
+              description="Картки на оформленні замовлення. Якщо порожньо — використовуються вбудовані зони Полтави (поки не задані райони за часом і не заповнені км)."
+            />
+            <CardBody>
+              <DeliveryZonesEditor
+                initialZones={settings.delivery_pricing?.zones ?? []}
+              />
+            </CardBody>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader
               title="Орієнтовна доставка за відстанню"
               description="Показується клієнту при виборі доставки. Фінальну суму узгоджуйте окремо (таксі)."
             />
             <CardBody>
               <DeliveryBandsEditor
                 initialBands={settings.delivery_pricing?.bands ?? []}
+              />
+            </CardBody>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader
+              title="Доставка за районом і часом (UAH)"
+              description="Якщо заповнено, клієнт обирає район і інтервал (ранок / день / вечір) — сума доставки додається до оплати. Для EUR залиште порожнім."
+            />
+            <CardBody>
+              <DeliveryDistrictsEditor
+                initialDistricts={settings.delivery_pricing?.districts ?? []}
               />
             </CardBody>
           </Card>

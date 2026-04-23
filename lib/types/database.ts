@@ -31,6 +31,8 @@ export type OrderRow = {
   product_id: string | null;
   /** Client-chosen format: small / medium / large */
   product_size: Size | null;
+  /** Snapshot of main product image at order time (public or absolute URL). */
+  product_image_url: string | null;
   product_name: string;
   price_paid: number;
   currency: string;
@@ -41,6 +43,10 @@ export type OrderRow = {
   delivery_date: string | null;
   delivery_time: string | null;
   delivery_address: string | null;
+  /** Set when district × time pricing applies (UAH). */
+  delivery_fee_uah: number | null;
+  /** Non-null when client entered gift card text (UAH add-on). */
+  postcard_fee_uah: number | null;
   recipient_phone: string | null;
   gift_message: string | null;
   notes: string | null;
@@ -60,8 +66,32 @@ export type DeliveryPricingBand = {
   price_uah: number;
 };
 
+/** Kyiv / Poltava-style zones: fee by approximate delivery window (morning / afternoon / evening). */
+export type DeliveryDistrictRow = {
+  id: string;
+  label_uk: string;
+  label_en: string;
+  morning_uah: number;
+  afternoon_uah: number;
+  evening_uah: number;
+};
+
+/** Named area + single UAH price (card-style delivery options). */
+export type DeliveryNamedZoneRow = {
+  id: string;
+  label_uk: string;
+  label_en: string;
+  description_uk?: string;
+  description_en?: string;
+  price_uah: number;
+};
+
 export type DeliveryPricingConfig = {
   bands: DeliveryPricingBand[];
+  /** When non-empty, storefront can quote delivery by district + time window (UAH). */
+  districts: DeliveryDistrictRow[];
+  /** Named zones with flat prices; when set in admin, overrides built-in defaults. */
+  zones: DeliveryNamedZoneRow[];
 };
 
 export type SiteSettingsRow = {

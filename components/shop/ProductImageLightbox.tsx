@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -18,6 +19,13 @@ type Props = {
   loading?: "lazy" | "eager";
   fetchPriority?: "high" | "low" | "auto";
   imgClassName?: string;
+  /** Navigates to this path instead of opening the lightbox (e.g. product page from a card). */
+  linkHref?: string;
+  /**
+   * When false, renders only the thumbnail (no lightbox). Use under a card-level link overlay.
+   * @default true
+   */
+  enableLightbox?: boolean;
 };
 
 export function ProductImageLightbox({
@@ -30,6 +38,8 @@ export function ProductImageLightbox({
   loading,
   fetchPriority,
   imgClassName,
+  linkHref,
+  enableLightbox = true,
 }: Props) {
   const t = useTranslations("product");
   const [open, setOpen] = useState(false);
@@ -61,6 +71,59 @@ export function ProductImageLightbox({
     );
   }
 
+  const imageClasses = cn(
+    "object-cover transition-opacity duration-200 group-hover:opacity-95",
+    imgClassName ?? "",
+  );
+
+  if (linkHref) {
+    return (
+      <Link
+        href={linkHref}
+        className={cn(
+          "group relative block w-full cursor-pointer overflow-hidden bg-bg outline-none ring-ink focus-visible:ring-2",
+          aspectClassName,
+        )}
+        aria-label={alt}
+      >
+        <Image
+          src={main}
+          alt={alt}
+          fill
+          className={imageClasses}
+          sizes={sizes}
+          quality={quality}
+          priority={priority}
+          loading={loading}
+          fetchPriority={fetchPriority}
+        />
+      </Link>
+    );
+  }
+
+  if (!enableLightbox) {
+    return (
+      <div
+        className={cn(
+          "relative block w-full overflow-hidden bg-bg",
+          aspectClassName,
+        )}
+      >
+        <Image
+          src={main}
+          alt={alt}
+          fill
+          className={cn("object-cover", imgClassName ?? "")}
+          sizes={sizes}
+          quality={quality}
+          priority={priority}
+          loading={loading}
+          fetchPriority={fetchPriority}
+        />
+      </div>
+    );
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
@@ -76,10 +139,7 @@ export function ProductImageLightbox({
             src={main}
             alt={alt}
             fill
-            className={cn(
-              "object-cover transition-opacity duration-200 group-hover:opacity-95",
-              imgClassName ?? "",
-            )}
+            className={imageClasses}
             sizes={sizes}
             quality={quality}
             priority={priority}

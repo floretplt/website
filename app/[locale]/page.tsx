@@ -138,7 +138,6 @@ export default async function HomePage({
       <StyleGallery
         items={STYLE_GALLERY_ITEMS}
         title={t("galleryTitle")}
-        subtitle={t("gallerySubtitle")}
         cta={t("galleryCta")}
       />
 

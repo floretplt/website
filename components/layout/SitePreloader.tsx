@@ -1,6 +1,6 @@
 "use client";
 
-import { Logo } from "@/components/layout/Logo";
+import { PreloaderMark } from "@/components/layout/PreloaderMark";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -66,16 +66,7 @@ export function SitePreloader() {
         }
       }}
     >
-      <div className="flex flex-col items-center gap-8">
-        <Logo
-          height={52}
-          className="text-ink motion-reduce:animate-none animate-preloaderPulse"
-        />
-        <div
-          className="h-px w-24 origin-left bg-ink/20 motion-reduce:animate-none animate-preloaderBar"
-          aria-hidden
-        />
-      </div>
+      <PreloaderMark />
     </div>
   );
 }

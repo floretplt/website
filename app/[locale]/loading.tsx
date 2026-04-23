@@ -1,7 +1,9 @@
+import { PreloaderMark } from "@/components/layout/PreloaderMark";
+
 export default function Loading() {
   return (
-    <div className="min-h-[40vh] animate-pulse bg-bg">
-      <div className="h-96 bg-ink/5" />
+    <div className="flex min-h-[80vh] w-full flex-col items-center justify-center bg-bg">
+      <PreloaderMark />
     </div>
   );
 }

@@ -48,3 +48,22 @@ export function minDeliveryDateAfterOrderCutoff(
   if (nowM <= cutoffM) return today;
   return kyivTomorrowString(now);
 }
+
+/** Add calendar days to a YYYY-MM-DD string (Kyiv calendar day arithmetic via UTC noon). */
+export function addCalendarDaysYYYYMMDD(dateStr: string, deltaDays: number): string {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) {
+    return dateStr;
+  }
+  const utc = new Date(Date.UTC(y, mo - 1, d + deltaDays, 12, 0, 0));
+  return kyivCalendarDateString(utc);
+}
+
+/** Inclusive list from start through start+(count-1) days. */
+export function enumeratePickupDates(startYmd: string, count: number): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push(addCalendarDaysYYYYMMDD(startYmd, i));
+  }
+  return out;
+}

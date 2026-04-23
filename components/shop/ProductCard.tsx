@@ -59,28 +59,29 @@ export function ProductCard({
     const tiers = offeredSizes(product, locale);
 
     return (
-      <article className="flex h-full min-h-0 flex-col animate-fadeIn">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm ring-1 ring-ink/[0.04]">
-          {/* 4:5 — same proportion as typical Instagram feed posts (e.g. 1080×1350) */}
-          {img ? (
-            <ProductImageLightbox
-              images={[img]}
-              alt={name}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              aspectClassName="aspect-[4/5] w-full shrink-0"
-              quality={68}
-              loading={deferredImage ? "lazy" : undefined}
-              fetchPriority={deferredImage ? "low" : undefined}
-            />
-          ) : (
-            <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
-              Floret
-            </div>
-          )}
-          <div className="flex min-h-0 flex-1 flex-col border-t border-ink/10 px-3 pb-3 pt-3">
-            <Link href={href} className="group block text-left">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
-                <span className="line-clamp-2 min-h-[2.75rem] font-display text-lg leading-snug text-ink group-hover:text-rose">
+      <article className="group relative flex h-full min-h-0 flex-col animate-fadeIn">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm ring-1 ring-ink/[0.04]">
+          <div className="pointer-events-none relative z-0 flex min-h-0 flex-1 flex-col">
+            {/* 4:5 — same proportion as typical Instagram feed posts (e.g. 1080×1350) */}
+            {img ? (
+              <ProductImageLightbox
+                images={[img]}
+                alt={name}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                aspectClassName="aspect-[4/5] w-full shrink-0"
+                quality={68}
+                loading={deferredImage ? "lazy" : undefined}
+                fetchPriority={deferredImage ? "low" : undefined}
+                enableLightbox={false}
+              />
+            ) : (
+              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
+                Floret
+              </div>
+            )}
+            <div className="flex min-h-0 flex-1 flex-col border-t border-ink/10 px-3 pb-3 pt-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 text-left">
+                <span className="line-clamp-2 min-h-[2.75rem] font-display text-lg leading-snug text-ink transition-colors group-hover:text-rose">
                   {name}
                 </span>
                 <span className="shrink-0 pt-0.5 text-sm tabular-nums text-ink">
@@ -92,74 +93,92 @@ export function ProductCard({
                   {formatMoney(listPrice, cur, locale)}
                 </span>
               </div>
-            </Link>
-            {showSizeTiers ? (
-              <p className="mt-2 min-h-[2.25rem] text-left text-[10px] leading-snug text-muted">
-                {tiers.map((s, i) => {
-                  const pr = productPriceForSize(product, locale, s);
-                  if (pr == null) return null;
-                  return (
-                    <span key={s}>
-                      {i > 0 ? " · " : null}
-                      {tierLetter(s)}{" "}
-                      {formatMoney(pr, cur, locale)}
-                    </span>
-                  );
-                })}
-              </p>
-            ) : null}
-            {showOrderCta ? (
+              {showSizeTiers ? (
+                <p className="mt-2 min-h-[2.25rem] text-left text-[10px] leading-snug text-muted">
+                  {tiers.map((s, i) => {
+                    const pr = productPriceForSize(product, locale, s);
+                    if (pr == null) return null;
+                    return (
+                      <span key={s}>
+                        {i > 0 ? " · " : null}
+                        {tierLetter(s)}{" "}
+                        {formatMoney(pr, cur, locale)}
+                      </span>
+                    );
+                  })}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <Link
+            href={href}
+            className="absolute inset-0 z-10 rounded-2xl outline-none ring-ink focus-visible:ring-2"
+            aria-label={name}
+          />
+          {showOrderCta ? (
+            <div className="relative z-20 px-3 pb-3 pt-0">
               <Link
                 href={orderHref}
                 className="btn-square mt-3 block w-full shrink-0 text-center"
               >
                 {orderLabel}
               </Link>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
       </article>
     );
   }
 
   return (
-    <article className="group flex flex-col animate-fadeIn">
-      {img ? (
-        <ProductImageLightbox
-          images={[img]}
-          alt={name}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          aspectClassName="aspect-square w-full"
-          quality={68}
-          loading={deferredImage ? "lazy" : undefined}
-          fetchPriority={deferredImage ? "low" : undefined}
-        />
-      ) : (
-        <div className="flex aspect-square w-full items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
-          Floret
-        </div>
-      )}
-      <div className="mt-4 flex flex-col items-center text-center">
-        <Link href={href} className="font-display text-lg text-ink hover:text-rose">
-          {name}
-        </Link>
-        <div className="mt-1 flex flex-wrap justify-center gap-2">
-          <span className="text-[10px] uppercase tracking-[0.12em] text-muted">
-            {moodLabel}
+    <article className="group relative flex flex-col animate-fadeIn">
+      <div className="pointer-events-none relative z-0 flex flex-col">
+        {img ? (
+          <ProductImageLightbox
+            images={[img]}
+            alt={name}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            aspectClassName="aspect-square w-full"
+            quality={68}
+            loading={deferredImage ? "lazy" : undefined}
+            fetchPriority={deferredImage ? "low" : undefined}
+            enableLightbox={false}
+          />
+        ) : (
+          <div className="flex aspect-square w-full items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
+            Floret
+          </div>
+        )}
+        <div className="mt-4 flex flex-col items-center text-center">
+          <span className="font-display text-lg text-ink transition-colors group-hover:text-rose">
+            {name}
           </span>
+          <div className="mt-1 flex flex-wrap justify-center gap-2">
+            <span className="text-[10px] uppercase tracking-[0.12em] text-muted">
+              {moodLabel}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-muted">
+            {priceFromPrefix ? (
+              <>
+                <span className="text-muted">{priceFromPrefix}</span>{" "}
+              </>
+            ) : null}
+            {formatMoney(listPrice, cur, locale)}
+          </p>
         </div>
-        <p className="mt-2 text-sm text-muted">
-          {priceFromPrefix ? (
-            <>
-              <span className="text-muted">{priceFromPrefix}</span>{" "}
-            </>
-          ) : null}
-          {formatMoney(listPrice, cur, locale)}
-        </p>
-        <Link href={orderHref} className="btn-square mt-4 w-full max-w-[200px] text-center">
-          {orderLabel}
-        </Link>
       </div>
+      <Link
+        href={href}
+        className="absolute inset-0 z-10 outline-none ring-ink focus-visible:ring-2"
+        aria-label={name}
+      />
+      <Link
+        href={orderHref}
+        className="btn-square relative z-20 mt-4 w-full max-w-[200px] self-center text-center"
+      >
+        {orderLabel}
+      </Link>
     </article>
   );
 }

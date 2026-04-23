@@ -48,7 +48,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Wrong payment method" }, { status: 400 });
     }
 
-    const amount = Number(order.price_paid);
+    const bouquet = Number(order.price_paid);
+    const o = order as {
+      delivery_fee_uah?: number | null;
+      postcard_fee_uah?: number | null;
+    };
+    const feeRaw = o.delivery_fee_uah;
+    const fee =
+      order.currency === "UAH" && feeRaw != null && Number.isFinite(Number(feeRaw))
+        ? Number(feeRaw)
+        : 0;
+    const pcRaw = o.postcard_fee_uah;
+    const postcard =
+      order.currency === "UAH" && pcRaw != null && Number.isFinite(Number(pcRaw))
+        ? Number(pcRaw)
+        : 0;
+    const amount = bouquet + fee + postcard;
     const currency = order.currency === "EUR" ? "EUR" : "UAH";
 
     const dataObj = {

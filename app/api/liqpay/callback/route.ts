@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decodeLiqPayData, liqpayVerify } from "@/lib/liqpay";
+import { escapeHtml } from "@/lib/html-escape";
 import { sendTelegramMessage } from "@/lib/telegram";
 
 export async function POST(req: Request) {
@@ -50,7 +51,11 @@ export async function POST(req: Request) {
 
       if (!error && order) {
         await sendTelegramMessage(
-          `<b>Оплачено #${order.order_number}</b>\n${order.product_name}\n${order.customer_name} ${order.customer_phone}`,
+          [
+            `<b>Оплачено замовлення #${order.order_number}</b>`,
+            `<b>Товар:</b> ${escapeHtml(order.product_name)}`,
+            `<b>Клієнт:</b> ${escapeHtml(order.customer_name)} ${escapeHtml(order.customer_phone)}`,
+          ].join("\n"),
         );
       }
     }

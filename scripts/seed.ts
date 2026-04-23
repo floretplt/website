@@ -37,7 +37,7 @@ async function main() {
   if (!existing?.length) {
     await admin.from("site_settings").insert({
       phone: "066 278 9828",
-      email: "hello@floret.poltava",
+      email: null,
       pickup_address_uk:
         "вул. Соборності, 25 Б, м. Полтава, Полтавська область, 36010",
       pickup_address_en:
@@ -45,9 +45,9 @@ async function main() {
       announcement_uk: "Доставка по Полтаві — уточнюйте час у месенджері.",
       announcement_en: "Delivery in Poltava — message us for timing.",
       about_short_uk:
-        "Ми збираємо букети в Полтаві з увагою до деталей та сезону.",
+        "FLORET був створений у 2015 році в самому серці Полтави.\n\nЗ того часу ми створюємо букети для особливих моментів - з увагою до деталей і неповторним стилем.\n\nМи про красу, витонченість та небанальний підхід. Саме тому нам довіряють.\n\nХто і кому дарує наші букети?\n\nНаші букети обирають люди з вільним мисленням, витончені, відкриті до нового, життєрадісні та доброзичливі - ті, хто цінує все красиве й незвичне. Наші клієнти не бояться давати зворотний зв'язок і говорити про недоліки, вони демократичні та йдуть у ногу з часом.\nНам дуже пощастило, що у 99% випадків наші букети потрапляють до рук однодумців. Тому майстерня FLORET - це не лише про квіти, а й про дружбу.",
       about_short_en:
-        "We craft bouquets in Poltava with care for detail and season.",
+        "FLORET was founded in 2015 in the heart of Poltava.\n\nSince then, we’ve been making bouquets for special moments — with attention to detail and a distinctive style.\n\nWe’re about beauty, refinement, and an approach that isn’t ordinary. That’s why people trust us.\n\nWho gives — and receives — our bouquets?\n\nThey’re chosen by open-minded, refined people who love what’s beautiful and unusual. Our clients aren’t afraid to give feedback.\n\nWe’re lucky that in most cases our bouquets reach kindred spirits. So the FLORET workshop is about flowers — and about friendship.",
       same_day_cutoff_time: "18:10:00",
       same_day_delivery_end_time: "19:00:00",
       closed_weekdays: [],

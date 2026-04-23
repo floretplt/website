@@ -66,8 +66,11 @@ export default async function LocaleLayout({
     telephone: normalizeUaPhone(settings.phone),
     address: {
       "@type": "PostalAddress",
-      addressLocality:
-        locale === "uk" ? "Полтава" : "Poltava",
+      streetAddress:
+        locale === "uk"
+          ? settings.pickup_address_uk
+          : settings.pickup_address_en,
+      addressLocality: locale === "uk" ? "Полтава" : "Poltava",
       addressCountry: "UA",
     },
   };

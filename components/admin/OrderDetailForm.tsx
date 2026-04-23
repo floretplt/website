@@ -6,9 +6,9 @@ import {
   updateOrderPaid,
   updateOrderStatus,
 } from "@/lib/actions/admin";
-import type { OrderStatus } from "@/lib/constants";
-import { ORDER_STATUSES } from "@/lib/constants";
+import type { DeliveryType, OrderStatus } from "@/lib/constants";
 import { ORDER_STATUS_META } from "@/lib/admin/order-status";
+import { orderStatusesForDeliveryType } from "@/lib/order-status-policy";
 import {
   Badge,
   Button,
@@ -30,10 +30,12 @@ type Order = {
   admin_notes: string | null;
   product_name: string;
   price_paid: number;
+  delivery_fee_uah?: number | null;
+  postcard_fee_uah?: number | null;
   currency: string;
   customer_name: string;
   customer_phone: string;
-  delivery_type: string;
+  delivery_type: DeliveryType;
   delivery_date: string | null;
   delivery_time: string | null;
   delivery_address: string | null;
@@ -67,6 +69,11 @@ export function OrderDetailForm({ order }: { order: Order }) {
   const [loading, setLoading] = useState(false);
 
   const meta = ORDER_STATUS_META[status] ?? ORDER_STATUS_META.new;
+  const statusSelectOptions = orderStatusesForDeliveryType(
+    order.delivery_type,
+  ).includes(status)
+    ? orderStatusesForDeliveryType(order.delivery_type)
+    : [...orderStatusesForDeliveryType(order.delivery_type), status];
 
   const copyLiqPay = async () => {
     setLoading(true);
@@ -109,7 +116,7 @@ export function OrderDetailForm({ order }: { order: Order }) {
                 {paid ? (
                   <Badge tone="emerald">Оплачено</Badge>
                 ) : (
-                  <Badge tone="neutral">Очікує оплату</Badge>
+                  <Badge tone="neutral">Зв&apos;яжіться з клієнтом</Badge>
                 )}
               </span>
             }
@@ -117,12 +124,46 @@ export function OrderDetailForm({ order }: { order: Order }) {
           />
           <CardBody>
             <dl className="divide-y divide-zinc-100">
-              <Row label="Сума">
+              <Row label="Букет">
                 <span className="font-medium text-zinc-900">
                   {Math.round(Number(order.price_paid)).toLocaleString("uk-UA")}{" "}
                   {order.currency}
                 </span>
               </Row>
+              {order.delivery_fee_uah != null &&
+              Number(order.delivery_fee_uah) > 0 ? (
+                <Row label="Доставка (UAH)">
+                  <span className="font-medium text-zinc-900">
+                    {Math.round(Number(order.delivery_fee_uah)).toLocaleString("uk-UA")}{" "}
+                    UAH
+                  </span>
+                </Row>
+              ) : null}
+              {order.postcard_fee_uah != null &&
+              Number(order.postcard_fee_uah) > 0 ? (
+                <Row label="Листівка (UAH)">
+                  <span className="font-medium text-zinc-900">
+                    {Math.round(Number(order.postcard_fee_uah)).toLocaleString("uk-UA")}{" "}
+                    UAH
+                  </span>
+                </Row>
+              ) : null}
+              {order.currency === "UAH" &&
+              ((order.delivery_fee_uah != null &&
+                Number(order.delivery_fee_uah) > 0) ||
+                (order.postcard_fee_uah != null &&
+                  Number(order.postcard_fee_uah) > 0)) ? (
+                <Row label="Разом до сплати">
+                  <span className="font-semibold text-zinc-900">
+                    {Math.round(
+                      Number(order.price_paid) +
+                        Number(order.delivery_fee_uah ?? 0) +
+                        Number(order.postcard_fee_uah ?? 0),
+                    ).toLocaleString("uk-UA")}{" "}
+                    UAH
+                  </span>
+                </Row>
+              ) : null}
               {order.product_size ? (
                 <Row label="Розмір">{order.product_size}</Row>
               ) : null}
@@ -158,9 +199,16 @@ export function OrderDetailForm({ order }: { order: Order }) {
                     ) : null}
                   </div>
                 ) : (
-                  <span className="inline-block rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">
-                    Самовивіз
-                  </span>
+                  <div className="space-y-1">
+                    <span className="inline-block rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">
+                      Самовивіз
+                    </span>
+                    <div className="whitespace-pre-wrap text-zinc-700">
+                      {[order.delivery_date, order.delivery_time]
+                        .filter(Boolean)
+                        .join(" ")}
+                    </div>
+                  </div>
                 )}
               </Row>
               <Row label="Оплата">
@@ -226,7 +274,7 @@ export function OrderDetailForm({ order }: { order: Order }) {
                   await updateOrderStatus(order.id, v);
                 }}
               >
-                {ORDER_STATUSES.map((s) => (
+                {statusSelectOptions.map((s) => (
                   <option key={s} value={s}>
                     {ORDER_STATUS_META[s].label}
                   </option>

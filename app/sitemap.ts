@@ -10,6 +10,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/contact",
     "/order",
     "/wedding",
+    "/delivery",
+    "/legal",
+    "/privacy",
     "/catalog/bouquets",
     "/catalog/box-bouquets",
   ];

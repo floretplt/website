@@ -4,7 +4,12 @@ import { getProductBySlug } from "@/lib/data/products";
 import type { ProductCategory, Size } from "@/lib/constants";
 import { PRODUCT_CATEGORIES, SIZES } from "@/lib/constants";
 import { getSiteSettings } from "@/lib/data/settings";
-import { minDeliveryDateAfterOrderCutoff } from "@/lib/delivery-kyiv";
+import { getEffectiveNamedZones } from "@/lib/default-delivery-zones";
+import { parseDeliveryPricingConfig } from "@/lib/delivery-pricing";
+import {
+  kyivCalendarDateString,
+  minDeliveryDateAfterOrderCutoff,
+} from "@/lib/delivery-kyiv";
 
 function parseProductSize(
   v: string | undefined,
@@ -40,8 +45,13 @@ export default async function OrderPage({
   }
 
   const settings = await getSiteSettings();
+  const deliveryPricing = parseDeliveryPricingConfig(
+    settings.delivery_pricing ?? {},
+  );
+  const namedZones = getEffectiveNamedZones(deliveryPricing);
   const cutoffStr = settings.same_day_cutoff_time.slice(0, 5);
   const minDeliveryDate = minDeliveryDateAfterOrderCutoff(cutoffStr);
+  const minPickupDate = kyivCalendarDateString();
   const deliveryEndStr = settings.same_day_delivery_end_time.slice(0, 5);
 
   return (
@@ -50,9 +60,12 @@ export default async function OrderPage({
       initialProduct={product}
       defaultProductSize={defaultProductSize}
       minDeliveryDate={minDeliveryDate}
+      minPickupDate={minPickupDate}
       sameDayOrderCutoff={cutoffStr}
       sameDayDeliveryEnd={deliveryEndStr}
-      deliveryBands={settings.delivery_pricing?.bands ?? []}
+      deliveryBands={deliveryPricing.bands ?? []}
+      deliveryDistricts={deliveryPricing.districts ?? []}
+      namedZones={namedZones}
     />
   );
 }

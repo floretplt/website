@@ -1,11 +1,16 @@
 "use client";
 
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { Controller, useForm } from "react-hook-form";
-import { useMemo, useState } from "react";
-import type { DeliveryPricingBand, ProductRow } from "@/lib/types/database";
+import { Controller, useForm, type Resolver } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import type {
+  DeliveryDistrictRow,
+  DeliveryNamedZoneRow,
+  DeliveryPricingBand,
+  ProductRow,
+} from "@/lib/types/database";
 import type { Locale } from "@/i18n/routing";
 import type { Size } from "@/lib/constants";
 import {
@@ -24,6 +29,15 @@ import { ProductImageLightbox } from "@/components/shop/ProductImageLightbox";
 import { formatMoney } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/shop/AddressAutocomplete";
 import { normalizeUaPhone } from "@/lib/phone";
+import { POSTCARD_FEE_UAH } from "@/lib/constants";
+import { addCalendarDaysYYYYMMDD } from "@/lib/delivery-kyiv";
+import {
+  bandDeliveryFeeUah,
+  districtDeliveryFeeUah,
+  namedZoneDeliveryFeeUah,
+} from "@/lib/delivery-pricing";
+import { pickupTimeSlotValues } from "@/lib/pickup-slots";
+import { Check } from "lucide-react";
 
 type Props = {
   locale: Locale;
@@ -32,10 +46,16 @@ type Props = {
   defaultProductSize?: Size;
   /** YYYY-MM-DD — earliest delivery date (Kyiv, same-day order cutoff). */
   minDeliveryDate: string;
+  /** YYYY-MM-DD — first day offered for pickup (usually today in Kyiv). */
+  minPickupDate: string;
   sameDayOrderCutoff?: string;
   sameDayDeliveryEnd?: string;
   /** Distance tiers from site settings — shown when delivery is selected. */
   deliveryBands?: DeliveryPricingBand[];
+  /** Optional district × time matrix (UAH) from site settings. */
+  deliveryDistricts?: DeliveryDistrictRow[];
+  /** Named zones (admin or built-in Poltava defaults). */
+  namedZones: DeliveryNamedZoneRow[];
 };
 
 const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -46,6 +66,8 @@ const VALIDATION_CODES = [
   "privacyRequired",
   "deliveryDateRequired",
   "deliveryTimeRequired",
+  "pickupDateRequired",
+  "pickupTimeRequired",
   "deliveryAddressRequired",
   "recipientPhoneRequired",
   "recipientPhoneInvalid",
@@ -71,9 +93,12 @@ export function OrderForm({
   initialProduct,
   defaultProductSize,
   minDeliveryDate,
+  minPickupDate,
   sameDayOrderCutoff,
   sameDayDeliveryEnd,
   deliveryBands = [],
+  deliveryDistricts = [],
+  namedZones,
 }: Props) {
   const t = useTranslations("order");
   const ts = useTranslations("sizes");
@@ -82,7 +107,12 @@ export function OrderForm({
   const [loading, setLoading] = useState(false);
 
   const currency = productCurrency(locale);
-
+  const pickupSlots = useMemo(() => pickupTimeSlotValues(), []);
+  const hasDistrictMatrix = deliveryDistricts.length > 0;
+  const maxPickupDate = useMemo(
+    () => addCalendarDaysYYYYMMDD(minPickupDate, 6),
+    [minPickupDate],
+  );
   const { resolvedDefaultSize, catalogMinPrice, defaultPriceForSize, defaultName } =
     useMemo(() => {
       if (!initialProduct) {
@@ -126,8 +156,8 @@ export function OrderForm({
         customer_name: "",
         customer_phone: "",
         delivery_type: "pickup" as const,
-        delivery_date: null,
-        delivery_time: null,
+        delivery_date: minPickupDate,
+        delivery_time: pickupSlots[0] ?? null,
         delivery_address: null,
         delivery_floor: null,
         delivery_apartment: null,
@@ -136,6 +166,10 @@ export function OrderForm({
         notes: null,
         payment_method: "reserve" as const,
         privacy_accepted: false,
+        coordinate_address_with_recipient: false,
+        delivery_district_id: null,
+        delivery_band_max_km: null,
+        delivery_zone_id: null,
       }) as Partial<OrderCreateInput>,
     [
       initialProduct,
@@ -144,6 +178,8 @@ export function OrderForm({
       catalogMinPrice,
       currency,
       resolvedDefaultSize,
+      minPickupDate,
+      pickupSlots,
     ],
   );
 
@@ -155,7 +191,7 @@ export function OrderForm({
     setValue,
     formState: { errors },
   } = useForm<OrderCreateInput>({
-    resolver: zodResolver(orderCreateSchema),
+    resolver: zodResolver(orderCreateSchema) as Resolver<OrderCreateInput>,
     defaultValues: defaultValues as OrderCreateInput,
     mode: "onBlur",
   });
@@ -163,6 +199,73 @@ export function OrderForm({
   const deliveryType = watch("delivery_type");
   const paymentMethod = watch("payment_method");
   const watchedSize = watch("product_size");
+  const coordinate = watch("coordinate_address_with_recipient");
+  const deliveryDistrictId = watch("delivery_district_id");
+  const watchDeliveryTime = watch("delivery_time");
+  const pricePaidWatch = watch("price_paid");
+  const giftMessageWatch = watch("gift_message");
+  const deliveryBandMaxKm = watch("delivery_band_max_km");
+  const deliveryZoneId = watch("delivery_zone_id");
+
+  useEffect(() => {
+    if (coordinate) {
+      setValue("delivery_address", "");
+      setValue("delivery_floor", "");
+      setValue("delivery_apartment", "");
+      setValue("delivery_district_id", null);
+      setValue("delivery_band_max_km", null);
+      setValue("delivery_zone_id", null);
+    }
+  }, [coordinate, setValue]);
+
+  const deliveryFeeUah = useMemo(() => {
+    if (deliveryType !== "delivery" || coordinate || currency !== "UAH") {
+      return null;
+    }
+    if (namedZones.length > 0) {
+      return namedZoneDeliveryFeeUah(namedZones, deliveryZoneId);
+    }
+    if (hasDistrictMatrix) {
+      return districtDeliveryFeeUah(
+        deliveryDistricts,
+        deliveryDistrictId,
+        watchDeliveryTime,
+      );
+    }
+    if (deliveryBands.length > 0) {
+      return bandDeliveryFeeUah(deliveryBands, deliveryBandMaxKm);
+    }
+    return null;
+  }, [
+    coordinate,
+    currency,
+    deliveryBandMaxKm,
+    deliveryBands,
+    deliveryDistrictId,
+    deliveryDistricts,
+    deliveryType,
+    deliveryZoneId,
+    hasDistrictMatrix,
+    namedZones,
+    watchDeliveryTime,
+  ]);
+
+  const bouquetAmount = Number(pricePaidWatch);
+  const postcardFeeUah =
+    currency === "UAH" && (giftMessageWatch?.trim() ?? "") !== ""
+      ? POSTCARD_FEE_UAH
+      : 0;
+  const needsDeliveryQuote =
+    deliveryType === "delivery" &&
+    currency === "UAH" &&
+    !coordinate &&
+    (namedZones.length > 0 || hasDistrictMatrix || deliveryBands.length > 0);
+  const deliveryFeeKnown = !needsDeliveryQuote || coordinate || deliveryFeeUah != null;
+  const deliveryChargeUah =
+    deliveryType !== "delivery" || currency !== "UAH" || coordinate
+      ? 0
+      : (deliveryFeeUah ?? 0);
+  const totalToCharge = bouquetAmount + deliveryChargeUah + postcardFeeUah;
 
   const tierFloor = useMemo(() => {
     if (!initialProduct) return 0.01;
@@ -173,8 +276,52 @@ export function OrderForm({
 
   const sizeOptions = initialProduct ? offeredSizes(initialProduct, locale) : [];
 
+  const showBandHintTable =
+    deliveryType === "delivery" &&
+    deliveryBands.length > 0 &&
+    (deliveryDistricts.length > 0 || coordinate);
+
+  const showBandTierCards =
+    deliveryType === "delivery" &&
+    currency === "UAH" &&
+    deliveryBands.length > 0 &&
+    namedZones.length === 0 &&
+    !hasDistrictMatrix &&
+    !coordinate;
+
   const onSubmit = async (values: OrderCreateInput) => {
     setFormError(null);
+    if (
+      values.delivery_type === "delivery" &&
+      values.currency === "UAH" &&
+      !values.coordinate_address_with_recipient &&
+      namedZones.length > 0 &&
+      !values.delivery_zone_id?.trim()
+    ) {
+      setFormError(t("deliveryNamedZoneRequired"));
+      return;
+    }
+    if (
+      values.delivery_type === "delivery" &&
+      values.currency === "UAH" &&
+      !values.coordinate_address_with_recipient &&
+      namedZones.length === 0 &&
+      deliveryBands.length > 0 &&
+      values.delivery_band_max_km == null
+    ) {
+      setFormError(t("deliveryTierRequired"));
+      return;
+    }
+    if (
+      values.delivery_type === "delivery" &&
+      values.currency === "UAH" &&
+      !values.coordinate_address_with_recipient &&
+      hasDistrictMatrix &&
+      !values.delivery_district_id?.trim()
+    ) {
+      setFormError(t("deliveryDistrictRequired"));
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/orders", {
@@ -204,6 +351,20 @@ export function OrderForm({
           setFormError(t("validation.priceTooLow"));
         } else if (code === "SAME_DAY_ORDER_CLOSED") {
           setFormError(t("sameDayOrderClosed"));
+        } else if (code === "PICKUP_DATE_INVALID") {
+          setFormError(t("pickupDateInvalid"));
+        } else if (code === "DELIVERY_DISTRICT_REQUIRED") {
+          setFormError(t("deliveryDistrictRequired"));
+        } else if (code === "INVALID_DELIVERY_DISTRICT") {
+          setFormError(t("invalidDeliveryDistrict"));
+        } else if (code === "DELIVERY_TIER_REQUIRED") {
+          setFormError(t("deliveryTierRequired"));
+        } else if (code === "INVALID_DELIVERY_TIER") {
+          setFormError(t("invalidDeliveryTier"));
+        } else if (code === "DELIVERY_ZONE_REQUIRED") {
+          setFormError(t("deliveryNamedZoneRequired"));
+        } else if (code === "INVALID_DELIVERY_ZONE") {
+          setFormError(t("invalidDeliveryNamedZone"));
         } else if (code === "SERVER_CONFIG") {
           setFormError(t("errorServerConfig"));
         } else if (code === "DATABASE_ERROR") {
@@ -421,28 +582,109 @@ export function OrderForm({
             <input
               type="radio"
               value="pickup"
-              {...register("delivery_type")}
-              onChange={() => {
-                setValue("delivery_type", "pickup");
-                setValue("delivery_date", null);
-                setValue("delivery_time", null);
-                setValue("delivery_address", null);
-                setValue("delivery_floor", null);
-                setValue("delivery_apartment", null);
-                setValue("recipient_phone", null);
-              }}
+              {...register("delivery_type", {
+                onChange: () => {
+                  setValue("delivery_date", minPickupDate, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  setValue("delivery_time", pickupSlots[0] ?? null, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  setValue("delivery_address", null);
+                  setValue("delivery_floor", null);
+                  setValue("delivery_apartment", null);
+                  setValue("recipient_phone", null);
+                  setValue("coordinate_address_with_recipient", false);
+                  setValue("delivery_district_id", null);
+                  setValue("delivery_band_max_km", null);
+                  setValue("delivery_zone_id", null);
+                },
+              })}
             />
             {t("pickup")}
           </label>
           <label className="flex items-center gap-2">
-            <input type="radio" value="delivery" {...register("delivery_type")} />
+            <input
+              type="radio"
+              value="delivery"
+              {...register("delivery_type", {
+                onChange: () => {
+                  setValue("delivery_date", minDeliveryDate, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  setValue("delivery_time", null, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  setValue("delivery_address", null);
+                  setValue("delivery_floor", null);
+                  setValue("delivery_apartment", null);
+                  setValue("recipient_phone", null);
+                  setValue("coordinate_address_with_recipient", false);
+                  setValue("delivery_district_id", null);
+                  setValue("delivery_band_max_km", null);
+                  setValue("delivery_zone_id", null);
+                },
+              })}
+            />
             {t("deliveryOption")}
           </label>
         </div>
 
+        {deliveryType === "pickup" ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            <p className="text-sm leading-relaxed text-muted md:col-span-2">
+              {t("pickupAddressHint")}
+            </p>
+            <div className="text-sm text-muted">
+              <label className="block">
+                <span className="mb-1 block uppercase tracking-wider">
+                  {t("pickupDate")}
+                  {req}
+                </span>
+                <input
+                  type="date"
+                  min={minPickupDate}
+                  max={maxPickupDate}
+                  lang={locale === "uk" ? "uk" : "en"}
+                  className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                  {...register("delivery_date")}
+                />
+              </label>
+              <p className="mt-1 text-[11px] text-muted">{t("pickupDateRangeHint")}</p>
+              <FieldError messageKey={errors.delivery_date?.message} />
+            </div>
+            <div className="text-sm text-muted">
+              <label className="block">
+                <span className="mb-1 block uppercase tracking-wider">
+                  {t("pickupTime")}
+                  {req}
+                </span>
+                <select
+                  className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                  {...register("delivery_time")}
+                >
+                  {pickupSlots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                {t("pickupTimeHint")}
+              </p>
+              <FieldError messageKey={errors.delivery_time?.message} />
+            </div>
+          </div>
+        ) : null}
+
         {deliveryType === "delivery" ? (
           <div className="grid gap-4 md:grid-cols-2">
-            {deliveryBands.length > 0 ? (
+            {showBandHintTable ? (
               <div className="rounded-lg border border-ink/15 bg-ink/[0.02] p-4 md:col-span-2">
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
                   {t("deliveryPricingTitle")}
@@ -468,6 +710,182 @@ export function OrderForm({
                   {t("deliveryPricingNote")}
                 </p>
               </div>
+            ) : null}
+            {showBandTierCards ? (
+              <Controller
+                name="delivery_band_max_km"
+                control={control}
+                render={({ field }) => (
+                  <div className="md:col-span-2 space-y-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                      {t("deliveryTierTitle")}
+                      {req}
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {deliveryBands.map((b) => {
+                        const selected = field.value === b.max_km;
+                        return (
+                          <button
+                            key={`${b.max_km}-${b.price_uah}`}
+                            type="button"
+                            onClick={() =>
+                              field.onChange(
+                                selected ? null : b.max_km,
+                              )
+                            }
+                            className={`flex flex-col gap-1 border px-4 py-3 text-left text-sm transition-colors ${
+                              selected
+                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                                : "border-ink/20 hover:border-ink/50"
+                            }`}
+                          >
+                            <span className="font-medium text-ink">
+                              {t("deliveryPricingKm", { km: b.max_km })}
+                            </span>
+                            <span className="tabular-nums text-muted">
+                              {formatMoney(b.price_uah, currency, locale)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-muted">
+                      {t("deliveryTierHint")}
+                    </p>
+                  </div>
+                )}
+              />
+            ) : null}
+            {currency === "UAH" && namedZones.length > 0 && !coordinate ? (
+              <Controller
+                name="delivery_zone_id"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-sm text-muted md:col-span-2 space-y-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                      {t("deliveryNamedZoneTitle")}
+                      {req}
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-1">
+                      {namedZones.map((z) => {
+                        const selected = field.value === z.id;
+                        const desc =
+                          locale === "uk" ? z.description_uk : z.description_en;
+                        return (
+                          <button
+                            key={z.id}
+                            type="button"
+                            onClick={() => field.onChange(z.id)}
+                            className={`relative flex w-full flex-col gap-1 border-2 px-4 py-3.5 pr-11 text-left transition-colors ${
+                              selected
+                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                                : "border-ink/20 hover:border-ink/45"
+                            }`}
+                          >
+                            {selected ? (
+                              <Check
+                                className="absolute right-3 top-3 h-5 w-5 shrink-0 text-ink"
+                                strokeWidth={2.25}
+                                aria-hidden
+                              />
+                            ) : null}
+                            <span className="pr-2 font-medium leading-snug text-ink">
+                              {locale === "uk" ? z.label_uk : z.label_en}
+                            </span>
+                            {desc ? (
+                              <span className="pr-2 text-[11px] leading-relaxed text-muted">
+                                {desc}
+                              </span>
+                            ) : null}
+                            <span className="tabular-nums text-muted">
+                              {formatMoney(z.price_uah, "UAH", locale)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-muted">
+                      {t("deliveryZoneCardsHint")}
+                    </p>
+                  </div>
+                )}
+              />
+            ) : null}
+            {currency === "UAH" && hasDistrictMatrix && !coordinate ? (
+              <Controller
+                name="delivery_district_id"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-sm text-muted md:col-span-2 space-y-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                      {t("deliveryDistrict")}
+                      {req}
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-1">
+                      {deliveryDistricts.map((d) => {
+                        const selected = field.value === d.id;
+                        const flat =
+                          d.morning_uah === d.afternoon_uah &&
+                          d.afternoon_uah === d.evening_uah;
+                        const priceLabel = flat
+                          ? formatMoney(d.morning_uah, "UAH", locale)
+                          : (() => {
+                              const lo = Math.min(
+                                d.morning_uah,
+                                d.afternoon_uah,
+                                d.evening_uah,
+                              );
+                              const hi = Math.max(
+                                d.morning_uah,
+                                d.afternoon_uah,
+                                d.evening_uah,
+                              );
+                              if (lo === hi) {
+                                return formatMoney(lo, "UAH", locale);
+                              }
+                              const slot = districtDeliveryFeeUah(
+                                [d],
+                                d.id,
+                                watchDeliveryTime,
+                              );
+                              return slot != null
+                                ? formatMoney(slot, "UAH", locale)
+                                : `${formatMoney(lo, "UAH", locale)}–${formatMoney(hi, "UAH", locale)}`;
+                            })();
+                        return (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => field.onChange(d.id)}
+                            className={`relative flex w-full flex-col gap-1 border-2 px-4 py-3.5 pr-11 text-left transition-colors ${
+                              selected
+                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                                : "border-ink/20 hover:border-ink/45"
+                            }`}
+                          >
+                            {selected ? (
+                              <Check
+                                className="absolute right-3 top-3 h-5 w-5 shrink-0 text-ink"
+                                strokeWidth={2.25}
+                                aria-hidden
+                              />
+                            ) : null}
+                            <span className="pr-2 font-medium leading-snug text-ink">
+                              {locale === "uk" ? d.label_uk : d.label_en}
+                            </span>
+                            <span className="tabular-nums text-muted">
+                              {priceLabel}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-muted">
+                      {t("deliveryZoneCardsHint")}
+                    </p>
+                  </div>
+                )}
+              />
             ) : null}
             <div className="text-sm text-muted">
               <label className="block">
@@ -510,12 +928,30 @@ export function OrderForm({
                   <option value="evening">{t("timeEvening")}</option>
                 </select>
               </label>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                {t("deliveryTimeApproxHint")}
+              </p>
               <FieldError messageKey={errors.delivery_time?.message} />
             </div>
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-muted md:col-span-2">
+              <input
+                type="checkbox"
+                className="mt-1"
+                {...register("coordinate_address_with_recipient")}
+              />
+              <span>
+                <span className="block font-medium text-ink">
+                  {t("coordinateAddressLabel")}
+                </span>
+                <span className="mt-1 block text-[11px] leading-relaxed">
+                  {t("coordinateAddressHelp")}
+                </span>
+              </span>
+            </label>
             <div className="md:col-span-2 text-sm text-muted">
               <span className="mb-1 block uppercase tracking-wider">
                 {t("address")}
-                {req}
+                {!coordinate ? req : opt}
               </span>
               <Controller
                 name="delivery_address"
@@ -534,6 +970,7 @@ export function OrderForm({
                         : undefined
                     }
                     fallbackHint={!mapsKey ? t("addressManualFallback") : undefined}
+                    disabled={!!coordinate}
                   />
                 )}
               />
@@ -545,7 +982,8 @@ export function OrderForm({
                 {opt}
               </span>
               <input
-                className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                className="w-full border border-ink/20 bg-transparent px-3 py-2 disabled:opacity-40"
+                disabled={!!coordinate}
                 {...register("delivery_floor")}
               />
             </label>
@@ -555,7 +993,8 @@ export function OrderForm({
                 {opt}
               </span>
               <input
-                className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                className="w-full border border-ink/20 bg-transparent px-3 py-2 disabled:opacity-40"
+                disabled={!!coordinate}
                 {...register("delivery_apartment")}
               />
             </label>
@@ -615,6 +1054,73 @@ export function OrderForm({
         <FieldError messageKey={errors.customer_phone?.message} />
       </section>
 
+      <section className="space-y-3 rounded-lg border-2 border-ink/25 bg-bg p-5 md:p-6">
+        <h2 className="eyebrow">{t("orderTotalTitle")}</h2>
+        <div className="flex justify-between gap-4 text-sm">
+          <span className="text-muted">{t("bouquetLine")}</span>
+          <span className="shrink-0 tabular-nums text-ink">
+            {formatMoney(
+              Number.isFinite(bouquetAmount) ? bouquetAmount : 0,
+              currency,
+              locale,
+            )}
+          </span>
+        </div>
+        {deliveryType === "delivery" && currency === "UAH" ? (
+          <div className="flex justify-between gap-4 text-sm">
+            <span className="text-muted">{t("deliveryLine")}</span>
+            <span className="shrink-0 text-right tabular-nums text-ink">
+              {coordinate ? (
+                <span className="text-muted">{t("deliveryFeeTbd")}</span>
+              ) : deliveryFeeUah != null ? (
+                formatMoney(deliveryFeeUah, "UAH", locale)
+              ) : (
+                <span className="text-muted">{t("deliveryFeeFromQuote")}</span>
+              )}
+            </span>
+          </div>
+        ) : null}
+        {currency === "UAH" && postcardFeeUah > 0 ? (
+          <div className="flex justify-between gap-4 text-sm">
+            <span className="text-muted">{t("postcardLine")}</span>
+            <span className="shrink-0 tabular-nums text-ink">
+              {formatMoney(postcardFeeUah, "UAH", locale)}
+            </span>
+          </div>
+        ) : null}
+        {deliveryType === "pickup" ? (
+          <p className="text-[11px] leading-relaxed text-muted">{t("pickupNoFee")}</p>
+        ) : null}
+        <div className="flex justify-between gap-4 border-t border-ink/20 pt-4 font-display text-lg font-medium tracking-tight">
+          <span>
+            {paymentMethod === "prepay" ? t("totalToPayNow") : t("totalEstimated")}
+          </span>
+          <span className="shrink-0 tabular-nums">
+            {deliveryFeeKnown ? (
+              formatMoney(
+                Number.isFinite(totalToCharge) ? totalToCharge : 0,
+                currency,
+                locale,
+              )
+            ) : (
+              <span className="text-muted">{t("totalPendingQuote")}</span>
+            )}
+          </span>
+        </div>
+        {!deliveryFeeKnown ? (
+          <p className="text-[11px] leading-relaxed text-muted">
+            {t("totalPendingQuoteHint")}
+          </p>
+        ) : null}
+        {paymentMethod === "prepay" &&
+        deliveryType === "delivery" &&
+        coordinate ? (
+          <p className="text-[11px] leading-relaxed text-muted">
+            {t("prepayBouquetOnlyNote")}
+          </p>
+        ) : null}
+      </section>
+
       <section className="space-y-4 border-b border-ink/10 pb-8">
         <h2 className="eyebrow">{t("payment")}</h2>
         <div className="flex flex-col gap-4 text-sm">
@@ -637,7 +1143,10 @@ export function OrderForm({
             className="mt-1"
           />
           <span>
-            {t("privacy")}
+            {t("privacy")}{" "}
+            <Link href="/privacy" className="text-ink underline-offset-2 hover:underline">
+              {t("privacyPolicyLink")}
+            </Link>
             <span className="whitespace-nowrap text-ink">{req}</span>
           </span>
         </label>

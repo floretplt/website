@@ -5,7 +5,7 @@ import { InstagramIcon } from "@/components/icons/Instagram";
 import type { SiteSettingsRow } from "@/lib/types/database";
 import type { Locale } from "@/i18n/routing";
 import { formatWorkingHours } from "@/lib/format";
-import { normalizeUaPhone } from "@/lib/phone";
+import { voiceDialHref } from "@/lib/phone";
 
 type Props = {
   settings: SiteSettingsRow;
@@ -40,7 +40,7 @@ export async function Footer({ settings, locale }: Props) {
         <div className="text-sm leading-relaxed text-bg/85">
           <p className="eyebrow mb-2 text-bg/60">{locale === "uk" ? "Контакти" : "Contact"}</p>
           <p>
-            <a href={`tel:${normalizeUaPhone(settings.phone)}`} className="hover:text-bg">
+            <a href={voiceDialHref(settings.phone)} className="hover:text-bg">
               {settings.phone}
             </a>
           </p>
@@ -65,7 +65,24 @@ export async function Footer({ settings, locale }: Props) {
           </div>
         </div>
       </div>
-      <div className="border-t border-bg/10 py-6 text-center text-[11px] uppercase tracking-[0.2em] text-bg/50">
+      <div className="border-t border-bg/10 px-6 py-6 text-center text-[11px] uppercase tracking-[0.2em] text-bg/50">
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <Link href="/legal" className="text-bg/70 underline-offset-4 hover:text-bg hover:underline">
+            {t("legal")}
+          </Link>
+          <span className="text-bg/30" aria-hidden>
+            ·
+          </span>
+          <Link href="/delivery" className="text-bg/70 underline-offset-4 hover:text-bg hover:underline">
+            {t("delivery")}
+          </Link>
+          <span className="text-bg/30" aria-hidden>
+            ·
+          </span>
+          <Link href="/privacy" className="text-bg/70 underline-offset-4 hover:text-bg hover:underline">
+            {t("privacy")}
+          </Link>
+        </div>
         © {new Date().getFullYear()} Floret Poltava · {t("rights")}
       </div>
     </footer>

@@ -16,6 +16,8 @@ const V = {
   privacyRequired: "privacyRequired",
   deliveryDate: "deliveryDateRequired",
   deliveryTime: "deliveryTimeRequired",
+  pickupDate: "pickupDateRequired",
+  pickupTime: "pickupTimeRequired",
   deliveryAddress: "deliveryAddressRequired",
   recipientPhone: "recipientPhoneRequired",
   recipientPhoneInvalid: "recipientPhoneInvalid",
@@ -52,12 +54,46 @@ export const orderCreateSchema = z
     /** Bouquet size chosen by the client (catalog styles are illustrative). */
     product_size: z.enum(SIZES),
     payment_method: z.enum(PAYMENT_METHODS),
+    /** When true, street address is unknown; we confirm with the recipient. */
+    coordinate_address_with_recipient: z
+      .boolean()
+      .optional()
+      .transform((v): boolean => v ?? false),
+    /** District id from site settings `delivery_pricing.districts` (UAH matrix). */
+    delivery_district_id: z.string().optional().nullable(),
+    /** Named zone id from `delivery_pricing.zones` or built-in Poltava defaults. */
+    delivery_zone_id: z.string().optional().nullable(),
+    /**
+     * When storefront uses distance tiers (bands) instead of districts: `max_km` of the chosen row.
+     */
+    delivery_band_max_km: z
+      .union([z.number().positive(), z.null()])
+      .optional()
+      .transform((v) => v ?? null),
     privacy_accepted: z
       .boolean()
       .refine((v) => v === true, { message: V.privacyRequired }),
   })
   .superRefine((data, ctx) => {
+    if (data.delivery_type === "pickup") {
+      if (!data.delivery_date?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["delivery_date"],
+          message: V.pickupDate,
+        });
+      }
+      if (!data.delivery_time?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["delivery_time"],
+          message: V.pickupTime,
+        });
+      }
+    }
+
     if (data.delivery_type === "delivery") {
+      const coordinate = data.coordinate_address_with_recipient === true;
       if (!data.delivery_date) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -72,7 +108,7 @@ export const orderCreateSchema = z
           message: V.deliveryTime,
         });
       }
-      if (!data.delivery_address?.trim()) {
+      if (!coordinate && !data.delivery_address?.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["delivery_address"],
@@ -175,4 +211,5 @@ export const productFormSchema = z
     }
   });
 
-export type OrderCreateInput = z.infer<typeof orderCreateSchema>;
+/** Parsed order payload (after defaults / transforms). */
+export type OrderCreateInput = z.output<typeof orderCreateSchema>;
