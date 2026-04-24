@@ -50,6 +50,8 @@ export type OrderRow = {
   recipient_phone: string | null;
   gift_message: string | null;
   notes: string | null;
+  /** Customer asked not to call; use messengers instead. */
+  prefer_messenger_contact: boolean;
   payment_method: PaymentMethod;
   status: OrderStatus;
   liqpay_order_id: string | null;

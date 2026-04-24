@@ -1,15 +1,18 @@
 "use client";
 
+import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
-  locale: import("@/i18n/routing").Locale;
   initialOrderNumber?: number;
+  /** After reserve checkout: show thank-you before lookup form. */
+  initialThanks?: boolean;
 };
 
-export function OrderLookup({ initialOrderNumber }: Props) {
+export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props) {
   const t = useTranslations("orderStatus");
+  const tOrder = useTranslations("order");
   const [orderNumber, setOrderNumber] = useState(
     initialOrderNumber ? String(initialOrderNumber) : "",
   );
@@ -17,6 +20,9 @@ export function OrderLookup({ initialOrderNumber }: Props) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  const showThanks =
+    initialThanks === true && initialOrderNumber != null && !result;
 
   const lookup = async () => {
     setLoading(true);
@@ -47,8 +53,35 @@ export function OrderLookup({ initialOrderNumber }: Props) {
   return (
     <div className="mx-auto max-w-lg px-6 py-16">
       <h1 className="h-section">{t("title")}</h1>
+
+      {showThanks ? (
+        <div className="mt-10 space-y-4 rounded-lg border border-ink/15 bg-bg/80 p-6 md:p-8">
+          <p className="font-display text-2xl tracking-tight text-ink">
+            {tOrder("thanksReserveTitle")}
+          </p>
+          <p className="text-base leading-relaxed text-ink">
+            {tOrder("thanksReserveLead", {
+              orderNumber: String(initialOrderNumber),
+            })}
+          </p>
+          <p className="text-sm leading-relaxed text-muted">
+            {tOrder("thanksReserveSub")}
+          </p>
+          <Link
+            href={`/order/${initialOrderNumber}`}
+            className="mt-2 inline-block text-sm font-medium text-ink underline-offset-4 hover:underline"
+          >
+            {tOrder("thanksDismissBanner")}
+          </Link>
+        </div>
+      ) : null}
+
       {!result ? (
-        <div className="mt-10 space-y-6">
+        <div
+          className={
+            showThanks ? "mt-10 space-y-6 border-t border-ink/10 pt-10" : "mt-10 space-y-6"
+          }
+        >
           <label className="block text-sm text-muted">
             <span className="mb-1 block uppercase tracking-wider">{t("orderNumber")}</span>
             <input

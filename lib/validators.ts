@@ -54,6 +54,11 @@ export const orderCreateSchema = z
     /** Bouquet size chosen by the client (catalog styles are illustrative). */
     product_size: z.enum(SIZES),
     payment_method: z.enum(PAYMENT_METHODS),
+    /** Prefer Viber/Telegram/WhatsApp instead of a phone call. */
+    prefer_messenger_contact: z
+      .boolean()
+      .optional()
+      .transform((v): boolean => v ?? false),
     /** When true, street address is unknown; we confirm with the recipient. */
     coordinate_address_with_recipient: z
       .boolean()

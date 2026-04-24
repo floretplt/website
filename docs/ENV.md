@@ -25,6 +25,7 @@ Variables prefixed with `NEXT_PUBLIC_` are embedded in the browser bundle. Treat
 | `LIQPAY_PRIVATE_KEY` | For online pay | LiqPay private key. Used to sign checkout payloads and verify `/api/liqpay/callback`. Never expose to the client. |
 | `TELEGRAM_BOT_TOKEN` | Optional | Telegram Bot API token from [@BotFather](https://t.me/BotFather). If missing, order notifications and inquiry webhooks are skipped (warning logged). |
 | `TELEGRAM_CHAT_ID` | Optional | Target chat ID for bot messages (same bot must be able to post there). Used for order notifications, `POST /api/decor-inquiry`, and `POST /api/wedding-inquiry`. |
+| `TELEGRAM_WEBHOOK_SECRET` | **Yes in production** (for inline buttons) | Random secret; must match the `secret_token` sent when registering the webhook (`scripts/set-telegram-webhook.sh`). The app compares it to the `x-telegram-bot-api-secret-token` header on `POST /api/telegram/webhook`. If the deployed value and Telegram’s webhook disagree, callbacks return **401** and order status buttons do nothing. In **development**, the route accepts requests without the header when this variable is unset. |
 
 ---
 
@@ -52,6 +53,7 @@ Variables prefixed with `NEXT_PUBLIC_` are embedded in the browser bundle. Treat
    `{NEXT_PUBLIC_SITE_URL}/api/liqpay/callback`  
    Use the same base URL you deploy with (HTTPS in production).
 4. **Vercel (or similar)** — Add every variable from `.env.example` in the project settings; set `NEXT_PUBLIC_SITE_URL` to your production domain.
+5. **Telegram order buttons** — Set `TELEGRAM_WEBHOOK_SECRET` in the host env to a long random string; run `bash scripts/set-telegram-webhook.sh` with the **same** value as `secret_token` (see script). Webhook URL must be `{NEXT_PUBLIC_SITE_URL}/api/telegram/webhook`. Verify with Bot API `getWebhookInfo`: URL, `has_custom_certificate`, and that updates include `callback_query`. If buttons still fail, check server logs for `401` on the webhook route (secret mismatch).
 
 **Wedding products in Supabase:** The shop no longer lists a wedding product catalog. If your database still has rows in `public.products` with `category = 'wedding'` from an older seed, you can delete them in the Supabase SQL editor or via admin; they are not shown on the site.
 
@@ -63,6 +65,7 @@ Variables prefixed with `NEXT_PUBLIC_` are embedded in the browser bundle. Treat
 - `lib/supabase/{server,client,admin}.ts` — Supabase clients  
 - `lib/auth.ts` — `ADMIN_EMAIL`, `NODE_ENV`  
 - `lib/telegram.ts` — Telegram bot  
+- `app/api/telegram/webhook/route.ts` — `TELEGRAM_WEBHOOK_SECRET`, inline keyboard callbacks  
 - `app/api/decor-inquiry/route.ts`, `app/api/wedding-inquiry/route.ts` — Telegram inquiries  
 - `lib/product-display.ts` — public image URLs from Storage  
 - `app/api/liqpay/*` — LiqPay keys and site URL  

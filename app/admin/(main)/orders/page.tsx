@@ -7,7 +7,7 @@ import { IconInbox } from "@/components/admin/icons";
 import { ORDER_STATUS_META } from "@/lib/admin/order-status";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/constants";
 import { OrdersListTable } from "@/components/admin/OrdersListTable";
-import type { DeliveryType } from "@/lib/constants";
+import type { DeliveryType, PaymentMethod } from "@/lib/constants";
 
 const TABS: { value: "all" | OrderStatus; label: string }[] = [
   { value: "all", label: "Усі" },
@@ -31,7 +31,7 @@ export default async function AdminOrdersPage({
   let builder = admin
     .from("orders")
     .select(
-      "id, order_number, product_name, product_image_url, status, paid, created_at, customer_phone, customer_name, price_paid, currency, delivery_type",
+      "id, order_number, product_name, product_image_url, status, paid, payment_method, created_at, customer_phone, customer_name, price_paid, currency, delivery_type",
     )
     .order("created_at", { ascending: false });
 
@@ -47,6 +47,8 @@ export default async function AdminOrdersPage({
       status: o.status as OrderStatus,
       product_image_url: (o as { product_image_url?: string | null })
         .product_image_url ?? null,
+      payment_method: ((o as { payment_method?: string }).payment_method ??
+        "reserve") as PaymentMethod,
     })) ?? [];
 
   return (

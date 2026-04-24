@@ -5,7 +5,10 @@ import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { sendTelegramOrderCreated } from "@/lib/telegram";
 import { buildNewOrderTelegramCaptionUk } from "@/lib/order-telegram-caption";
 import { publicAssetAbsoluteUrl } from "@/lib/public-asset-url";
-import { primaryProductImageUrl } from "@/lib/product-image";
+import {
+  primaryProductImageUrl,
+  resolvePublicProductImageUrl,
+} from "@/lib/product-image";
 import { telegramOrderInlineKeyboard } from "@/lib/telegram-order-keyboard";
 import {
   DELIVERY_ADDRESS_PENDING_WITH_RECIPIENT_UK,
@@ -262,10 +265,11 @@ export async function POST(req: Request) {
         );
       }
       const p = prod as ProductRow;
-      productImageSnapshot = primaryProductImageUrl({
+      const rawPrimary = primaryProductImageUrl({
         image_url: p.image_url ?? null,
         images: p.images,
       });
+      productImageSnapshot = resolvePublicProductImageUrl(rawPrimary);
       const sizes = offeredSizes(p, locale);
       if (!sizes.includes(data.product_size)) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
@@ -306,6 +310,7 @@ export async function POST(req: Request) {
         delivery_fee_uah: deliveryFeeUah,
         postcard_fee_uah: postcardFeeUah,
         product_image_url: productImageSnapshot,
+        prefer_messenger_contact: data.prefer_messenger_contact === true,
       })
       .select("id, order_number")
       .single();

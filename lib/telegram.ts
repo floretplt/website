@@ -68,7 +68,11 @@ export async function sendTelegramOrderCreated(args: {
       photo: args.photoUrl,
     });
     if (photoRes.ok) return;
-    console.warn("Telegram sendPhoto failed, falling back to sendMessage");
+    const detail = "error" in photoRes ? photoRes.error : "unknown error";
+    console.warn("Telegram sendPhoto failed, falling back to sendMessage", {
+      photoUrlPreview: args.photoUrl.slice(0, 120),
+      detail,
+    });
   }
 
   await telegramPost("sendMessage", {

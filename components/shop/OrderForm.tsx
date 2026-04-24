@@ -165,6 +165,7 @@ export function OrderForm({
         gift_message: null,
         notes: null,
         payment_method: "reserve" as const,
+        prefer_messenger_contact: false,
         privacy_accepted: false,
         coordinate_address_with_recipient: false,
         delivery_district_id: null,
@@ -395,7 +396,7 @@ export function OrderForm({
       if (values.payment_method === "reserve") {
         const num = json.orderNumber;
         if (num != null) {
-          router.push(`/order/${num}`);
+          router.push(`/order/${num}?thanks=1`);
         } else {
           setFormError(t("error"));
         }
@@ -440,11 +441,11 @@ export function OrderForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mx-auto max-w-xl space-y-10 px-6 py-12 md:px-0 md:py-16"
+      className="mx-auto max-w-xl space-y-8 px-6 py-12 md:px-0 md:py-16"
     >
       <h1 className="h-section">{t("title")}</h1>
 
-      <section className="space-y-4 border-b border-ink/10 pb-8">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("product")}</h2>
         {previewSrc ? (
           <div className="max-w-[280px]">
@@ -562,7 +563,7 @@ export function OrderForm({
         </div>
       </section>
 
-      <section className="space-y-4 border-b border-ink/10 pb-8">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">
           {t("notes")}
           {opt}
@@ -575,7 +576,7 @@ export function OrderForm({
         />
       </section>
 
-      <section className="space-y-4 border-b border-ink/10 pb-8">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("delivery")}</h2>
         <div className="flex gap-6 text-sm">
           <label className="flex items-center gap-2">
@@ -1026,7 +1027,7 @@ export function OrderForm({
         ) : null}
       </section>
 
-      <section className="space-y-4 border-b border-ink/10 pb-8">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("contact")}</h2>
         <label className="block text-sm text-muted">
           <span className="mb-1 block uppercase tracking-wider">
@@ -1052,9 +1053,17 @@ export function OrderForm({
           />
         </label>
         <FieldError messageKey={errors.customer_phone?.message} />
+        <label className="flex items-start gap-3 text-sm text-muted">
+          <input
+            type="checkbox"
+            {...register("prefer_messenger_contact")}
+            className="mt-1"
+          />
+          <span>{t("preferMessengerContact")}</span>
+        </label>
       </section>
 
-      <section className="space-y-3 rounded-lg border-2 border-ink/25 bg-bg p-5 md:p-6">
+      <section className="space-y-3 rounded-xl border border-ink/15 bg-bg/80 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("orderTotalTitle")}</h2>
         <div className="flex justify-between gap-4 text-sm">
           <span className="text-muted">{t("bouquetLine")}</span>
@@ -1121,7 +1130,7 @@ export function OrderForm({
         ) : null}
       </section>
 
-      <section className="space-y-4 border-b border-ink/10 pb-8">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("payment")}</h2>
         <div className="flex flex-col gap-4 text-sm">
           <label className="flex items-center gap-2">

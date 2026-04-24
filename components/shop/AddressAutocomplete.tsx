@@ -49,7 +49,7 @@ function loadMapsScript(apiKey: string): Promise<void> {
       return;
     }
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&v=weekly`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=uk&v=weekly`;
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();

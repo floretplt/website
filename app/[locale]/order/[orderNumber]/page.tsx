@@ -1,16 +1,24 @@
 import { OrderLookup } from "@/components/shop/OrderLookup";
-import type { Locale } from "@/i18n/routing";
 
 export default async function OrderStatusPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; orderNumber: string };
+  searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const locale = params.locale as Locale;
   const orderNumber = Number(params.orderNumber);
   if (Number.isNaN(orderNumber)) {
     return null;
   }
 
-  return <OrderLookup locale={locale} initialOrderNumber={orderNumber} />;
+  const thanksRaw = searchParams.thanks;
+  const thanks =
+    thanksRaw === "1" ||
+    thanksRaw === "true" ||
+    (Array.isArray(thanksRaw) && thanksRaw.includes("1"));
+
+  return (
+    <OrderLookup initialOrderNumber={orderNumber} initialThanks={thanks} />
+  );
 }

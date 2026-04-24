@@ -44,6 +44,7 @@ type Order = {
   notes: string | null;
   payment_method: string;
   product_size: string | null;
+  prefer_messenger_contact?: boolean;
 };
 
 function Row({
@@ -115,8 +116,10 @@ export function OrderDetailForm({ order }: { order: Order }) {
                 <Badge tone={meta.tone}>{meta.label}</Badge>
                 {paid ? (
                   <Badge tone="emerald">Оплачено</Badge>
+                ) : order.payment_method === "reserve" ? (
+                  <Badge tone="neutral">Забронювати — передзвонимо</Badge>
                 ) : (
-                  <Badge tone="neutral">Зв&apos;яжіться з клієнтом</Badge>
+                  <Badge tone="neutral">Оплатити зараз (LiqPay)</Badge>
                 )}
               </span>
             }
@@ -176,6 +179,11 @@ export function OrderDetailForm({ order }: { order: Order }) {
                   >
                     {order.customer_phone}
                   </a>
+                  {order.prefer_messenger_contact ? (
+                    <span className="text-xs text-zinc-500">
+                      Не дзвонити — Viber / WhatsApp / Telegram
+                    </span>
+                  ) : null}
                 </div>
               </Row>
               <Row label="Доставка">
@@ -213,8 +221,8 @@ export function OrderDetailForm({ order }: { order: Order }) {
               </Row>
               <Row label="Оплата">
                 {order.payment_method === "prepay"
-                  ? "Онлайн (LiqPay)"
-                  : "Резерв / оплата при отриманні"}
+                  ? "Оплатити зараз (LiqPay)"
+                  : "Забронювати — передзвонимо"}
               </Row>
               {order.gift_message ? (
                 <Row label="Листівка">

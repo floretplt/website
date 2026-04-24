@@ -17,7 +17,7 @@ import {
   IconTrendUp,
 } from "@/components/admin/icons";
 import { ORDER_STATUS_META } from "@/lib/admin/order-status";
-import type { OrderStatus } from "@/lib/constants";
+import type { OrderStatus, PaymentMethod } from "@/lib/constants";
 import { kyivCalendarDateString } from "@/lib/delivery-kyiv";
 import { voiceDialHref } from "@/lib/phone";
 
@@ -76,7 +76,7 @@ export default async function AdminDashboardPage() {
   const { data: recent } = await admin
     .from("orders")
     .select(
-      "id, order_number, product_name, product_image_url, status, created_at, paid, customer_name, customer_phone, delivery_type",
+      "id, order_number, product_name, product_image_url, status, created_at, paid, payment_method, customer_name, customer_phone, delivery_type",
     )
     .order("created_at", { ascending: false })
     .limit(8);
@@ -163,9 +163,9 @@ export default async function AdminDashboardPage() {
             description="Щойно прийде перше замовлення, воно з'явиться тут."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-100 bg-zinc-50/60 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+          <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-zinc-100 bg-zinc-50/80 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
                 <tr>
                   <th className="px-4 py-3 pl-6">Фото</th>
                   <th className="px-4 py-3">Номер</th>
@@ -186,6 +186,8 @@ export default async function AdminDashboardPage() {
                   const img = (o as { product_image_url?: string | null })
                     .product_image_url;
                   const dt = (o as { delivery_type?: string }).delivery_type;
+                  const pm = ((o as { payment_method?: string }).payment_method ??
+                    "reserve") as PaymentMethod;
                   return (
                     <tr
                       key={o.id}
@@ -197,10 +199,10 @@ export default async function AdminDashboardPage() {
                           <img
                             src={img}
                             alt=""
-                            className="h-9 w-9 rounded-md object-cover ring-1 ring-zinc-200"
+                            className="h-11 w-11 rounded-lg object-cover ring-1 ring-zinc-200/80"
                           />
                         ) : (
-                          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-zinc-100 text-[9px] text-zinc-400">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-100 text-[10px] text-zinc-400">
                             —
                           </div>
                         )}
@@ -231,13 +233,13 @@ export default async function AdminDashboardPage() {
                       <td className="px-4 py-3">
                         <Badge tone={meta.tone}>{meta.label}</Badge>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="min-w-[140px] px-4 py-3">
                         {o.paid ? (
                           <Badge tone="emerald">Оплачено</Badge>
+                        ) : pm === "reserve" ? (
+                          <Badge tone="neutral">Забронювати — передзвонимо</Badge>
                         ) : (
-                          <Badge tone="neutral">
-                            Зв&apos;яжіться з клієнтом
-                          </Badge>
+                          <Badge tone="neutral">Оплатити зараз (LiqPay)</Badge>
                         )}
                       </td>
                       <td className="px-4 py-3 text-zinc-500">

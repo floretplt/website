@@ -5,7 +5,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { updateOrderStatus } from "@/lib/actions/admin";
 import { ORDER_STATUS_META } from "@/lib/admin/order-status";
-import type { DeliveryType, OrderStatus } from "@/lib/constants";
+import type { DeliveryType, OrderStatus, PaymentMethod } from "@/lib/constants";
 import { orderStatusesForDeliveryType } from "@/lib/order-status-policy";
 import { voiceDialHref } from "@/lib/phone";
 import { Badge, Select } from "@/components/admin/ui";
@@ -19,6 +19,7 @@ export type OrdersListRow = {
   product_image_url: string | null;
   status: OrderStatus;
   paid: boolean;
+  payment_method: PaymentMethod;
   created_at: string;
   customer_phone: string;
   customer_name: string;
@@ -31,9 +32,9 @@ export function OrdersListTable({ rows }: { rows: OrdersListRow[] }) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-zinc-100 bg-zinc-50/60 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+    <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm">
+      <table className="w-full min-w-[800px] text-left text-sm">
+        <thead className="border-b border-zinc-100 bg-zinc-50/80 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
           <tr>
             <th className="px-4 py-3 pl-6">Фото</th>
             <th className="px-4 py-3">Номер</th>
@@ -84,10 +85,10 @@ function OrderRow({
           <img
             src={o.product_image_url}
             alt=""
-            className="h-11 w-11 rounded-md object-cover ring-1 ring-zinc-200"
+            className="h-12 w-12 rounded-lg object-cover ring-1 ring-zinc-200/80"
           />
         ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-zinc-100 text-[10px] text-zinc-400">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100 text-[10px] text-zinc-400">
             —
           </div>
         )}
@@ -116,7 +117,7 @@ function OrderRow({
       </td>
       <td className="px-4 py-3">
         <Select
-          className="min-w-[140px] py-1.5 text-xs"
+          className="min-w-[150px] border-zinc-200 py-2 text-xs font-medium text-zinc-800"
           value={o.status}
           disabled={pending}
           onChange={(e) => {
@@ -134,11 +135,17 @@ function OrderRow({
           ))}
         </Select>
       </td>
-      <td className="px-4 py-3">
+      <td className="min-w-[160px] max-w-[200px] px-4 py-3">
         {o.paid ? (
           <Badge tone="emerald">Оплачено</Badge>
+        ) : o.payment_method === "reserve" ? (
+          <Badge tone="neutral" className="whitespace-normal text-left leading-snug">
+            Забронювати — передзвонимо
+          </Badge>
         ) : (
-          <Badge tone="neutral">Зв&apos;яжіться з клієнтом</Badge>
+          <Badge tone="neutral" className="whitespace-normal text-left leading-snug">
+            Оплатити зараз (LiqPay)
+          </Badge>
         )}
       </td>
       <td className="px-4 py-3 whitespace-nowrap text-zinc-500">

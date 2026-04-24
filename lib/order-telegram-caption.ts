@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html-escape";
+import { formatStoredDeliveryTimeUk } from "@/lib/order-delivery-time-telegram";
 import { bouquetSizeLetter } from "@/lib/order-format";
 import type { z } from "zod";
 import { orderCreateSchema } from "@/lib/validators";
@@ -48,12 +49,19 @@ export function buildNewOrderTelegramCaptionUk(params: {
   lines.push(
     `<b>Клієнт:</b> ${escapeHtml(data.customer_name)} ${escapeHtml(data.customer_phone)}`,
   );
+  if (data.prefer_messenger_contact) {
+    lines.push(
+      "<b>Зв’язок:</b> не дзвонити — напишіть у Viber / WhatsApp / Telegram",
+    );
+  }
   const delKind = data.delivery_type === "delivery" ? "Доставка" : "Самовивіз";
   lines.push(`<b>Тип:</b> ${delKind}`);
 
+  const timeUk = formatStoredDeliveryTimeUk(data.delivery_time ?? null);
+
   if (data.delivery_type === "delivery") {
     lines.push(
-      `<b>Дата / час:</b> ${escapeHtml(String(data.delivery_date ?? ""))} ${escapeHtml(String(data.delivery_time ?? ""))}`,
+      `<b>Дата / час:</b> ${escapeHtml(String(data.delivery_date ?? ""))} ${escapeHtml(timeUk)}`,
     );
     if (mergedAddress) {
       lines.push(`<b>Адреса:</b> ${escapeHtml(mergedAddress)}`);
@@ -65,7 +73,7 @@ export function buildNewOrderTelegramCaptionUk(params: {
     }
   } else {
     lines.push(
-      `<b>Дата / час самовивозу:</b> ${escapeHtml(String(data.delivery_date ?? ""))} ${escapeHtml(String(data.delivery_time ?? ""))}`,
+      `<b>Дата / час самовивозу:</b> ${escapeHtml(String(data.delivery_date ?? ""))} ${escapeHtml(timeUk)}`,
     );
   }
 
