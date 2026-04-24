@@ -22,11 +22,16 @@ export async function POST(req: Request) {
     return new NextResponse("invalid signature", { status: 400 });
   }
 
-  const payload = decodeLiqPayData<{
-    order_id?: string;
-    status?: string;
-    transaction_id?: string;
-  }>(data);
+  let payload: { order_id?: string; status?: string; transaction_id?: string };
+  try {
+    payload = decodeLiqPayData<{
+      order_id?: string;
+      status?: string;
+      transaction_id?: string;
+    }>(data);
+  } catch {
+    return new NextResponse("invalid payload", { status: 400 });
+  }
 
   const orderId = payload.order_id;
   if (!orderId) {

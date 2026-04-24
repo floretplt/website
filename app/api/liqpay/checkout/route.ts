@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLiqPayCheckoutUrl, liqpayEncode, liqpaySign } from "@/lib/liqpay";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   orderId: z.string().uuid(),
 });
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req.headers);
+  if (!rateLimit(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const pub = process.env.NEXT_PUBLIC_LIQPAY_PUBLIC_KEY;
   const priv = process.env.LIQPAY_PRIVATE_KEY;
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

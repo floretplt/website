@@ -41,6 +41,14 @@ const nextConfig = {
         key: "Permissions-Policy",
         value: "camera=(), microphone=(), geolocation=()",
       },
+      // Nonce-free CSP directives that are safe regardless of inline scripts:
+      // frame-ancestors supersedes X-Frame-Options in modern browsers.
+      // object-src blocks Flash/plugin injection.
+      // base-uri prevents <base> tag hijacking.
+      {
+        key: "Content-Security-Policy",
+        value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self';",
+      },
     ];
     if (process.env.NODE_ENV === "production") {
       security.push({
