@@ -8,11 +8,19 @@ export function resolveOrderStatusAfterTelegramAction(
 ): OrderStatus | null {
   if (code === "p" && current === "new") return "in_progress";
   if (code === "r" && current === "in_progress") return "ready";
-  if (code === "o" && current === "ready" && deliveryType === "delivery") {
+  if (
+    code === "o" &&
+    deliveryType === "delivery" &&
+    (current === "ready" || current === "in_progress")
+  ) {
     return "out_for_delivery";
   }
   if (code === "c") {
-    if (current === "ready" || current === "out_for_delivery") {
+    if (
+      current === "ready" ||
+      current === "out_for_delivery" ||
+      current === "in_progress"
+    ) {
       return "completed";
     }
   }

@@ -14,17 +14,6 @@ import { resolveOrderStatusAfterTelegramAction } from "@/lib/telegram-order-stat
 import type { DeliveryType, OrderStatus } from "@/lib/constants";
 
 export async function POST(req: Request) {
-  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (secret) {
-    const got = req.headers.get("x-telegram-bot-api-secret-token");
-    if (got !== secret) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
-  } else if (process.env.NODE_ENV === "production") {
-    console.error("TELEGRAM_WEBHOOK_SECRET is not set");
-    return NextResponse.json({ error: "misconfigured" }, { status: 503 });
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -32,15 +21,56 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const cq = (body as { callback_query?: Record<string, unknown> })
+  const rawCq = (body as { callback_query?: Record<string, unknown> })
     .callback_query;
-  if (!cq?.id || typeof cq.data !== "string") {
+  const callbackId =
+    rawCq?.id != null && String(rawCq.id).trim() !== ""
+      ? String(rawCq.id)
+      : null;
+
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
+  const got = req.headers.get("x-telegram-bot-api-secret-token")?.trim();
+
+  if (secret) {
+    if (got !== secret) {
+      console.error(
+        "Telegram webhook: secret token mismatch (check TELEGRAM_WEBHOOK_SECRET matches setWebhook secret_token; trim newlines in env).",
+      );
+      if (callbackId) {
+        await answerTelegramCallbackQuery(
+          callbackId,
+          "Не вдалося оновити статус: сервер відхилив запит (перевірте TELEGRAM_WEBHOOK_SECRET на хостингу та scripts/set-telegram-webhook.sh).",
+          true,
+        );
+      }
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+  } else if (process.env.NODE_ENV === "production") {
+    console.error("TELEGRAM_WEBHOOK_SECRET is not set");
+    if (callbackId) {
+      await answerTelegramCallbackQuery(
+        callbackId,
+        "Вебхук не налаштовано на сервері (TELEGRAM_WEBHOOK_SECRET).",
+        true,
+      );
+    }
+    return NextResponse.json({ error: "misconfigured" }, { status: 503 });
+  }
+
+  if (!callbackId || !rawCq) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const cq = rawCq;
+
+  if (typeof cq.data !== "string") {
+    await answerTelegramCallbackQuery(callbackId, "Невідома дія");
     return NextResponse.json({ ok: true });
   }
 
   const parsed = parseTelegramOrderCallback(cq.data);
   if (!parsed) {
-    await answerTelegramCallbackQuery(String(cq.id), "Невідома дія");
+    await answerTelegramCallbackQuery(callbackId, "Невідома дія");
     return NextResponse.json({ ok: true });
   }
 
@@ -52,11 +82,7 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (error || !order) {
-    await answerTelegramCallbackQuery(
-      String(cq.id),
-      "Замовлення не знайдено",
-      true,
-    );
+    await answerTelegramCallbackQuery(callbackId, "Замовлення не знайдено", true);
     return NextResponse.json({ ok: true });
   }
 
@@ -70,7 +96,7 @@ export async function POST(req: Request) {
 
   if (!next) {
     await answerTelegramCallbackQuery(
-      String(cq.id),
+      callbackId,
       "Дія недоступна для поточного статусу",
       true,
     );
@@ -83,7 +109,7 @@ export async function POST(req: Request) {
     .eq("id", order.id);
 
   if (upErr) {
-    await answerTelegramCallbackQuery(String(cq.id), "Помилка збереження", true);
+    await answerTelegramCallbackQuery(callbackId, "Помилка збереження", true);
     return NextResponse.json({ ok: true });
   }
 
@@ -110,7 +136,7 @@ export async function POST(req: Request) {
     });
   }
 
-  await answerTelegramCallbackQuery(String(cq.id), "Статус оновлено");
+  await answerTelegramCallbackQuery(callbackId, "Статус оновлено");
 
   return NextResponse.json({ ok: true });
 }

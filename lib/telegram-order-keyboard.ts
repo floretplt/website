@@ -18,20 +18,25 @@ export function telegramOrderInlineKeyboard(order: {
   const { status, delivery_type: dt, order_number: num } = order;
 
   if (status === "new") {
-    rows.push([{ text: "У роботу", callback_data: cb(num, "p") }]);
+    rows.push([{ text: "✅ У роботу", callback_data: cb(num, "p") }]);
   } else if (status === "in_progress") {
-    rows.push([{ text: "Готово", callback_data: cb(num, "r") }]);
+    const row1 = [{ text: "🎁 Готово", callback_data: cb(num, "r") }];
+    if (dt === "delivery") {
+      row1.push({ text: "🚗 У дорозі", callback_data: cb(num, "o") });
+    }
+    rows.push(row1);
+    rows.push([{ text: "🏁 Завершено", callback_data: cb(num, "c") }]);
   } else if (status === "ready") {
     if (dt === "delivery") {
       rows.push([
-        { text: "У дорозі", callback_data: cb(num, "o") },
-        { text: "Завершено", callback_data: cb(num, "c") },
+        { text: "🚗 У дорозі", callback_data: cb(num, "o") },
+        { text: "🏁 Завершено", callback_data: cb(num, "c") },
       ]);
     } else {
-      rows.push([{ text: "Завершено", callback_data: cb(num, "c") }]);
+      rows.push([{ text: "🏁 Завершено", callback_data: cb(num, "c") }]);
     }
   } else if (status === "out_for_delivery") {
-    rows.push([{ text: "Завершено", callback_data: cb(num, "c") }]);
+    rows.push([{ text: "🏁 Завершено", callback_data: cb(num, "c") }]);
   }
 
   if (rows.length === 0) return undefined;
