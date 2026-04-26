@@ -32,7 +32,7 @@ export default async function LiqPayResultPage({
   const orderNumberOk = Number.isFinite(orderNumber) && orderNumber > 0;
 
   return (
-    <div className="mx-auto max-w-lg px-6 py-24 text-center">
+    <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6 sm:py-24">
       {ok && orderNumberOk ? (
         <div className="space-y-6 text-left">
           <h1 className="h-section text-center">{t("thanksPaidTitle")}</h1>

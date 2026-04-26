@@ -21,7 +21,7 @@ export async function Footer({ settings, locale }: Props) {
 
   return (
     <footer className="border-t border-ink/10 bg-ink text-bg">
-      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-3 md:px-10">
+      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-3 md:px-10">
         <div>
           <Logo height={30} />
           <p className="mt-6 text-sm leading-relaxed text-bg/80">
@@ -65,7 +65,7 @@ export async function Footer({ settings, locale }: Props) {
           </div>
         </div>
       </div>
-      <div className="border-t border-bg/10 px-6 py-6 text-center text-[11px] uppercase tracking-[0.2em] text-bg/50">
+      <div className="border-t border-bg/10 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-center text-[11px] uppercase tracking-[0.2em] text-bg/50 sm:px-6">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link href="/legal" className="text-bg/70 underline-offset-4 hover:text-bg hover:underline">
             {t("legal")}

@@ -22,27 +22,36 @@ export function CategoryTabs() {
 
   return (
     <div className="border-b border-ink/10 bg-bg">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 md:gap-x-7 md:px-10">
-        {items.map((item) => {
-          const isAll = item.id === "all";
-          const active = isAll
-            ? path === "/catalog"
-            : path === item.href || path.startsWith(`${item.href}/`);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={cn(
-                "whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors",
-                active
-                  ? "border-b-2 border-ink pb-0.5 text-ink"
-                  : "text-muted hover:text-ink",
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
+        <div
+          className="-mx-4 overflow-x-auto overscroll-x-contain px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <nav
+            className="flex snap-x snap-mandatory flex-nowrap items-center gap-x-4 py-3 md:flex-wrap md:gap-x-7 md:gap-y-2 md:snap-none"
+          >
+            {items.map((item) => {
+              const isAll = item.id === "all";
+              const active = isAll
+                ? path === "/catalog"
+                : path === item.href || path.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={cn(
+                    "shrink-0 snap-start whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink",
+                    active
+                      ? "border-b-2 border-ink pb-0.5 text-ink"
+                      : "border-b-2 border-transparent pb-0.5 text-muted hover:text-ink",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export function TeamSection({
   const Tag = embedded ? "div" : "section";
   return (
     <Tag className={outerClass}>
-      <div className="mx-auto max-w-6xl px-6 md:px-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
         <SectionHeading title={title} />
 
         <div className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-10">

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SitePreloader } from "@/components/layout/SitePreloader";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
@@ -14,6 +14,12 @@ const cormorant = Cormorant_Garamond({
   style: ["normal", "italic"],
   variable: "--font-cormorant",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -35,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="uk" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cormorant.variable} min-h-screen bg-bg font-sans text-ink antialiased`}
+        className={`${inter.variable} ${cormorant.variable} min-h-screen overflow-x-hidden bg-bg font-sans text-ink antialiased [text-size-adjust:100%]`}
       >
         <SitePreloader />
         {children}

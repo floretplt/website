@@ -7,9 +7,16 @@
   --foreground: #1c1c1a;
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
+  overflow-x: hidden;
 }
 
 @layer utilities {
@@ -20,11 +27,11 @@ body {
 
 @layer components {
   .h-display {
-    @apply font-display text-4xl font-normal tracking-tight text-ink md:text-5xl lg:text-6xl;
+    @apply font-display text-[clamp(1.5rem,5.5vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-5xl lg:text-6xl;
   }
 
   .h-section {
-    @apply font-display text-3xl font-normal tracking-tight text-ink md:text-4xl;
+    @apply font-display text-[clamp(1.35rem,4.2vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-4xl;
   }
 
   .eyebrow {

@@ -42,7 +42,7 @@ export function StudioTeamSection({
       id="studio-team"
       className="scroll-mt-24 border-t border-ink/10 bg-gradient-to-b from-bg via-rose/[0.04] to-bg py-20 md:py-28"
     >
-      <div className="mx-auto max-w-6xl px-6 md:px-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
         <SectionHeading title={sectionTitle} />
 
         <div className="mt-14 md:mt-16 md:grid md:grid-cols-12 md:items-start md:gap-x-10 lg:gap-x-14">

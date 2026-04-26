@@ -79,7 +79,7 @@ export default async function ProductPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <article className="mx-auto max-w-6xl px-6 pb-28 pt-12 md:px-10 md:pb-16 md:pt-16">
+      <article className="mx-auto max-w-6xl px-4 pb-[max(7rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] pt-10 sm:px-6 sm:pt-12 md:px-10 md:pb-16 md:pt-16">
         <p className="eyebrow mb-2">{tc(category)}</p>
         <div className="grid gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
           <div className="space-y-4">
@@ -92,7 +92,7 @@ export default async function ProductPage({
           </div>
 
           <div className="md:sticky md:top-28 md:self-start">
-            <h1 className="font-display text-4xl text-ink md:text-5xl">
+            <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
               {productName(product, locale)}
             </h1>
             <div className="mt-4 space-y-1 text-sm text-muted">

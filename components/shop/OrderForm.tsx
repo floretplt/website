@@ -443,7 +443,7 @@ export function OrderForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mx-auto max-w-xl space-y-8 px-6 py-12 md:px-0 md:py-16"
+      className="mx-auto max-w-xl space-y-8 px-4 py-10 sm:px-6 sm:py-12 md:px-0 md:py-16"
     >
       <h1 className="h-section">{t("title")}</h1>
 
@@ -580,7 +580,7 @@ export function OrderForm({
 
       <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("delivery")}</h2>
-        <div className="flex gap-6 text-sm">
+        <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:gap-6">
           <label className="flex items-center gap-2">
             <input
               type="radio"
@@ -692,23 +692,25 @@ export function OrderForm({
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
                   {t("deliveryPricingTitle")}
                 </p>
-                <table className="mt-3 w-full max-w-md text-sm">
-                  <tbody>
-                    {deliveryBands.map((b) => (
-                      <tr
-                        key={`${b.max_km}-${b.price_uah}`}
-                        className="border-t border-ink/10 first:border-t-0"
-                      >
-                        <td className="py-2 pr-4 text-muted">
-                          {t("deliveryPricingKm", { km: b.max_km })}
-                        </td>
-                        <td className="py-2 tabular-nums text-ink">
-                          {formatMoney(b.price_uah, currency, locale)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+                  <table className="mt-3 w-full min-w-[16rem] max-w-md text-sm">
+                    <tbody>
+                      {deliveryBands.map((b) => (
+                        <tr
+                          key={`${b.max_km}-${b.price_uah}`}
+                          className="border-t border-ink/10 first:border-t-0"
+                        >
+                          <td className="py-2 pr-4 text-muted">
+                            {t("deliveryPricingKm", { km: b.max_km })}
+                          </td>
+                          <td className="py-2 tabular-nums text-ink">
+                            {formatMoney(b.price_uah, currency, locale)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <p className="mt-3 text-[11px] leading-relaxed text-muted">
                   {t("deliveryPricingNote")}
                 </p>

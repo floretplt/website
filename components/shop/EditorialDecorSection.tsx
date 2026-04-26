@@ -103,7 +103,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
 
   return (
     <section className="border-t border-ink/10 py-20 md:py-28">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 md:grid-cols-2 md:px-10">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:gap-12 sm:px-6 md:grid-cols-2 md:px-10">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-bg">
           <Image
             src={imageSrc}

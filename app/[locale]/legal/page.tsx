@@ -27,7 +27,7 @@ export default async function LegalPage({
     "text-xs font-medium uppercase tracking-[0.15em] text-muted underline-offset-4 hover:text-ink hover:underline";
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-20 md:px-10 md:py-28">
+    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <h1 className="h-section">{t("title")}</h1>
       <nav
         aria-label="On this page"

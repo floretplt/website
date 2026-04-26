@@ -15,7 +15,7 @@ export default async function AboutPage({
   const short = aboutShortForLocale(settings, locale);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <div className="grid gap-12 md:grid-cols-2 md:items-start">
         <div>
           <SectionHeading title={t("title")} />

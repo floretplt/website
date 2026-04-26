@@ -19,7 +19,7 @@ export default async function ContactPage({
   const mapSrc = googleMapsEmbedSrc(address, locale);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <h1 className="h-section">{t("title")}</h1>
       <div className="mt-12 grid gap-12 md:grid-cols-2">
         <div className="space-y-8 text-sm leading-relaxed text-muted">

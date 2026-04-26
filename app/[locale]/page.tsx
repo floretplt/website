@@ -60,7 +60,7 @@ export default async function HomePage({
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-ink/20" />
-        <div className="relative z-10 mx-auto flex min-h-[85vh] max-w-6xl flex-col justify-end px-6 pb-20 pt-32 md:min-h-[90vh] md:px-10 md:pb-28">
+        <div className="relative z-10 mx-auto flex min-h-[85vh] max-w-6xl flex-col justify-end px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[90vh] md:px-10 md:pb-28">
           <h1 className="h-display max-w-xl text-balance text-white">
             {t("heroTagline")}
           </h1>
@@ -90,7 +90,7 @@ export default async function HomePage({
       />
 
       <section className="border-t border-ink/10 bg-bg py-20 md:py-28">
-        <div className="mx-auto max-w-6xl px-6 md:px-10">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
           <SectionHeading title={t("categoriesTitle")} />
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <CategoryTile
@@ -143,7 +143,7 @@ export default async function HomePage({
       />
 
       <section className="bg-sage/40 py-20 md:py-28">
-        <div className="mx-auto max-w-3xl px-6 text-center md:px-10">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 md:px-10">
           <p className="font-display text-2xl leading-snug text-ink md:text-3xl">
             {t("ctaStrip")}
           </p>

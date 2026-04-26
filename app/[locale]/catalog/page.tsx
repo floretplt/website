@@ -48,11 +48,11 @@ export default async function CatalogAllPage({
 
   return (
     <div className="bg-bg">
-      <div className="mx-auto max-w-7xl border-b border-ink/10 px-6 pb-8 pt-12 md:px-10 md:pb-10 md:pt-16">
+      <div className="mx-auto max-w-7xl border-b border-ink/10 px-4 pb-8 pt-10 sm:px-6 sm:pt-12 md:px-10 md:pb-10 md:pt-16">
         <h1 className="h-section max-w-2xl text-balance">{t("allCategoriesTitle")}</h1>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 md:px-10 md:py-12">
         <p className="mx-auto max-w-3xl text-center text-sm leading-relaxed text-muted md:text-[15px]">
           {t("styleDisclaimer")}
         </p>

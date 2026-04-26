@@ -56,7 +56,7 @@ export function CatalogFilters({ minPrice, maxPrice }: Props) {
         <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.15em] text-muted">
           {t("colorMood")}
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="-mx-1 flex flex-nowrap gap-3 overflow-x-auto overscroll-x-contain px-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
           {COLOR_MOODS.map((m) => {
             const chip = MOOD_CHIP[m];
             const selected = moodVal === m;
@@ -66,7 +66,7 @@ export function CatalogFilters({ minPrice, maxPrice }: Props) {
                 type="button"
                 title={tm(m)}
                 onClick={() => setParam("mood", selected ? null : m)}
-                className={`flex flex-col items-center gap-1.5 rounded-md p-1 transition-opacity hover:opacity-90 ${
+                className={`flex shrink-0 flex-col items-center gap-1.5 rounded-md p-1.5 transition-opacity hover:opacity-90 ${
                   selected ? "opacity-100" : "opacity-95"
                 }`}
               >
@@ -95,10 +95,10 @@ export function CatalogFilters({ minPrice, maxPrice }: Props) {
         <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.15em] text-muted">
           {t("price")}
         </p>
-        <div className="flex gap-2 text-sm">
+        <div className="flex gap-2 text-base sm:text-sm">
           <input
             type="number"
-            className="w-full border border-ink/20 bg-transparent px-2 py-1"
+            className="min-h-11 w-full min-w-0 border border-ink/20 bg-transparent px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1"
             value={minV}
             min={minPrice}
             max={maxPrice}
@@ -107,7 +107,7 @@ export function CatalogFilters({ minPrice, maxPrice }: Props) {
           <span className="self-center text-muted">—</span>
           <input
             type="number"
-            className="w-full border border-ink/20 bg-transparent px-2 py-1"
+            className="min-h-11 w-full min-w-0 border border-ink/20 bg-transparent px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1"
             value={maxV}
             min={minPrice}
             max={maxPrice}

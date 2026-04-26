@@ -26,7 +26,7 @@ export function StyleGallery({ items, title, subtitle, cta }: Props) {
 
   return (
     <section className="border-t border-ink/10 bg-bg py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-6 md:px-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10">
         <h2 className="h-section text-center">{title}</h2>
         {subtitle?.trim() ? (
           <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-relaxed text-muted md:text-[15px]">

@@ -45,15 +45,15 @@ export function HomeFeatured({
   }, [products, tab]);
 
   return (
-    <section id="style-bouquets" className="scroll-mt-24 bg-white py-20 md:py-28">
-      <div className="mx-auto max-w-6xl px-6 md:px-10">
+    <section id="style-bouquets" className="scroll-mt-24 bg-white py-16 md:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
         <h2 className="h-section text-center">{title}</h2>
         {subtitle ? (
           <p className="mx-auto mt-5 max-w-xl text-center text-sm leading-relaxed text-muted">
             {subtitle}
           </p>
         ) : null}
-        <div className="mt-8 flex flex-wrap justify-center gap-6 text-[11px] font-medium uppercase tracking-[0.2em] text-muted">
+        <div className="mt-8 -mx-4 flex justify-start gap-4 overflow-x-auto overscroll-x-contain px-4 pb-1 text-[11px] font-medium uppercase tracking-[0.2em] text-muted [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => {
             const label =
               t.id === "all"
@@ -67,9 +67,9 @@ export function HomeFeatured({
                 type="button"
                 onClick={() => setTab(t.id)}
                 className={
-                  tab === t.id
+                  (tab === t.id
                     ? "border-b border-ink text-ink"
-                    : "border-b border-transparent hover:text-ink"
+                    : "border-b border-transparent hover:text-ink") + " shrink-0 whitespace-nowrap py-1"
                 }
               >
                 {label}

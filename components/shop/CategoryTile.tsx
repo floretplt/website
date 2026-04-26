@@ -30,12 +30,12 @@ export function CategoryTile({
           fetchPriority="low"
         />
       </div>
-      <div className="mt-3 flex items-center justify-between border border-ink px-4 py-3 text-[11px] font-medium uppercase tracking-[0.18em]">
-        <span>{title}</span>
+      <div className="mt-3 flex items-center justify-between gap-3 border border-ink px-4 py-3 text-[11px] font-medium uppercase tracking-[0.18em]">
+        <span className="min-w-0 flex-1 truncate">{title}</span>
         {disabled && comingLabel ? (
-          <span className="text-muted">{comingLabel}</span>
+          <span className="shrink-0 text-muted">{comingLabel}</span>
         ) : (
-          <ArrowRight className="h-4 w-4" strokeWidth={1} />
+          <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1} />
         )}
       </div>
     </>

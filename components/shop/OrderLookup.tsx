@@ -51,7 +51,7 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
   };
 
   return (
-    <div className="mx-auto max-w-lg px-6 py-16">
+    <div className="mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16">
       <h1 className="h-section">{t("title")}</h1>
 
       {showThanks ? (
