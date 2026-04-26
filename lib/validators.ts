@@ -46,6 +46,7 @@ export const orderCreateSchema = z
     delivery_date: z.string().optional().nullable(),
     delivery_time: z.string().optional().nullable(),
     delivery_address: z.string().optional().nullable(),
+    delivery_entrance: z.string().optional().nullable(),
     delivery_floor: z.string().optional().nullable(),
     delivery_apartment: z.string().optional().nullable(),
     recipient_phone: z.string().optional().nullable(),

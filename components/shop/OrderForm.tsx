@@ -159,6 +159,7 @@ export function OrderForm({
         delivery_date: minPickupDate,
         delivery_time: pickupSlots[0] ?? null,
         delivery_address: null,
+        delivery_entrance: null,
         delivery_floor: null,
         delivery_apartment: null,
         recipient_phone: null,
@@ -211,6 +212,7 @@ export function OrderForm({
   useEffect(() => {
     if (coordinate) {
       setValue("delivery_address", "");
+      setValue("delivery_entrance", "");
       setValue("delivery_floor", "");
       setValue("delivery_apartment", "");
       setValue("delivery_district_id", null);
@@ -949,56 +951,67 @@ export function OrderForm({
                 </span>
               </span>
             </label>
-            <div className="md:col-span-2 text-sm text-muted">
-              <span className="mb-1 block uppercase tracking-wider">
-                {t("address")}
-                {!coordinate ? req : opt}
-              </span>
-              <Controller
-                name="delivery_address"
-                control={control}
-                render={({ field }) => (
-                  <AddressAutocomplete
-                    name={field.name}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    apiKey={mapsKey}
-                    placeholder={t("addressPlaceholder")}
-                    hint={
-                      mapsKey
-                        ? t("addressAutocompleteHint")
-                        : undefined
-                    }
-                    fallbackHint={!mapsKey ? t("addressManualFallback") : undefined}
-                    disabled={!!coordinate}
+            {!coordinate && (
+              <>
+                <div className="md:col-span-2 text-sm text-muted">
+                  <span className="mb-1 block uppercase tracking-wider">
+                    {t("address")}
+                    {req}
+                  </span>
+                  <Controller
+                    name="delivery_address"
+                    control={control}
+                    render={({ field }) => (
+                      <AddressAutocomplete
+                        name={field.name}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        apiKey={mapsKey}
+                        placeholder={t("addressPlaceholder")}
+                        hint={
+                          mapsKey
+                            ? t("addressAutocompleteHint")
+                            : undefined
+                        }
+                        fallbackHint={!mapsKey ? t("addressManualFallback") : undefined}
+                      />
+                    )}
                   />
-                )}
-              />
-              <FieldError messageKey={errors.delivery_address?.message} />
-            </div>
-            <label className="text-sm text-muted">
-              <span className="mb-1 block uppercase tracking-wider">
-                {t("floor")}
-                {opt}
-              </span>
-              <input
-                className="w-full border border-ink/20 bg-transparent px-3 py-2 disabled:opacity-40"
-                disabled={!!coordinate}
-                {...register("delivery_floor")}
-              />
-            </label>
-            <label className="text-sm text-muted">
-              <span className="mb-1 block uppercase tracking-wider">
-                {t("apartment")}
-                {opt}
-              </span>
-              <input
-                className="w-full border border-ink/20 bg-transparent px-3 py-2 disabled:opacity-40"
-                disabled={!!coordinate}
-                {...register("delivery_apartment")}
-              />
-            </label>
+                  <FieldError messageKey={errors.delivery_address?.message} />
+                </div>
+                <label className="md:col-span-2 text-sm text-muted">
+                  <span className="mb-1 block uppercase tracking-wider">
+                    {t("entrance")}
+                    {opt}
+                  </span>
+                  <input
+                    className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                    {...register("delivery_entrance")}
+                  />
+                </label>
+                <label className="text-sm text-muted">
+                  <span className="mb-1 block uppercase tracking-wider">
+                    {t("floor")}
+                    {opt}
+                  </span>
+                  <input
+                    className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                    {...register("delivery_floor")}
+                  />
+                </label>
+                <label className="text-sm text-muted">
+                  <span className="mb-1 block uppercase tracking-wider">
+                    {t("apartment")}
+                    {opt}
+                  </span>
+                  <input
+                    className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                    {...register("delivery_apartment")}
+                  />
+                </label>
+              </>
+            )}
             <label className="md:col-span-2 text-sm text-muted">
               <span className="mb-1 block uppercase tracking-wider">
                 {t("recipientPhone")}
@@ -1130,47 +1143,68 @@ export function OrderForm({
         ) : null}
       </section>
 
-      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
+      <section className="space-y-5 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("payment")}</h2>
-        <div className="flex flex-col gap-4 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="radio" value="reserve" {...register("payment_method")} />
-            {t("reserve")}
+
+        <div className="flex flex-col gap-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-ink/15 p-4 transition-colors hover:border-ink/30 has-[:checked]:border-ink has-[:checked]:bg-ink/[0.04]">
+            <input
+              type="radio"
+              value="reserve"
+              {...register("payment_method")}
+              className="mt-0.5 shrink-0"
+            />
+            <div>
+              <span className="block text-sm font-medium text-ink">{t("reserve")}</span>
+              <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
+                {t("reserveDescription")}
+              </span>
+            </div>
           </label>
-          <label className="flex items-center gap-2">
-            <input type="radio" value="prepay" {...register("payment_method")} />
-            {t("payNow")}
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-ink/15 p-4 transition-colors hover:border-ink/30 has-[:checked]:border-ink has-[:checked]:bg-ink/[0.04]">
+            <input
+              type="radio"
+              value="prepay"
+              {...register("payment_method")}
+              className="mt-0.5 shrink-0"
+            />
+            <div>
+              <span className="block text-sm font-medium text-ink">{t("payNow")}</span>
+              <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
+                {t("payNowDescription")}
+              </span>
+            </div>
           </label>
         </div>
+
+        <div className="space-y-2 border-t border-ink/10 pt-4">
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-muted">
+            <input
+              type="checkbox"
+              {...register("privacy_accepted")}
+              className="mt-1"
+            />
+            <span>
+              {t("privacy")}{" "}
+              <Link href="/privacy" className="text-ink underline-offset-2 hover:underline">
+                {t("privacyPolicyLink")}
+              </Link>
+              <span className="whitespace-nowrap text-ink">{req}</span>
+            </span>
+          </label>
+          <FieldError messageKey={errors.privacy_accepted?.message} />
+        </div>
+
+        {formError ? <p className="text-sm text-red-800">{formError}</p> : null}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-pill w-full justify-center"
+        >
+          {loading ? t("submitting") : paymentMethod === "prepay" ? t("payNow") : t("reserve")}
+        </button>
       </section>
-
-      <div className="space-y-2">
-        <label className="flex items-start gap-3 text-sm text-muted">
-          <input
-            type="checkbox"
-            {...register("privacy_accepted")}
-            className="mt-1"
-          />
-          <span>
-            {t("privacy")}{" "}
-            <Link href="/privacy" className="text-ink underline-offset-2 hover:underline">
-              {t("privacyPolicyLink")}
-            </Link>
-            <span className="whitespace-nowrap text-ink">{req}</span>
-          </span>
-        </label>
-        <FieldError messageKey={errors.privacy_accepted?.message} />
-      </div>
-
-      {formError ? <p className="text-sm text-red-800">{formError}</p> : null}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="btn-pill w-full justify-center md:w-auto"
-      >
-        {loading ? t("submitting") : paymentMethod === "prepay" ? t("payNow") : t("reserve")}
-      </button>
     </form>
   );
 }

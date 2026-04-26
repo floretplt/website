@@ -111,6 +111,7 @@ export async function POST(req: Request) {
             data.delivery_address,
             data.delivery_floor,
             data.delivery_apartment,
+            data.delivery_entrance,
           )
       : null;
 
