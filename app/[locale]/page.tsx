@@ -118,6 +118,7 @@ export default async function HomePage({
       />
 
       <StudioTeamSection
+        locale={locale}
         sectionTitle={t("studioTeamTitle")}
         aboutText={about ?? t("aboutBody")}
         teamTitle={t("teamTitle")}
