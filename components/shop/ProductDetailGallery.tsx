@@ -136,7 +136,7 @@ export function ProductDetailGallery({ images, productName }: Props) {
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
-                <p className="mt-2 text-center text-xs text-bg/70">
+                <p className="mt-2 text-center text-sm text-bg/70 md:text-xs">
                   {idx + 1} / {images.length}
                 </p>
               </>

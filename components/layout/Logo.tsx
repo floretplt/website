@@ -3,33 +3,45 @@ import { cn } from "@/lib/utils";
 type Props = {
   className?: string;
   height?: number;
+  /** `light` = white mark on dark footer (`bg-ink`). Default = dark logo on light bg. */
+  variant?: "ink" | "light";
+  fetchPriority?: "high" | "low" | "auto";
 };
 
 const LOGO_ASPECT = 1650 / 905;
+const INTRINSIC_W = 1650;
+const INTRINSIC_H = 905;
 
-export function Logo({ className, height = 22 }: Props) {
-  /** Even CSS px sizes reduce fuzzy edges when the mask is composited on mobile. */
+/**
+ * Raster-free SVG via `<img>` (vector scales crisply). Avoids CSS `mask-image`,
+ * which often looks soft on mobile Safari.
+ */
+export function Logo({
+  className,
+  height = 22,
+  variant = "ink",
+  fetchPriority = "auto",
+}: Props) {
   const heightPx = height % 2 === 0 ? height : height + 1;
-  const widthPx = Math.max(2, Math.round((heightPx * LOGO_ASPECT) / 2) * 2);
+  const widthPx = Math.max(2, Math.round(heightPx * LOGO_ASPECT));
   return (
-    <span
-      role="img"
-      aria-label="Floret Poltava"
+    <img
+      src="/logo.svg"
+      alt="Floret Poltava"
+      width={INTRINSIC_W}
+      height={INTRINSIC_H}
+      decoding="async"
+      draggable={false}
+      fetchPriority={fetchPriority}
       className={cn(
-        "inline-block bg-current align-middle [transform:translateZ(0)]",
+        "pointer-events-none block max-w-none shrink-0 select-none align-middle",
+        variant === "light" && "brightness-0 invert",
         className,
       )}
       style={{
-        width: widthPx,
         height: heightPx,
-        WebkitMaskImage: "url(/logo.svg)",
-        maskImage: "url(/logo.svg)",
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskSize: "contain",
-        maskSize: "contain",
-        WebkitMaskPosition: "center",
-        maskPosition: "center",
+        width: widthPx,
+        objectFit: "contain",
       }}
     />
   );

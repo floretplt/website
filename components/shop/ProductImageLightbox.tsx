@@ -62,7 +62,7 @@ export function ProductImageLightbox({
     return (
       <div
         className={cn(
-          "flex w-full items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted",
+          "flex w-full items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted md:text-xs",
           aspectClassName,
         )}
       >
@@ -198,7 +198,7 @@ export function ProductImageLightbox({
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
-                <p className="mt-2 text-center text-xs text-bg/70">
+                <p className="mt-2 text-center text-sm text-bg/70 md:text-xs">
                   {idx + 1} / {images.length}
                 </p>
               </>

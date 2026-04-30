@@ -125,13 +125,10 @@ export function AddressAutocomplete({
           disabled={disabled}
           placeholder={placeholder}
           autoComplete="street-address"
-          className={cn(
-            "w-full border border-ink/20 bg-transparent px-3 py-2",
-            className,
-          )}
+          className={cn("form-input", className)}
         />
         {fallbackHint ? (
-          <p className="text-xs text-muted">{fallbackHint}</p>
+          <p className="text-sm text-muted md:text-xs">{fallbackHint}</p>
         ) : null}
       </div>
     );
@@ -149,12 +146,9 @@ export function AddressAutocomplete({
         disabled={disabled}
         placeholder={placeholder}
         autoComplete="off"
-        className={cn(
-          "w-full border border-ink/20 bg-transparent px-3 py-2",
-          className,
-        )}
+        className={cn("form-input", className)}
       />
-      {hint ? <p className="text-[11px] leading-relaxed text-muted">{hint}</p> : null}
+      {hint ? <p className="text-sm leading-relaxed text-muted md:text-[11px]">{hint}</p> : null}
     </div>
   );
 }

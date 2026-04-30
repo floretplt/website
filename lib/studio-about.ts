@@ -1,8 +1,5 @@
-import type { Locale } from "@/i18n/routing";
-
 /** Known subheading between intro and closing copy (must match DB / translations). */
 const SUBHEADING_UK = "Хто і кому дарує наші букети?";
-const SUBHEADING_EN = "Who gives — and receives — our bouquets?";
 
 function normalizeForMatch(s: string): string {
   return s
@@ -25,21 +22,14 @@ function flattenBlock(s: string): string {
   return s.replace(/\r\n/g, "\n").replace(/\n/g, " ").trim();
 }
 
-export function splitStudioAbout(
-  aboutText: string,
-  locale: Locale,
-): {
+export function splitStudioAbout(aboutText: string): {
   introBlocks: string[];
   subheading: string | null;
   closingBlocks: string[];
 } {
-  const needle = normalizeForMatch(
-    locale === "uk" ? SUBHEADING_UK : SUBHEADING_EN,
-  );
+  const needle = normalizeForMatch(SUBHEADING_UK);
   const rawBlocks = paragraphBlocksFromAboutText(aboutText);
-  const idx = rawBlocks.findIndex(
-    (b) => normalizeForMatch(b) === needle,
-  );
+  const idx = rawBlocks.findIndex((b) => normalizeForMatch(b) === needle);
 
   if (idx === -1) {
     return {

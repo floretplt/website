@@ -5,9 +5,15 @@ import { routing } from "./i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (pathname === "/en" || pathname.startsWith("/en/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === "/en" ? "/" : pathname.slice(3) || "/";
+    return NextResponse.redirect(url, 308);
+  }
   if (
-    request.nextUrl.pathname.startsWith("/admin") ||
-    request.nextUrl.pathname.startsWith("/api")
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api")
   ) {
     return NextResponse.next();
   }

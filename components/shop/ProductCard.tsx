@@ -1,7 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { ProductImageLightbox } from "@/components/shop/ProductImageLightbox";
 import type { ProductRow } from "@/lib/types/database";
-import type { Locale } from "@/i18n/routing";
 import type { Size } from "@/lib/constants";
 import { formatMoney } from "@/lib/format";
 import {
@@ -14,7 +13,6 @@ import {
 } from "@/lib/product-display";
 type CardProps = {
   product: ProductRow;
-  locale: Locale;
   category: string;
   moodLabel: string;
   /** Kept for API compatibility; catalog styles are illustrative, not stock. */
@@ -36,7 +34,6 @@ type CardProps = {
 
 export function ProductCard({
   product,
-  locale,
   category,
   moodLabel,
   orderLabel,
@@ -47,19 +44,19 @@ export function ProductCard({
   deferredImage = false,
 }: CardProps) {
   const img = primaryImage(product);
-  const listPrice = productMinPrice(product, locale);
-  const cur = productCurrency(locale);
-  const name = productName(product, locale);
+  const listPrice = productMinPrice(product);
+  const cur = productCurrency();
+  const name = productName(product);
   const href = `/catalog/${category}/${product.slug}`;
   const orderHref = `/order?product=${product.slug}&category=${category}`;
 
   if (variant === "catalog") {
     const tierLetter = (s: Size) =>
       s === "small" ? "S" : s === "medium" ? "M" : "L";
-    const tiers = offeredSizes(product, locale);
+    const tiers = offeredSizes(product);
 
     return (
-      <article className="group relative flex h-full min-h-0 flex-col animate-fadeIn">
+      <article className="group relative flex h-full min-h-0 flex-col">
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm ring-1 ring-ink/[0.04]">
           <div className="pointer-events-none relative z-0 flex min-h-0 flex-1 flex-col">
             {/* 4:5 — same proportion as typical Instagram feed posts (e.g. 1080×1350) */}
@@ -73,36 +70,37 @@ export function ProductCard({
                 loading={deferredImage ? "lazy" : undefined}
                 fetchPriority={deferredImage ? "low" : undefined}
                 enableLightbox={false}
+                imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               />
             ) : (
-              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
+              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted md:text-xs">
                 Floret
               </div>
             )}
             <div className="flex min-h-0 flex-1 flex-col border-t border-ink/10 px-3 pb-3 pt-3">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 text-left">
-                <span className="line-clamp-2 min-h-[2.75rem] font-display text-lg leading-snug text-ink transition-colors group-hover:text-rose">
+                <span className="line-clamp-2 min-h-[2.75rem] font-display text-xl leading-snug text-ink transition-colors group-hover:text-rose md:text-lg">
                   {name}
                 </span>
-                <span className="shrink-0 pt-0.5 text-sm tabular-nums text-ink">
+                <span className="shrink-0 pt-0.5 text-base tabular-nums text-ink md:text-sm">
                   {priceFromPrefix ? (
                     <>
                       <span className="text-muted">{priceFromPrefix}</span>{" "}
                     </>
                   ) : null}
-                  {formatMoney(listPrice, cur, locale)}
+                  {formatMoney(listPrice, cur)}
                 </span>
               </div>
               {showSizeTiers ? (
-                <p className="mt-2 min-h-[2.25rem] text-left text-[10px] leading-snug text-muted">
+                <p className="mt-2 min-h-[2.5rem] text-left text-sm leading-snug text-muted tabular-nums md:min-h-[2.25rem] md:text-[11px]">
                   {tiers.map((s, i) => {
-                    const pr = productPriceForSize(product, locale, s);
+                    const pr = productPriceForSize(product, s);
                     if (pr == null) return null;
                     return (
                       <span key={s}>
                         {i > 0 ? " · " : null}
                         {tierLetter(s)}{" "}
-                        {formatMoney(pr, cur, locale)}
+                        {formatMoney(pr, cur)}
                       </span>
                     );
                   })}
@@ -119,7 +117,7 @@ export function ProductCard({
             <div className="relative z-20 px-3 pb-3 pt-0">
               <Link
                 href={orderHref}
-                className="btn-square mt-3 block w-full shrink-0 text-center"
+                className="btn-square mt-3 block w-full shrink-0 rounded-lg text-center"
               >
                 {orderLabel}
               </Link>
@@ -131,7 +129,7 @@ export function ProductCard({
   }
 
   return (
-    <article className="group relative flex flex-col animate-fadeIn">
+    <article className="group relative flex flex-col">
       <div className="pointer-events-none relative z-0 flex flex-col">
         {img ? (
           <ProductImageLightbox
@@ -143,28 +141,29 @@ export function ProductCard({
             loading={deferredImage ? "lazy" : undefined}
             fetchPriority={deferredImage ? "low" : undefined}
             enableLightbox={false}
+            imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex aspect-square w-full items-center justify-center bg-bg text-xs uppercase tracking-widest text-muted">
+          <div className="flex aspect-square w-full items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted md:text-xs">
             Floret
           </div>
         )}
         <div className="mt-4 flex flex-col items-center text-center">
-          <span className="font-display text-lg text-ink transition-colors group-hover:text-rose">
+          <span className="font-display text-xl text-ink transition-colors group-hover:text-rose md:text-lg">
             {name}
           </span>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.12em] text-muted">
+            <span className="text-sm uppercase tracking-[0.12em] text-muted md:text-xs">
               {moodLabel}
             </span>
           </div>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-2 text-base text-muted md:text-sm">
             {priceFromPrefix ? (
               <>
                 <span className="text-muted">{priceFromPrefix}</span>{" "}
               </>
             ) : null}
-            {formatMoney(listPrice, cur, locale)}
+            {formatMoney(listPrice, cur)}
           </p>
         </div>
       </div>

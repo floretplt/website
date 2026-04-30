@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { ProductDetailGallery } from "@/components/shop/ProductDetailGallery";
 import { ProductStickyCta } from "@/components/shop/ProductStickyCta";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { Reveal } from "@/components/animations/Reveal";
 import {
   PRODUCT_CATEGORIES,
   type ProductCategory,
@@ -53,17 +54,17 @@ export default async function ProductPage({
   const related = await getRelatedProducts(category, product.id, 4);
   const gallery = galleryUrls(product);
 
-  const cur = productCurrency(locale);
+  const cur = productCurrency();
   const orderHref = `/order?product=${product.slug}&category=${category}`;
-  const lowPrice = productMinPrice(product, locale);
-  const highPrice = productMaxPrice(product, locale);
-  const tiers = offeredSizes(product, locale);
+  const lowPrice = productMinPrice(product);
+  const highPrice = productMaxPrice(product);
+  const tiers = offeredSizes(product);
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: productName(product, locale),
-    description: productDescription(product, locale),
+    name: productName(product),
+    description: productDescription(product),
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: cur,
@@ -86,18 +87,18 @@ export default async function ProductPage({
             {gallery.length > 0 ? (
               <ProductDetailGallery
                 images={gallery}
-                productName={productName(product, locale)}
+                productName={productName(product)}
               />
             ) : null}
           </div>
 
           <div className="md:sticky md:top-28 md:self-start">
             <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
-              {productName(product, locale)}
+              {productName(product)}
             </h1>
-            <div className="mt-4 space-y-1 text-sm text-muted">
+            <div className="mt-4 space-y-1 text-base text-muted md:text-sm">
               {tiers.map((size) => {
-                const amt = productPriceForSize(product, locale, size);
+                const amt = productPriceForSize(product, size);
                 if (amt == null) return null;
                 return (
                   <p key={size}>
@@ -105,17 +106,17 @@ export default async function ProductPage({
                       {size === "small" ? "S" : size === "medium" ? "M" : "L"}
                     </span>
                     {" — "}
-                    {formatMoney(amt, cur, locale)}
+                    {formatMoney(amt, cur)}
                   </p>
                 );
               })}
             </div>
-            <p className="mt-4 text-sm text-muted">
+            <p className="mt-4 text-base text-muted md:text-sm">
               {t("mood")}: {tm(product.color_mood)}
             </p>
-            <p className="mt-4 text-sm leading-relaxed text-muted">{t("styleNote")}</p>
-            <div className="mt-8 max-w-prose leading-relaxed text-muted">
-              {productDescription(product, locale) || "—"}
+            <p className="mt-4 text-base leading-relaxed text-muted md:text-sm">{t("styleNote")}</p>
+            <div className="mt-8 max-w-prose text-base leading-relaxed text-muted md:text-sm">
+              {productDescription(product) || "—"}
             </div>
             <Link href={orderHref} className="btn-pill mt-10 hidden md:inline-flex">
               {t("order")}
@@ -125,18 +126,20 @@ export default async function ProductPage({
 
         {related.length > 0 ? (
           <section className="mt-20 border-t border-ink/10 pt-16">
-            <h2 className="h-section mb-10">{t("related")}</h2>
+            <Reveal>
+              <h2 className="h-section mb-10">{t("related")}</h2>
+            </Reveal>
             <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-              {related.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  locale={locale}
-                  category={category}
-                  moodLabel={tm(p.color_mood)}
-                  orderLabel={t("order")}
-                  priceFromPrefix={t("from")}
-                />
+              {related.map((p, i) => (
+                <Reveal key={p.id} delayMs={i * 70}>
+                  <ProductCard
+                    product={p}
+                    category={category}
+                    moodLabel={tm(p.color_mood)}
+                    orderLabel={t("order")}
+                    priceFromPrefix={t("from")}
+                  />
+                </Reveal>
               ))}
             </div>
           </section>

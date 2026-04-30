@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="uk" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cormorant.variable} min-h-screen overflow-x-hidden bg-bg font-sans text-ink antialiased [text-size-adjust:100%]`}
+        className={`${inter.variable} ${cormorant.variable} min-h-screen bg-bg font-sans text-ink antialiased [text-size-adjust:100%]`}
       >
         <SitePreloader />
         {children}

@@ -12,7 +12,7 @@ export default async function AboutPage({
   const locale = params.locale as Locale;
   const t = await getTranslations({ locale, namespace: "about" });
   const settings = await getSiteSettings();
-  const short = aboutShortForLocale(settings, locale);
+  const short = aboutShortForLocale(settings);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">

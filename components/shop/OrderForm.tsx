@@ -11,7 +11,6 @@ import type {
   DeliveryPricingBand,
   ProductRow,
 } from "@/lib/types/database";
-import type { Locale } from "@/i18n/routing";
 import type { Size } from "@/lib/constants";
 import {
   orderCreateSchema,
@@ -24,6 +23,7 @@ import {
   productMinPrice,
   productName,
   productPriceForSize,
+  productSmallTierFloorPrice,
 } from "@/lib/product-display";
 import { ProductImageLightbox } from "@/components/shop/ProductImageLightbox";
 import { formatMoney } from "@/lib/format";
@@ -40,7 +40,6 @@ import { pickupTimeSlotValues } from "@/lib/pickup-slots";
 import { Check } from "lucide-react";
 
 type Props = {
-  locale: Locale;
   initialProduct: ProductRow | null;
   /** From `?size=` when present (small | medium | large). */
   defaultProductSize?: Size;
@@ -79,17 +78,16 @@ function FieldError({ messageKey }: { messageKey: string | undefined }) {
   const t = useTranslations("order.validation");
   if (!messageKey) return null;
   if (!VALIDATION_CODES.includes(messageKey as (typeof VALIDATION_CODES)[number])) {
-    return <p className="text-sm text-red-800">{messageKey}</p>;
+    return <p className="text-base text-red-800 md:text-sm">{messageKey}</p>;
   }
   return (
-    <p className="text-sm text-red-800">
+    <p className="text-base text-red-800 md:text-sm">
       {t(messageKey as (typeof VALIDATION_CODES)[number])}
     </p>
   );
 }
 
 export function OrderForm({
-  locale,
   initialProduct,
   defaultProductSize,
   minDeliveryDate,
@@ -106,7 +104,7 @@ export function OrderForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const currency = productCurrency(locale);
+  const currency = productCurrency();
   const pickupSlots = useMemo(() => pickupTimeSlotValues(), []);
   const hasDistrictMatrix = deliveryDistricts.length > 0;
   const maxPickupDate = useMemo(
@@ -123,20 +121,20 @@ export function OrderForm({
           defaultName: "",
         };
       }
-      const offered = offeredSizes(initialProduct, locale);
+      const offered = offeredSizes(initialProduct);
       const rs: Size =
         defaultProductSize && offered.includes(defaultProductSize)
           ? defaultProductSize
           : (offered[0] ?? "medium");
-      const minP = productMinPrice(initialProduct, locale);
-      const tier = productPriceForSize(initialProduct, locale, rs);
+      const minP = productMinPrice(initialProduct);
+      const tier = productPriceForSize(initialProduct, rs);
       return {
         resolvedDefaultSize: rs,
         catalogMinPrice: minP,
         defaultPriceForSize: tier ?? minP,
-        defaultName: productName(initialProduct, locale),
+        defaultName: productName(initialProduct),
       };
-    }, [initialProduct, locale, defaultProductSize]);
+    }, [initialProduct, defaultProductSize]);
 
   const previewSrc = useMemo(
     () => (initialProduct ? primaryImage(initialProduct) : null),
@@ -191,11 +189,14 @@ export function OrderForm({
     handleSubmit,
     watch,
     setValue,
+    getValues,
+    trigger,
     formState: { errors },
   } = useForm<OrderCreateInput>({
     resolver: zodResolver(orderCreateSchema) as Resolver<OrderCreateInput>,
     defaultValues: defaultValues as OrderCreateInput,
     mode: "onBlur",
+    reValidateMode: "onChange",
   });
 
   const deliveryType = watch("delivery_type");
@@ -270,14 +271,28 @@ export function OrderForm({
       : (deliveryFeeUah ?? 0);
   const totalToCharge = bouquetAmount + deliveryChargeUah + postcardFeeUah;
 
-  const tierFloor = useMemo(() => {
+  /** Lowest allowed sum: size S (or cheapest tier if S is not sold). */
+  const smallTierMin = useMemo(() => {
     if (!initialProduct) return 0.01;
-    const pr = productPriceForSize(initialProduct, locale, watchedSize);
-    if (pr != null && pr > 0) return pr;
+    const s = productSmallTierFloorPrice(initialProduct);
+    if (s != null && s > 0) return s;
     return Math.max(catalogMinPrice || 0.01, 0.01);
-  }, [initialProduct, locale, watchedSize, catalogMinPrice]);
+  }, [initialProduct, catalogMinPrice]);
 
-  const sizeOptions = initialProduct ? offeredSizes(initialProduct, locale) : [];
+  useEffect(() => {
+    if (!initialProduct) return;
+    const current = getValues("price_paid");
+    if (typeof current === "number" && current + 1e-9 < smallTierMin) {
+      setValue("price_paid", smallTierMin, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    } else {
+      void trigger("price_paid");
+    }
+  }, [initialProduct, watchedSize, smallTierMin, getValues, setValue, trigger]);
+
+  const sizeOptions = initialProduct ? offeredSizes(initialProduct) : [];
 
   const showBandHintTable =
     deliveryType === "delivery" &&
@@ -294,6 +309,16 @@ export function OrderForm({
 
   const onSubmit = async (values: OrderCreateInput) => {
     setFormError(null);
+    if (initialProduct) {
+      if (values.price_paid + 1e-9 < smallTierMin) {
+        setFormError(
+          t("priceBelowSmallMinimum", {
+            min: formatMoney(smallTierMin, currency),
+          }),
+        );
+        return;
+      }
+    }
     if (
       values.delivery_type === "delivery" &&
       values.currency === "UAH" &&
@@ -462,15 +487,15 @@ export function OrderForm({
         {initialProduct ? (
           <>
             <p className="font-display text-2xl">{defaultName}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
+            <p className="mt-2 text-base leading-relaxed text-muted md:text-sm">
               {sizeOptions.map((s, i) => {
-                const pr = productPriceForSize(initialProduct, locale, s);
+                const pr = productPriceForSize(initialProduct, s);
                 if (pr == null) return null;
                 const label = s === "small" ? "S" : s === "medium" ? "M" : "L";
                 return (
                   <span key={s}>
                     {i > 0 ? " · " : null}
-                    {label} — {formatMoney(pr, currency, locale)}
+                    {label} — {formatMoney(pr, currency)}
                   </span>
                 );
               })}
@@ -479,22 +504,19 @@ export function OrderForm({
           </>
         ) : (
           <div className="space-y-3">
-            <label className="block text-sm text-muted">
-              <span className="mb-1 block uppercase tracking-wider">
+            <label className="block">
+              <span className="form-label">
                 {t("productNameManual")}
                 {req}
               </span>
-              <input
-                className="w-full border border-ink/20 bg-transparent px-3 py-2"
-                {...register("product_name")}
-              />
+              <input className="form-input" {...register("product_name")} />
             </label>
             <FieldError messageKey={errors.product_name?.message} />
           </div>
         )}
 
         <div className="pt-2">
-          <p className="mb-3 text-sm uppercase tracking-wider text-muted">
+          <p className="form-label mb-3">
             {t("bouquetSize")}
             {req}
           </p>
@@ -510,16 +532,16 @@ export function OrderForm({
                     title={ts(s)}
                     onClick={() => {
                       field.onChange(s);
-                      if (initialProduct) {
-                        const pr = productPriceForSize(initialProduct, locale, s);
-                        setValue(
-                          "price_paid",
-                          pr ?? catalogMinPrice,
-                          { shouldValidate: true, shouldDirty: true },
-                        );
-                      }
+                      if (!initialProduct) return;
+                      const tier = productPriceForSize(initialProduct, s);
+                      const next =
+                        tier != null && tier > 0 ? tier : smallTierMin;
+                      setValue("price_paid", next, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      });
                     }}
-                    className={`min-w-[3rem] border px-4 py-2 text-sm font-medium uppercase tracking-wider ${
+                    className={`min-w-[3rem] border px-4 py-2 text-base font-medium uppercase tracking-wider md:text-sm ${
                       field.value === s
                         ? "border-ink bg-ink text-bg"
                         : "border-ink/20 text-muted hover:border-ink"
@@ -535,27 +557,39 @@ export function OrderForm({
         </div>
 
         <div className="pt-2">
-          <label className="block text-sm text-muted">
-            <span className="mb-1 block uppercase tracking-wider">
+          <label className="block min-w-0">
+            <span className="form-label">
               {t("agreedAmount")}
               {req}
             </span>
             <input
               type="number"
               step="0.01"
-              min={initialProduct ? tierFloor : 0.01}
-              className="w-full border border-ink/20 bg-transparent px-3 py-2"
-              {...register("price_paid", { valueAsNumber: true })}
+              min={initialProduct ? smallTierMin : 0.01}
+              className="form-input tabular-nums"
+              {...register("price_paid", {
+                valueAsNumber: true,
+                validate: (v) => {
+                  if (!initialProduct) return true;
+                  if (typeof v !== "number" || !Number.isFinite(v)) return true;
+                  if (v + 1e-9 < smallTierMin) {
+                    return t("priceBelowSmallMinimum", {
+                      min: formatMoney(smallTierMin, currency),
+                    });
+                  }
+                  return true;
+                },
+              })}
             />
           </label>
           {initialProduct ? (
             <>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+              <p className="mt-1 text-sm md:text-[11px] leading-relaxed text-muted">
                 {t("agreedAmountHint")}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+              <p className="mt-1 text-sm md:text-[11px] leading-relaxed text-muted">
                 {t("priceFloorHint", {
-                  min: formatMoney(tierFloor, currency, locale),
+                  min: formatMoney(smallTierMin, currency),
                 })}
               </p>
             </>
@@ -572,7 +606,7 @@ export function OrderForm({
         </h2>
         <textarea
           rows={4}
-          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-sm"
+          className="form-input min-h-[7.5rem] resize-y py-3"
           placeholder={t("notesPlaceholder")}
           {...register("notes")}
         />
@@ -580,7 +614,7 @@ export function OrderForm({
 
       <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("delivery")}</h2>
-        <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex flex-col gap-3 text-base sm:flex-row sm:items-center sm:gap-6 md:text-sm">
           <label className="flex items-center gap-2">
             <input
               type="radio"
@@ -638,13 +672,13 @@ export function OrderForm({
         </div>
 
         {deliveryType === "pickup" ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <p className="text-sm leading-relaxed text-muted md:col-span-2">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <p className="text-base leading-relaxed text-muted md:col-span-2 md:text-sm">
               {t("pickupAddressHint")}
             </p>
-            <div className="text-sm text-muted">
-              <label className="block">
-                <span className="mb-1 block uppercase tracking-wider">
+            <div className="min-w-0 text-base text-muted md:text-sm">
+              <label className="block min-w-0">
+                <span className="form-label">
                   {t("pickupDate")}
                   {req}
                 </span>
@@ -652,24 +686,21 @@ export function OrderForm({
                   type="date"
                   min={minPickupDate}
                   max={maxPickupDate}
-                  lang={locale === "uk" ? "uk" : "en"}
-                  className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                  lang="uk"
+                  className="form-input max-w-full"
                   {...register("delivery_date")}
                 />
               </label>
-              <p className="mt-1 text-[11px] text-muted">{t("pickupDateRangeHint")}</p>
+              <p className="mt-1 text-sm md:text-[11px] text-muted">{t("pickupDateRangeHint")}</p>
               <FieldError messageKey={errors.delivery_date?.message} />
             </div>
-            <div className="text-sm text-muted">
-              <label className="block">
-                <span className="mb-1 block uppercase tracking-wider">
+            <div className="min-w-0 text-base text-muted md:text-sm">
+              <label className="block min-w-0">
+                <span className="form-label">
                   {t("pickupTime")}
                   {req}
                 </span>
-                <select
-                  className="w-full border border-ink/20 bg-transparent px-3 py-2"
-                  {...register("delivery_time")}
-                >
+                <select className="form-input" {...register("delivery_time")}>
                   {pickupSlots.map((slot) => (
                     <option key={slot} value={slot}>
                       {slot}
@@ -677,7 +708,7 @@ export function OrderForm({
                   ))}
                 </select>
               </label>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+              <p className="mt-1 text-sm md:text-[11px] leading-relaxed text-muted">
                 {t("pickupTimeHint")}
               </p>
               <FieldError messageKey={errors.delivery_time?.message} />
@@ -686,14 +717,12 @@ export function OrderForm({
         ) : null}
 
         {deliveryType === "delivery" ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
             {showBandHintTable ? (
               <div className="rounded-lg border border-ink/15 bg-ink/[0.02] p-4 md:col-span-2">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-                  {t("deliveryPricingTitle")}
-                </p>
+                <p className="form-label mb-0">{t("deliveryPricingTitle")}</p>
                 <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-                  <table className="mt-3 w-full min-w-[16rem] max-w-md text-sm">
+                  <table className="mt-3 w-full min-w-[16rem] max-w-md text-base md:text-sm">
                     <tbody>
                       {deliveryBands.map((b) => (
                         <tr
@@ -704,14 +733,14 @@ export function OrderForm({
                             {t("deliveryPricingKm", { km: b.max_km })}
                           </td>
                           <td className="py-2 tabular-nums text-ink">
-                            {formatMoney(b.price_uah, currency, locale)}
+                            {formatMoney(b.price_uah, currency)}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-muted">
+                <p className="mt-3 text-sm md:text-[11px] leading-relaxed text-muted">
                   {t("deliveryPricingNote")}
                 </p>
               </div>
@@ -722,7 +751,7 @@ export function OrderForm({
                 control={control}
                 render={({ field }) => (
                   <div className="md:col-span-2 space-y-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                    <p className="form-label mb-0">
                       {t("deliveryTierTitle")}
                       {req}
                     </p>
@@ -738,7 +767,7 @@ export function OrderForm({
                                 selected ? null : b.max_km,
                               )
                             }
-                            className={`flex flex-col gap-1 border px-4 py-3 text-left text-sm transition-colors ${
+                            className={`flex flex-col gap-1 border px-4 py-3 text-left text-base transition-colors md:text-sm ${
                               selected
                                 ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
                                 : "border-ink/20 hover:border-ink/50"
@@ -748,13 +777,13 @@ export function OrderForm({
                               {t("deliveryPricingKm", { km: b.max_km })}
                             </span>
                             <span className="tabular-nums text-muted">
-                              {formatMoney(b.price_uah, currency, locale)}
+                              {formatMoney(b.price_uah, currency)}
                             </span>
                           </button>
                         );
                       })}
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted">
+                    <p className="text-sm md:text-[11px] leading-relaxed text-muted">
                       {t("deliveryTierHint")}
                     </p>
                   </div>
@@ -766,8 +795,8 @@ export function OrderForm({
                 name="delivery_zone_id"
                 control={control}
                 render={({ field }) => (
-                  <div className="text-sm text-muted md:col-span-2 space-y-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                  <div className="text-base text-muted md:col-span-2 md:text-sm space-y-3">
+                    <p className="form-label mb-0">
                       {t("deliveryNamedZoneTitle")}
                       {req}
                     </p>
@@ -775,7 +804,7 @@ export function OrderForm({
                       {namedZones.map((z) => {
                         const selected = field.value === z.id;
                         const desc =
-                          locale === "uk" ? z.description_uk : z.description_en;
+                          z.description_uk;
                         return (
                           <button
                             key={z.id}
@@ -795,21 +824,21 @@ export function OrderForm({
                               />
                             ) : null}
                             <span className="pr-2 font-medium leading-snug text-ink">
-                              {locale === "uk" ? z.label_uk : z.label_en}
+                              {z.label_uk}
                             </span>
                             {desc ? (
-                              <span className="pr-2 text-[11px] leading-relaxed text-muted">
+                              <span className="pr-2 text-sm md:text-[11px] leading-relaxed text-muted">
                                 {desc}
                               </span>
                             ) : null}
                             <span className="tabular-nums text-muted">
-                              {formatMoney(z.price_uah, "UAH", locale)}
+                              {formatMoney(z.price_uah, "UAH")}
                             </span>
                           </button>
                         );
                       })}
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted">
+                    <p className="text-sm md:text-[11px] leading-relaxed text-muted">
                       {t("deliveryZoneCardsHint")}
                     </p>
                   </div>
@@ -821,8 +850,8 @@ export function OrderForm({
                 name="delivery_district_id"
                 control={control}
                 render={({ field }) => (
-                  <div className="text-sm text-muted md:col-span-2 space-y-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                  <div className="text-base text-muted md:col-span-2 md:text-sm space-y-3">
+                    <p className="form-label mb-0">
                       {t("deliveryDistrict")}
                       {req}
                     </p>
@@ -833,7 +862,7 @@ export function OrderForm({
                           d.morning_uah === d.afternoon_uah &&
                           d.afternoon_uah === d.evening_uah;
                         const priceLabel = flat
-                          ? formatMoney(d.morning_uah, "UAH", locale)
+                          ? formatMoney(d.morning_uah, "UAH")
                           : (() => {
                               const lo = Math.min(
                                 d.morning_uah,
@@ -846,7 +875,7 @@ export function OrderForm({
                                 d.evening_uah,
                               );
                               if (lo === hi) {
-                                return formatMoney(lo, "UAH", locale);
+                                return formatMoney(lo, "UAH");
                               }
                               const slot = districtDeliveryFeeUah(
                                 [d],
@@ -854,8 +883,8 @@ export function OrderForm({
                                 watchDeliveryTime,
                               );
                               return slot != null
-                                ? formatMoney(slot, "UAH", locale)
-                                : `${formatMoney(lo, "UAH", locale)}–${formatMoney(hi, "UAH", locale)}`;
+                                ? formatMoney(slot, "UAH")
+                                : `${formatMoney(lo, "UAH")}–${formatMoney(hi, "UAH")}`;
                             })();
                         return (
                           <button
@@ -876,7 +905,7 @@ export function OrderForm({
                               />
                             ) : null}
                             <span className="pr-2 font-medium leading-snug text-ink">
-                              {locale === "uk" ? d.label_uk : d.label_en}
+                              {d.label_uk}
                             </span>
                             <span className="tabular-nums text-muted">
                               {priceLabel}
@@ -885,30 +914,30 @@ export function OrderForm({
                         );
                       })}
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted">
+                    <p className="text-sm md:text-[11px] leading-relaxed text-muted">
                       {t("deliveryZoneCardsHint")}
                     </p>
                   </div>
                 )}
               />
             ) : null}
-            <div className="text-sm text-muted">
-              <label className="block">
-                <span className="mb-1 block uppercase tracking-wider">
+            <div className="min-w-0 text-base text-muted md:text-sm">
+              <label className="block min-w-0">
+                <span className="form-label">
                   {t("deliveryDate")}
                   {req}
                 </span>
                 <input
                   type="date"
                   min={minDeliveryDate}
-                  lang={locale === "uk" ? "uk" : "en"}
-                  className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                  lang="uk"
+                  className="form-input max-w-full"
                   {...register("delivery_date")}
                 />
               </label>
-              <p className="mt-1 text-[11px] text-muted">{t("dateFormatHint")}</p>
+              <p className="mt-1 text-sm md:text-[11px] text-muted">{t("dateFormatHint")}</p>
               {sameDayOrderCutoff && sameDayDeliveryEnd ? (
-                <p className="mt-2 text-[11px] leading-relaxed text-muted">
+                <p className="mt-2 text-sm md:text-[11px] leading-relaxed text-muted">
                   {t("deliverySameDayRules", {
                     orderCutoff: sameDayOrderCutoff,
                     deliveryEnd: sameDayDeliveryEnd,
@@ -917,28 +946,25 @@ export function OrderForm({
               ) : null}
               <FieldError messageKey={errors.delivery_date?.message} />
             </div>
-            <div className="text-sm text-muted">
-              <label className="block">
-                <span className="mb-1 block uppercase tracking-wider">
+            <div className="min-w-0 text-base text-muted md:text-sm">
+              <label className="block min-w-0">
+                <span className="form-label">
                   {t("deliveryTime")}
                   {req}
                 </span>
-                <select
-                  className="w-full border border-ink/20 bg-transparent px-3 py-2"
-                  {...register("delivery_time")}
-                >
+                <select className="form-input" {...register("delivery_time")}>
                   <option value="">—</option>
                   <option value="morning">{t("timeMorning")}</option>
                   <option value="afternoon">{t("timeAfternoon")}</option>
                   <option value="evening">{t("timeEvening")}</option>
                 </select>
               </label>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted">
+              <p className="mt-1 text-sm md:text-[11px] leading-relaxed text-muted">
                 {t("deliveryTimeApproxHint")}
               </p>
               <FieldError messageKey={errors.delivery_time?.message} />
             </div>
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-muted md:col-span-2">
+            <label className="flex cursor-pointer items-start gap-3 text-base text-muted md:col-span-2 md:text-sm">
               <input
                 type="checkbox"
                 className="mt-1"
@@ -948,15 +974,15 @@ export function OrderForm({
                 <span className="block font-medium text-ink">
                   {t("coordinateAddressLabel")}
                 </span>
-                <span className="mt-1 block text-[11px] leading-relaxed">
+                <span className="mt-1 block text-sm md:text-[11px] leading-relaxed">
                   {t("coordinateAddressHelp")}
                 </span>
               </span>
             </label>
             {!coordinate && (
               <>
-                <div className="md:col-span-2 text-sm text-muted">
-                  <span className="mb-1 block uppercase tracking-wider">
+                <div className="min-w-0 md:col-span-2 md:text-sm">
+                  <span className="form-label">
                     {t("address")}
                     {req}
                   </span>
@@ -970,6 +996,7 @@ export function OrderForm({
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         apiKey={mapsKey}
+                        className="form-input"
                         placeholder={t("addressPlaceholder")}
                         hint={
                           mapsKey
@@ -982,59 +1009,50 @@ export function OrderForm({
                   />
                   <FieldError messageKey={errors.delivery_address?.message} />
                 </div>
-                <label className="md:col-span-2 text-sm text-muted">
-                  <span className="mb-1 block uppercase tracking-wider">
+                <label className="min-w-0 md:col-span-2 md:text-sm">
+                  <span className="form-label">
                     {t("entrance")}
                     {opt}
                   </span>
-                  <input
-                    className="w-full border border-ink/20 bg-transparent px-3 py-2"
-                    {...register("delivery_entrance")}
-                  />
+                  <input className="form-input" {...register("delivery_entrance")} />
                 </label>
-                <label className="text-sm text-muted">
-                  <span className="mb-1 block uppercase tracking-wider">
+                <label className="min-w-0 md:text-sm">
+                  <span className="form-label">
                     {t("floor")}
                     {opt}
                   </span>
-                  <input
-                    className="w-full border border-ink/20 bg-transparent px-3 py-2"
-                    {...register("delivery_floor")}
-                  />
+                  <input className="form-input" {...register("delivery_floor")} />
                 </label>
-                <label className="text-sm text-muted">
-                  <span className="mb-1 block uppercase tracking-wider">
+                <label className="min-w-0 md:text-sm">
+                  <span className="form-label">
                     {t("apartment")}
                     {opt}
                   </span>
-                  <input
-                    className="w-full border border-ink/20 bg-transparent px-3 py-2"
-                    {...register("delivery_apartment")}
-                  />
+                  <input className="form-input" {...register("delivery_apartment")} />
                 </label>
               </>
             )}
-            <label className="md:col-span-2 text-sm text-muted">
-              <span className="mb-1 block uppercase tracking-wider">
+            <label className="min-w-0 md:col-span-2 md:text-sm">
+              <span className="form-label">
                 {t("recipientPhone")}
                 {req}
               </span>
               <input
                 type="tel"
                 placeholder="+380..."
-                className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                className="form-input"
                 {...register("recipient_phone")}
               />
             </label>
             <FieldError messageKey={errors.recipient_phone?.message} />
-            <label className="md:col-span-2 text-sm text-muted">
-              <span className="mb-1 block uppercase tracking-wider">
+            <label className="min-w-0 md:col-span-2 md:text-sm">
+              <span className="form-label">
                 {t("giftMessage")}
                 {opt}
               </span>
               <textarea
                 rows={2}
-                className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                className="form-input min-h-[4.5rem] resize-y py-3"
                 {...register("gift_message")}
               />
             </label>
@@ -1044,31 +1062,28 @@ export function OrderForm({
 
       <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("contact")}</h2>
-        <label className="block text-sm text-muted">
-          <span className="mb-1 block uppercase tracking-wider">
+        <label className="block min-w-0 md:text-sm">
+          <span className="form-label">
             {t("customerName")}
             {req}
           </span>
-          <input
-            className="w-full border border-ink/20 bg-transparent px-3 py-2"
-            {...register("customer_name")}
-          />
+          <input className="form-input" {...register("customer_name")} />
         </label>
         <FieldError messageKey={errors.customer_name?.message} />
-        <label className="block text-sm text-muted">
-          <span className="mb-1 block uppercase tracking-wider">
+        <label className="block min-w-0 md:text-sm">
+          <span className="form-label">
             {t("customerPhone")}
             {req}
           </span>
           <input
             type="tel"
             placeholder="+380..."
-            className="w-full border border-ink/20 bg-transparent px-3 py-2"
+            className="form-input"
             {...register("customer_phone")}
           />
         </label>
         <FieldError messageKey={errors.customer_phone?.message} />
-        <label className="flex items-start gap-3 text-sm text-muted">
+        <label className="flex items-start gap-3 text-base text-muted md:text-sm">
           <input
             type="checkbox"
             {...register("prefer_messenger_contact")}
@@ -1078,26 +1093,25 @@ export function OrderForm({
         </label>
       </section>
 
-      <section className="space-y-3 rounded-xl border border-ink/15 bg-bg/80 p-5 shadow-sm md:p-6">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("orderTotalTitle")}</h2>
-        <div className="flex justify-between gap-4 text-sm">
+        <div className="flex justify-between gap-4 text-base md:text-sm">
           <span className="text-muted">{t("bouquetLine")}</span>
           <span className="shrink-0 tabular-nums text-ink">
             {formatMoney(
               Number.isFinite(bouquetAmount) ? bouquetAmount : 0,
               currency,
-              locale,
             )}
           </span>
         </div>
         {deliveryType === "delivery" && currency === "UAH" ? (
-          <div className="flex justify-between gap-4 text-sm">
+          <div className="flex justify-between gap-4 text-base md:text-sm">
             <span className="text-muted">{t("deliveryLine")}</span>
             <span className="shrink-0 text-right tabular-nums text-ink">
               {coordinate ? (
                 <span className="text-muted">{t("deliveryFeeTbd")}</span>
               ) : deliveryFeeUah != null ? (
-                formatMoney(deliveryFeeUah, "UAH", locale)
+                formatMoney(deliveryFeeUah, "UAH")
               ) : (
                 <span className="text-muted">{t("deliveryFeeFromQuote")}</span>
               )}
@@ -1105,15 +1119,15 @@ export function OrderForm({
           </div>
         ) : null}
         {currency === "UAH" && postcardFeeUah > 0 ? (
-          <div className="flex justify-between gap-4 text-sm">
+          <div className="flex justify-between gap-4 text-base md:text-sm">
             <span className="text-muted">{t("postcardLine")}</span>
             <span className="shrink-0 tabular-nums text-ink">
-              {formatMoney(postcardFeeUah, "UAH", locale)}
+              {formatMoney(postcardFeeUah, "UAH")}
             </span>
           </div>
         ) : null}
         {deliveryType === "pickup" ? (
-          <p className="text-[11px] leading-relaxed text-muted">{t("pickupNoFee")}</p>
+          <p className="text-sm md:text-[11px] leading-relaxed text-muted">{t("pickupNoFee")}</p>
         ) : null}
         <div className="flex justify-between gap-4 border-t border-ink/20 pt-4 font-display text-lg font-medium tracking-tight">
           <span>
@@ -1124,7 +1138,6 @@ export function OrderForm({
               formatMoney(
                 Number.isFinite(totalToCharge) ? totalToCharge : 0,
                 currency,
-                locale,
               )
             ) : (
               <span className="text-muted">{t("totalPendingQuote")}</span>
@@ -1132,20 +1145,20 @@ export function OrderForm({
           </span>
         </div>
         {!deliveryFeeKnown ? (
-          <p className="text-[11px] leading-relaxed text-muted">
+          <p className="text-sm md:text-[11px] leading-relaxed text-muted">
             {t("totalPendingQuoteHint")}
           </p>
         ) : null}
         {paymentMethod === "prepay" &&
         deliveryType === "delivery" &&
         coordinate ? (
-          <p className="text-[11px] leading-relaxed text-muted">
+          <p className="text-sm md:text-[11px] leading-relaxed text-muted">
             {t("prepayBouquetOnlyNote")}
           </p>
         ) : null}
       </section>
 
-      <section className="space-y-5 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
+      <section className="space-y-4 rounded-xl border border-ink/12 bg-bg/60 p-5 shadow-sm md:p-6">
         <h2 className="eyebrow">{t("payment")}</h2>
 
         <div className="flex flex-col gap-3">
@@ -1157,8 +1170,8 @@ export function OrderForm({
               className="mt-0.5 shrink-0"
             />
             <div>
-              <span className="block text-sm font-medium text-ink">{t("reserve")}</span>
-              <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
+              <span className="block text-base font-medium text-ink md:text-sm">{t("reserve")}</span>
+              <span className="mt-0.5 block text-sm md:text-[11px] leading-relaxed text-muted">
                 {t("reserveDescription")}
               </span>
             </div>
@@ -1171,8 +1184,8 @@ export function OrderForm({
               className="mt-0.5 shrink-0"
             />
             <div>
-              <span className="block text-sm font-medium text-ink">{t("payNow")}</span>
-              <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
+              <span className="block text-base font-medium text-ink md:text-sm">{t("payNow")}</span>
+              <span className="mt-0.5 block text-sm md:text-[11px] leading-relaxed text-muted">
                 {t("payNowDescription")}
               </span>
             </div>
@@ -1180,7 +1193,7 @@ export function OrderForm({
         </div>
 
         <div className="space-y-2 border-t border-ink/10 pt-4">
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-muted">
+          <label className="flex cursor-pointer items-start gap-3 text-base text-muted md:text-sm">
             <input
               type="checkbox"
               {...register("privacy_accepted")}
@@ -1197,7 +1210,7 @@ export function OrderForm({
           <FieldError messageKey={errors.privacy_accepted?.message} />
         </div>
 
-        {formError ? <p className="text-sm text-red-800">{formError}</p> : null}
+        {formError ? <p className="text-base text-red-800 md:text-sm">{formError}</p> : null}
 
         <button
           type="submit"

@@ -16,7 +16,6 @@ import {
 } from "@/lib/delivery-address";
 import { normalizeUaPhone } from "@/lib/phone";
 import type { ProductRow } from "@/lib/types/database";
-import type { Locale } from "@/i18n/routing";
 import {
   addCalendarDaysYYYYMMDD,
   kyivCalendarDateString,
@@ -31,7 +30,11 @@ import {
 } from "@/lib/delivery-pricing";
 import { getEffectiveNamedZones } from "@/lib/default-delivery-zones";
 import { POSTCARD_FEE_UAH } from "@/lib/constants";
-import { offeredSizes, productPriceForSize } from "@/lib/product-display";
+import {
+  offeredSizes,
+  productPriceForSize,
+  productSmallTierFloorPrice,
+} from "@/lib/product-display";
 
 function isTooLateForSameDayKyiv(
   deliveryDate: string,
@@ -247,8 +250,6 @@ export async function POST(req: Request) {
         ? POSTCARD_FEE_UAH
         : null;
 
-    const locale: Locale = data.currency === "UAH" ? "uk" : "en";
-
     let productImageSnapshot: string | null = null;
 
     if (data.product_id) {
@@ -271,15 +272,19 @@ export async function POST(req: Request) {
         images: p.images,
       });
       productImageSnapshot = resolvePublicProductImageUrl(rawPrimary);
-      const sizes = offeredSizes(p, locale);
+      const sizes = offeredSizes(p);
       if (!sizes.includes(data.product_size)) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
       }
-      const tierPrice = productPriceForSize(p, locale, data.product_size);
+      const tierPrice = productPriceForSize(p, data.product_size);
       if (tierPrice == null) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
       }
-      if (data.price_paid + 1e-6 < tierPrice) {
+      const smallFloor = productSmallTierFloorPrice(p);
+      if (smallFloor == null) {
+        return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
+      }
+      if (data.price_paid + 1e-6 < smallFloor) {
         return NextResponse.json({ error: "PRICE_TOO_LOW" }, { status: 400 });
       }
     }
@@ -335,24 +340,27 @@ export async function POST(req: Request) {
     const del = deliveryFeeUah ?? 0;
     const totalDue = Number(data.price_paid) + del + pc;
 
-    const caption = buildNewOrderTelegramCaptionUk({
-      data,
-      orderNumber: row.order_number,
-      mergedAddress: data.delivery_type === "delivery" ? mergedAddress : null,
-      deliveryFeeUah,
-      postcardFeeUah,
-      totalDueUah: totalDue,
-    });
+    /** Prepay: staff Telegram is sent from `/api/liqpay/callback` after LiqPay confirms payment. */
+    if (data.payment_method !== "prepay") {
+      const caption = buildNewOrderTelegramCaptionUk({
+        data,
+        orderNumber: row.order_number,
+        mergedAddress: data.delivery_type === "delivery" ? mergedAddress : null,
+        deliveryFeeUah,
+        postcardFeeUah,
+        totalDueUah: totalDue,
+      });
 
-    await sendTelegramOrderCreated({
-      caption,
-      photoUrl: publicAssetAbsoluteUrl(productImageSnapshot),
-      replyMarkup: telegramOrderInlineKeyboard({
-        order_number: row.order_number,
-        status: "new",
-        delivery_type: data.delivery_type,
-      }),
-    });
+      await sendTelegramOrderCreated({
+        caption,
+        photoUrl: publicAssetAbsoluteUrl(productImageSnapshot),
+        replyMarkup: telegramOrderInlineKeyboard({
+          order_number: row.order_number,
+          status: "new",
+          delivery_type: data.delivery_type,
+        }),
+      });
+    }
 
     return NextResponse.json({
       id: row.id,

@@ -13,16 +13,15 @@ export default async function ContactPage({
   const locale = params.locale as Locale;
   const t = await getTranslations({ locale, namespace: "contact" });
   const settings = await getSiteSettings();
-  const address =
-    locale === "uk" ? settings.pickup_address_uk : settings.pickup_address_en;
-  const hours = formatWorkingHours(settings.working_hours, locale);
-  const mapSrc = googleMapsEmbedSrc(address, locale);
+  const address = settings.pickup_address_uk;
+  const hours = formatWorkingHours(settings.working_hours);
+  const mapSrc = googleMapsEmbedSrc(address);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <h1 className="h-section">{t("title")}</h1>
       <div className="mt-12 grid gap-12 md:grid-cols-2">
-        <div className="space-y-8 text-sm leading-relaxed text-muted">
+        <div className="space-y-8 text-base leading-relaxed text-muted md:text-sm">
           <div>
             <p className="eyebrow mb-2">{t("phone")}</p>
             <a href={voiceDialHref(settings.phone)} className="text-ink hover:text-rose">

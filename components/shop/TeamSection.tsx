@@ -21,25 +21,28 @@ export function TeamSection({
   embedded = false,
 }: Props) {
   const outerClass = embedded
-    ? "pt-16 md:pt-20"
-    : "border-t border-ink/10 py-20 md:py-28";
+    ? "w-full bg-transparent pt-12 md:pt-16 pb-20 md:pb-28"
+    : "border-t border-ink/10 bg-bg py-20 md:py-28";
   const Tag = embedded ? "div" : "section";
   return (
     <Tag className={outerClass}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
         <SectionHeading title={title} />
 
-        <div className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-10">
+        <div className="mt-12 grid grid-cols-1 gap-14 sm:mt-14 sm:grid-cols-3 sm:gap-10 md:gap-12 lg:gap-16">
           {members.map((member) => (
-            <article key={member.id} className="flex flex-col text-left">
-              <div className="relative mx-auto aspect-[3/4] w-full max-w-[280px] overflow-hidden border border-ink/10 bg-ink/[0.03] sm:mx-0">
+            <article
+              key={member.id}
+              className="flex h-full flex-col text-left sm:max-w-none"
+            >
+              <div className="relative mx-auto aspect-[3/4] w-full max-w-[280px] overflow-hidden bg-ink/[0.04] sm:mx-0 sm:max-w-none">
                 {member.photoSrc ? (
                   <Image
                     src={member.photoSrc}
                     alt={names[member.id]}
                     fill
                     className="object-cover object-top"
-                    sizes="(max-width:640px) 90vw, 280px"
+                    sizes="(max-width:640px) 90vw, (max-width:1024px) 30vw, 320px"
                     loading="lazy"
                     fetchPriority="low"
                   />
@@ -48,16 +51,16 @@ export function TeamSection({
                     <span className="font-display text-3xl text-ink/25 md:text-4xl">
                       —
                     </span>
-                    <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
+                    <span className="text-sm font-medium uppercase tracking-[0.12em] text-muted md:text-xs md:tracking-[0.2em]">
                       {placeholderLabel}
                     </span>
                   </div>
                 )}
               </div>
-              <h3 className="mt-6 font-display text-xl text-ink md:text-2xl">
+              <h3 className="mt-5 font-display text-xl font-medium tracking-tight text-ink md:mt-6 md:text-2xl">
                 {names[member.id]}
               </h3>
-              <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted md:text-[15px]">
+              <p className="mt-3 max-w-prose font-sans text-sm font-normal leading-relaxed text-muted md:mt-4 md:text-[15px] md:leading-relaxed">
                 {bios[member.id]}
               </p>
             </article>

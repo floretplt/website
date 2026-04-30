@@ -1,5 +1,4 @@
 import { OrderForm } from "@/components/shop/OrderForm";
-import type { Locale } from "@/i18n/routing";
 import { getProductBySlug } from "@/lib/data/products";
 import type { ProductCategory, Size } from "@/lib/constants";
 import { PRODUCT_CATEGORIES, SIZES } from "@/lib/constants";
@@ -19,13 +18,13 @@ function parseProductSize(
 }
 
 export default async function OrderPage({
-  params,
+  params: _params,
   searchParams,
 }: {
   params: { locale: string };
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const locale = params.locale as Locale;
+  void _params;
   const slug =
     typeof searchParams.product === "string" ? searchParams.product : null;
   const cat =
@@ -56,7 +55,6 @@ export default async function OrderPage({
 
   return (
     <OrderForm
-      locale={locale}
       initialProduct={product}
       defaultProductSize={defaultProductSize}
       minDeliveryDate={minDeliveryDate}

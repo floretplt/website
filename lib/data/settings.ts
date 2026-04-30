@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Locale } from "@/i18n/routing";
 import { parseDeliveryPricingConfig } from "@/lib/delivery-pricing";
 import type { SiteSettingsRow } from "@/lib/types/database";
 import { cache } from "react";
@@ -63,16 +62,10 @@ export const getSiteSettings = cache(async (): Promise<SiteSettingsRow> => {
   }
 });
 
-export function announcementForLocale(
-  row: SiteSettingsRow,
-  locale: Locale,
-): string | null {
-  return locale === "uk" ? row.announcement_uk : row.announcement_en;
+export function announcementForLocale(row: SiteSettingsRow): string | null {
+  return row.announcement_uk;
 }
 
-export function aboutShortForLocale(
-  row: SiteSettingsRow,
-  locale: Locale,
-): string | null {
-  return locale === "uk" ? row.about_short_uk : row.about_short_en;
+export function aboutShortForLocale(row: SiteSettingsRow): string | null {
+  return row.about_short_uk;
 }

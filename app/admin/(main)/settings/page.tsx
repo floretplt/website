@@ -59,18 +59,11 @@ export default async function AdminSettingsPage() {
               description="Показується на сторінці оформлення замовлення."
             />
             <CardBody className="space-y-4">
-              <Field label="Адреса (UK)">
+              <Field label="Адреса самовивозу">
                 <Textarea
                   name="pickup_address_uk"
                   rows={2}
                   defaultValue={settings.pickup_address_uk ?? ""}
-                />
-              </Field>
-              <Field label="Address (EN)">
-                <Textarea
-                  name="pickup_address_en"
-                  rows={2}
-                  defaultValue={settings.pickup_address_en ?? ""}
                 />
               </Field>
             </CardBody>
@@ -82,16 +75,10 @@ export default async function AdminSettingsPage() {
               description="Рядок банера показується на сайті, якщо заповнено. Hero — URL картинки для першого екрану головної."
             />
             <CardBody className="grid gap-4 sm:grid-cols-2">
-              <Field label="Банер (UK)">
+              <Field label="Текст банера">
                 <Input
                   name="announcement_uk"
                   defaultValue={settings.announcement_uk ?? ""}
-                />
-              </Field>
-              <Field label="Banner (EN)">
-                <Input
-                  name="announcement_en"
-                  defaultValue={settings.announcement_en ?? ""}
                 />
               </Field>
               <Field label="Hero image URL" className="sm:col-span-2">
@@ -110,18 +97,11 @@ export default async function AdminSettingsPage() {
               description="Показується на головній, одразу під героєм."
             />
             <CardBody className="grid gap-4 sm:grid-cols-2">
-              <Field label="Коротко про нас (UK)">
+              <Field label="Коротко про нас" className="sm:col-span-2">
                 <Textarea
                   name="about_short_uk"
                   rows={4}
                   defaultValue={settings.about_short_uk ?? ""}
-                />
-              </Field>
-              <Field label="About short (EN)">
-                <Textarea
-                  name="about_short_en"
-                  rows={4}
-                  defaultValue={settings.about_short_en ?? ""}
                 />
               </Field>
             </CardBody>
@@ -191,7 +171,7 @@ export default async function AdminSettingsPage() {
           <Card className="lg:col-span-2">
             <CardHeader
               title="Доставка за районом і часом (UAH)"
-              description="Якщо заповнено, клієнт обирає район і інтервал (ранок / день / вечір) — сума доставки додається до оплати. Для EUR залиште порожнім."
+              description="Якщо заповнено, клієнт обирає район і інтервал (ранок / день / вечір) — сума доставки додається до оплати."
             />
             <CardBody>
               <DeliveryDistrictsEditor

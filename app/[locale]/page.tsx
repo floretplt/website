@@ -15,6 +15,7 @@ import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { EditorialDecorSection } from "@/components/shop/EditorialDecorSection";
+import { Reveal } from "@/components/animations/Reveal";
 
 const HERO_FALLBACK = "/images/hero.jpg";
 const CAT_IMG = {
@@ -41,7 +42,7 @@ export default async function HomePage({
     getSiteSettings(),
     getFeaturedProducts(),
   ]);
-  const about = aboutShortForLocale(settings, locale);
+  const about = aboutShortForLocale(settings);
 
   const moodKeys = ["pink", "blue", "yellow", "red", "white", "bright"] as const;
   const moods = Object.fromEntries(moodKeys.map((k) => [k, tm(k)]));
@@ -61,21 +62,22 @@ export default async function HomePage({
         />
         <div className="absolute inset-0 bg-ink/20" />
         <div className="relative z-10 mx-auto flex min-h-[85vh] max-w-6xl flex-col justify-end px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[90vh] md:px-10 md:pb-28">
-          <h1 className="h-display max-w-xl text-balance text-white">
-            {t("heroTagline")}
-          </h1>
-          <Link
-            href={locale === "en" ? "/en#style-bouquets" : "/#style-bouquets"}
-            className="btn-pill-inverse mt-8 w-fit"
-          >
-            {t("heroCta")}
-          </Link>
+          <Reveal>
+            <h1 className="h-display max-w-xl text-balance text-white">
+              {t("heroTagline")}
+            </h1>
+            <Link
+              href="/#style-bouquets"
+              className="btn-pill-inverse mt-8 w-fit"
+            >
+              {t("heroCta")}
+            </Link>
+          </Reveal>
         </div>
       </section>
 
       <HomeFeatured
         products={featured}
-        locale={locale}
         title={t("featuredTitle")}
         subtitle={t("featuredSubtitle")}
         cta={t("featuredCta")}
@@ -91,50 +93,61 @@ export default async function HomePage({
 
       <section className="border-t border-ink/10 bg-bg py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
-          <SectionHeading title={t("categoriesTitle")} />
+          <Reveal>
+            <SectionHeading title={t("categoriesTitle")} />
+          </Reveal>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <CategoryTile
-              title={tc("bouquets")}
-              href="/catalog/bouquets"
-              imageSrc={CAT_IMG.bouquets}
-            />
-            <CategoryTile
-              title={tc("box-bouquets")}
-              href="/catalog/box-bouquets"
-              imageSrc={CAT_IMG.box}
-            />
-            <CategoryTile
-              title={tc("wedding")}
-              href="/wedding"
-              imageSrc={CAT_IMG.wedding}
-            />
+            <Reveal delayMs={0}>
+              <CategoryTile
+                title={tc("bouquets")}
+                href="/catalog/bouquets"
+                imageSrc={CAT_IMG.bouquets}
+              />
+            </Reveal>
+            <Reveal delayMs={80}>
+              <CategoryTile
+                title={tc("box-bouquets")}
+                href="/catalog/box-bouquets"
+                imageSrc={CAT_IMG.box}
+              />
+            </Reveal>
+            <Reveal delayMs={160}>
+              <CategoryTile
+                title={tc("wedding")}
+                href="/wedding"
+                imageSrc={CAT_IMG.wedding}
+              />
+            </Reveal>
           </div>
         </div>
       </section>
 
-      <EditorialDecorSection
-        imageSrc={EDITORIAL_IMAGE}
-        imageAlt={t("editorialTitle")}
-      />
+      <Reveal>
+        <EditorialDecorSection
+          imageSrc={EDITORIAL_IMAGE}
+          imageAlt={t("editorialTitle")}
+        />
+      </Reveal>
 
-      <StudioTeamSection
-        locale={locale}
-        sectionTitle={t("studioTeamTitle")}
-        aboutText={about ?? t("aboutBody")}
-        teamTitle={t("teamTitle")}
-        placeholderLabel={t("teamPhotoPlaceholder")}
-        names={{
-          tanya: t("teamTanya"),
-          zhenya: t("teamZhenya"),
-          yana: t("teamYana"),
-        }}
-        bios={{
-          tanya: t("teamBioTanya"),
-          zhenya: t("teamBioZhenya"),
-          yana: t("teamBioYana"),
-        }}
-        members={TEAM_MEMBERS}
-      />
+      <Reveal>
+        <StudioTeamSection
+          sectionTitle={t("studioTeamTitle")}
+          aboutText={about ?? t("aboutBody")}
+          teamTitle={t("teamTitle")}
+          placeholderLabel={t("teamPhotoPlaceholder")}
+          names={{
+            tanya: t("teamTanya"),
+            zhenya: t("teamZhenya"),
+            yana: t("teamYana"),
+          }}
+          bios={{
+            tanya: t("teamBioTanya"),
+            zhenya: t("teamBioZhenya"),
+            yana: t("teamBioYana"),
+          }}
+          members={TEAM_MEMBERS}
+        />
+      </Reveal>
 
       <StyleGallery
         items={STYLE_GALLERY_ITEMS}
@@ -144,12 +157,14 @@ export default async function HomePage({
 
       <section className="bg-sage/40 py-20 md:py-28">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 md:px-10">
-          <p className="font-display text-2xl leading-snug text-ink md:text-3xl">
-            {t("ctaStrip")}
-          </p>
-          <Link href="/order" className="btn-pill mt-10 inline-flex">
-            {t("ctaButton")}
-          </Link>
+          <Reveal>
+            <p className="font-display text-2xl leading-snug text-ink md:text-3xl">
+              {t("ctaStrip")}
+            </p>
+            <Link href="/order" className="btn-pill mt-10 inline-flex">
+              {t("ctaButton")}
+            </Link>
+          </Reveal>
         </div>
       </section>
     </>

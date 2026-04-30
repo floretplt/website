@@ -33,11 +33,16 @@ const config: Config = {
           "50%": { transform: "scaleX(1)", opacity: "1" },
           "100%": { transform: "scaleX(0.35)", opacity: "0.4" },
         },
+        sheetIn: {
+          "0%": { opacity: "0", transform: "translateY(-6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         fadeIn: "fadeIn 0.2s ease-out forwards",
         preloaderPulse: "preloaderPulse 1.8s ease-in-out infinite",
         preloaderBar: "preloaderBar 1.4s ease-in-out infinite",
+        sheetIn: "sheetIn 0.22s ease-out forwards",
       },
     },
   },

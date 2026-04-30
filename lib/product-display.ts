@@ -1,15 +1,13 @@
 import type { ProductRow } from "@/lib/types/database";
-import type { Locale } from "@/i18n/routing";
 import type { Size } from "@/lib/constants";
 import { SIZES } from "@/lib/constants";
 
-export function productName(p: ProductRow, locale: Locale) {
-  return locale === "uk" ? p.name_uk : p.name_en;
+export function productName(p: ProductRow) {
+  return p.name_uk;
 }
 
-export function productDescription(p: ProductRow, locale: Locale) {
-  const d = locale === "uk" ? p.description_uk : p.description_en;
-  return d ?? "";
+export function productDescription(p: ProductRow) {
+  return p.description_uk ?? "";
 }
 
 const SIZE_KEYS: Record<Size, keyof ProductRow> = {
@@ -25,61 +23,58 @@ function tierUah(p: ProductRow, size: Size): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function tierEur(p: ProductRow, size: Size): number | null {
-  const key =
-    size === "small"
-      ? "price_eur_small"
-      : size === "medium"
-        ? "price_eur_medium"
-        : "price_eur_large";
-  const v = p[key];
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
 /** Price for one size tier, or null if that tier is not sold. */
-export function productPriceForSize(
-  p: ProductRow,
-  locale: Locale,
-  size: Size,
-): number | null {
-  return locale === "uk" ? tierUah(p, size) : tierEur(p, size);
+export function productPriceForSize(p: ProductRow, size: Size): number | null {
+  return tierUah(p, size);
 }
 
 /** Sizes that have a price in the active currency (client can order). */
-export function offeredSizes(p: ProductRow, locale: Locale): Size[] {
-  return SIZES.filter((s) => productPriceForSize(p, locale, s) != null);
+export function offeredSizes(p: ProductRow): Size[] {
+  return SIZES.filter((s) => productPriceForSize(p, s) != null);
+}
+
+/**
+ * Minimum allowed `price_paid` for a catalog product: size S when that tier is sold;
+ * otherwise the cheapest offered tier (e.g. M-only compositions).
+ */
+export function productSmallTierFloorPrice(p: ProductRow): number | null {
+  const offered = offeredSizes(p);
+  if (offered.includes("small")) {
+    const v = productPriceForSize(p, "small");
+    if (v != null && v > 0) return v;
+  }
+  const lo = productMinPrice(p);
+  return lo > 0 ? lo : null;
 }
 
 /** Minimum priced tier among offered sizes. */
-export function productMinPrice(p: ProductRow, locale: Locale): number {
-  const vals = offeredSizes(p, locale)
-    .map((s) => productPriceForSize(p, locale, s))
+export function productMinPrice(p: ProductRow): number {
+  const vals = offeredSizes(p)
+    .map((s) => productPriceForSize(p, s))
     .filter((n): n is number => n != null);
   if (vals.length === 0) return 0;
   return Math.min(...vals);
 }
 
 /** Maximum priced tier among offered sizes (filters / schema.org). */
-export function productMaxPrice(p: ProductRow, locale: Locale): number {
-  const vals = offeredSizes(p, locale)
-    .map((s) => productPriceForSize(p, locale, s))
+export function productMaxPrice(p: ProductRow): number {
+  const vals = offeredSizes(p)
+    .map((s) => productPriceForSize(p, s))
     .filter((n): n is number => n != null);
   if (vals.length === 0) return 0;
   return Math.max(...vals);
 }
 
 /** @deprecated Prefer productPriceForSize with explicit size. */
-export function productPriceAmount(p: ProductRow, locale: Locale) {
-  const m = productPriceForSize(p, locale, "medium");
+export function productPriceAmount(p: ProductRow) {
+  const m = productPriceForSize(p, "medium");
   if (m != null) return m;
-  const f = offeredSizes(p, locale)[0];
-  return f ? productPriceForSize(p, locale, f)! : 0;
+  const f = offeredSizes(p)[0];
+  return f ? productPriceForSize(p, f)! : 0;
 }
 
-export function productCurrency(locale: Locale): "UAH" | "EUR" {
-  return locale === "uk" ? "UAH" : "EUR";
+export function productCurrency(): "UAH" | "EUR" {
+  return "UAH";
 }
 
 function resolveStoragePath(path: string): string | null {
@@ -93,7 +88,7 @@ export function primaryImage(p: ProductRow): string | null {
   if (p.image_url) return resolveStoragePath(p.image_url) ?? p.image_url;
   const imgs = p.images;
   if (imgs && Array.isArray(imgs) && imgs[0]) {
-    return resolveStoragePath(imgs[0] as string);
+    return resolveStoragePath(imgs[0] as string) ?? (imgs[0] as string);
   }
   return null;
 }

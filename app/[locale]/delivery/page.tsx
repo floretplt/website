@@ -28,7 +28,7 @@ export default async function DeliveryPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <h1 className="h-section">{t("title")}</h1>
-      <div className="mt-10 space-y-10 text-sm leading-relaxed text-muted md:text-[15px]">
+      <div className="mt-10 space-y-10 text-base leading-relaxed text-muted md:text-[15px]">
         <p>{t("free")}</p>
         <div>
           <p className="font-medium text-ink">{t("cityIntro")}</p>

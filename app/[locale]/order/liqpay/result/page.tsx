@@ -39,7 +39,7 @@ export default async function LiqPayResultPage({
           <p className="text-lg leading-relaxed text-ink">
             {t("thanksPaidLead", { orderNumber: String(orderNumber) })}
           </p>
-          <p className="text-sm leading-relaxed text-muted">
+          <p className="text-base leading-relaxed text-muted md:text-sm">
             {t("thanksPaidSub")}
           </p>
           <div className="flex flex-col items-center gap-4 pt-4 sm:flex-row sm:justify-center">
@@ -51,9 +51,9 @@ export default async function LiqPayResultPage({
             </Link>
             <Link
               href="/catalog/bouquets"
-              className="text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline"
+              className="text-base font-medium text-muted underline-offset-4 hover:text-ink hover:underline md:text-sm"
             >
-              {locale === "uk" ? "До каталогу" : "Back to catalog"}
+              До каталогу
             </Link>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default async function LiqPayResultPage({
         <>
           <h1 className="h-section">{ok ? t("successPaid") : te("paymentFailed")}</h1>
           <Link href="/catalog/bouquets" className="btn-pill mt-10 inline-flex">
-            {locale === "uk" ? "До каталогу" : "Back to catalog"}
+            До каталогу
           </Link>
         </>
       )}

@@ -1,14 +1,12 @@
 import Image from "next/image";
 import { SectionHeading } from "@/components/shop/SectionHeading";
 import { TeamSection } from "@/components/shop/TeamSection";
-import type { Locale } from "@/i18n/routing";
 import { splitStudioAbout } from "@/lib/studio-about";
 import type { TeamMemberConfig, TeamMemberId } from "@/lib/team";
 
 const STUDIO_PHOTO = "/images/studio/studio-team.jpg";
 
 type Props = {
-  locale: Locale;
   sectionTitle: string;
   aboutText: string;
   teamTitle: string;
@@ -20,7 +18,6 @@ type Props = {
 
 /** Merged «Про студію» copy + team grid with shared anchor for nav. */
 export function StudioTeamSection({
-  locale,
   sectionTitle,
   aboutText,
   teamTitle,
@@ -29,34 +26,31 @@ export function StudioTeamSection({
   bios,
   members,
 }: Props) {
-  const { introBlocks, subheading, closingBlocks } = splitStudioAbout(
-    aboutText,
-    locale,
-  );
+  const { introBlocks, subheading, closingBlocks } = splitStudioAbout(aboutText);
 
   const bodyClass =
-    "mt-5 text-[15px] leading-[1.75] text-muted md:mt-6 md:text-base md:leading-[1.7]";
+    "mt-4 text-[15px] leading-[1.75] text-muted md:mt-6 md:text-base md:leading-[1.7]";
 
   return (
     <section
       id="studio-team"
-      className="scroll-mt-24 border-t border-ink/10 bg-gradient-to-b from-bg via-rose/[0.04] to-bg py-20 md:py-28"
+      className="scroll-mt-24 border-t border-ink/10 bg-gradient-to-b from-[#faf9f7] via-bg to-[#faf9f7] pb-0 pt-20 md:pt-28"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10">
         <SectionHeading title={sectionTitle} />
 
-        <div className="mt-14 md:mt-16 md:grid md:grid-cols-12 md:items-start md:gap-x-10 lg:gap-x-14">
-          <div className="order-2 mt-12 md:order-1 md:col-span-5 md:mt-0 lg:col-span-5">
-            <div className="relative border-l border-ink/12 pl-7 md:pl-9">
+        <div className="mt-10 grid grid-cols-1 gap-y-6 md:mt-16 md:grid-cols-12 md:items-start md:gap-x-10 md:gap-y-4 lg:gap-x-16">
+          <div className="order-2 md:order-1 md:col-span-5 md:mt-0 lg:col-span-5">
+            <div className="relative mx-auto max-w-lg border-l border-ink/12 pl-6 sm:pl-7 md:mx-0 md:max-w-none md:pl-9">
               <span
-                className="absolute left-[-1px] top-0 h-16 w-px bg-gradient-to-b from-rose/50 via-sage/35 to-transparent"
+                className="absolute left-[-1px] top-0 h-20 w-px bg-gradient-to-b from-rose/60 via-sage/40 to-transparent"
                 aria-hidden
               />
               {introBlocks.map((p, i) =>
                 i === 0 ? (
                   <p
                     key={`intro-${i}`}
-                    className="font-display text-[1.35rem] font-normal leading-snug tracking-tight text-ink md:text-2xl"
+                    className="font-display text-[1.35rem] font-normal leading-snug tracking-tight text-ink md:text-[1.65rem] md:leading-snug"
                   >
                     {p}
                   </p>
@@ -67,7 +61,7 @@ export function StudioTeamSection({
                 ),
               )}
               {subheading ? (
-                <h3 className="mt-7 font-display text-lg font-medium leading-snug tracking-tight text-ink md:mt-8 md:text-xl">
+                <h3 className="mt-6 font-display text-lg font-medium leading-snug tracking-tight text-rose max-md:mt-5 md:mt-9 md:text-xl">
                   {subheading}
                 </h3>
               ) : null}
@@ -88,21 +82,20 @@ export function StudioTeamSection({
 
           <div className="relative order-1 md:order-2 md:col-span-7 lg:col-span-7">
             <div
-              className="pointer-events-none absolute -bottom-5 left-0 right-[18%] top-[18%] rounded-[1.75rem] bg-sage/20 md:-bottom-6 md:rounded-[2rem]"
+              className="pointer-events-none absolute -bottom-5 left-0 right-[14%] top-[14%] rounded-[1.85rem] bg-sage/18 max-md:hidden md:-bottom-6 md:rounded-[2.1rem]"
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute bottom-0 right-0 h-32 w-48 translate-x-1/4 translate-y-1/4 rounded-full bg-rose/20 blur-3xl md:h-40 md:w-56"
+              className="pointer-events-none absolute bottom-0 right-0 h-36 w-52 translate-x-[22%] translate-y-[18%] rounded-full bg-rose/15 blur-3xl max-md:hidden md:h-44 md:w-60"
               aria-hidden
             />
-            {/* Photo is 4:3 landscape — keep this aspect on all breakpoints so nothing is cropped */}
-            <figure className="relative mx-auto aspect-[4/3] w-full md:mx-0 md:translate-x-1 lg:translate-x-3">
-              <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-ink/[0.04] shadow-[0_32px_80px_-24px_rgba(28,28,26,0.28),0_12px_32px_-16px_rgba(28,28,26,0.12)] ring-1 ring-ink/[0.06] md:rounded-[1.75rem]">
+            <figure className="relative mx-auto aspect-[5/4] w-full max-md:mx-0 md:aspect-[4/3] md:mx-0 md:translate-x-0.5 lg:translate-x-2">
+              <div className="relative h-full w-full overflow-hidden rounded-[1.25rem] bg-ink/[0.035] shadow-[0_28px_70px_-22px_rgba(28,28,26,0.22),0_10px_28px_-12px_rgba(28,28,26,0.1)] ring-1 ring-ink/[0.05] md:rounded-[1.85rem]">
                 <Image
                   src={STUDIO_PHOTO}
                   alt={sectionTitle}
                   fill
-                  className="object-contain"
+                  className="object-cover object-[center_28%] md:object-contain md:object-center"
                   sizes="(max-width:768px) 100vw, 58vw"
                 />
               </div>
@@ -111,7 +104,7 @@ export function StudioTeamSection({
         </div>
 
         <div
-          className="mx-auto mt-12 h-px max-w-md bg-gradient-to-r from-transparent via-ink/15 to-transparent md:mt-14"
+          className="mx-auto mt-10 h-px max-w-lg bg-gradient-to-r from-transparent via-ink/12 to-transparent md:mt-20"
           aria-hidden
         />
       </div>

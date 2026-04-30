@@ -23,21 +23,18 @@ export async function generateMetadata({
   params: { locale: string };
 }) {
   const { locale } = params;
+  if (!routing.locales.includes(locale as Locale)) {
+    return { title: "Floret" };
+  }
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const title = locale === "uk" ? "Floret Poltava" : "Floret Poltava";
+  const title = "Floret Poltava";
   const desc =
-    locale === "uk"
-      ? "Квіткова студія Floret у Полтаві — букети, декор, весільні композиції."
-      : "Floret flower studio in Poltava — bouquets, decor, wedding florals.";
+    "Квіткова студія Floret у Полтаві — букети, декор, весільні композиції.";
   return {
     title: { default: title, template: `%s · Floret` },
     description: desc,
     alternates: {
-      canonical: `${base}/${locale === "uk" ? "" : "en"}`,
-      languages: {
-        uk: `${base}/`,
-        en: `${base}/en`,
-      },
+      canonical: `${base}/`,
     },
   };
 }
@@ -56,7 +53,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
   const settings = await getSiteSettings();
-  const ann = announcementForLocale(settings, locale as Locale);
+  const ann = announcementForLocale(settings);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -66,11 +63,8 @@ export default async function LocaleLayout({
     telephone: normalizeUaPhone(settings.phone),
     address: {
       "@type": "PostalAddress",
-      streetAddress:
-        locale === "uk"
-          ? settings.pickup_address_uk
-          : settings.pickup_address_en,
-      addressLocality: locale === "uk" ? "Полтава" : "Poltava",
+      streetAddress: settings.pickup_address_uk,
+      addressLocality: "Полтава",
       addressCountry: "UA",
     },
   };
@@ -85,7 +79,7 @@ export default async function LocaleLayout({
         <AnnouncementBar message={ann} />
         <Header />
         <main>{children}</main>
-        <Footer settings={settings} locale={locale as Locale} />
+        <Footer settings={settings} />
       </LocaleHtml>
     </NextIntlClientProvider>
   );

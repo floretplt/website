@@ -1,10 +1,10 @@
 import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
-  locales: ["uk", "en"],
+  locales: ["uk"],
   defaultLocale: "uk",
-  localePrefix: "as-needed",
-  // Ukrainian by default; English only when the visitor opens /en or uses the toggle.
+  /** Single locale: keep public URLs without a `/uk` segment (same as former default-locale paths). */
+  localePrefix: "never",
   localeDetection: false,
 });
 

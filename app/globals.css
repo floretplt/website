@@ -8,15 +8,26 @@
 }
 
 html {
-  overflow-x: hidden;
+  /* clip avoids horizontal scroll without breaking position:sticky like overflow-x:hidden */
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Reserve scrollbar width so toggling body overflow (mobile menu) does not shift layout */
+  scrollbar-gutter: stable;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-scope {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 @layer utilities {
@@ -27,27 +38,36 @@ body {
 
 @layer components {
   .h-display {
-    @apply font-display text-[clamp(1.5rem,5.5vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-5xl lg:text-6xl;
+    @apply font-display text-[clamp(1.625rem,5.8vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-5xl lg:text-6xl;
   }
 
   .h-section {
-    @apply font-display text-[clamp(1.35rem,4.2vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-4xl;
+    @apply font-display text-[clamp(1.5rem,4.5vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-4xl;
   }
 
   .eyebrow {
-    @apply text-xs font-medium uppercase tracking-[0.2em] text-muted;
+    @apply text-sm font-medium uppercase tracking-[0.16em] text-muted md:text-xs md:tracking-[0.2em];
   }
 
   .btn-pill {
-    @apply inline-flex items-center justify-center rounded-full border border-ink bg-transparent px-6 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-bg;
+    @apply inline-flex items-center justify-center rounded-full border border-ink bg-transparent px-6 py-2.5 text-sm font-medium uppercase tracking-[0.12em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.15em];
   }
 
   .btn-pill-inverse {
-    @apply inline-flex items-center justify-center rounded-full border border-bg bg-transparent px-6 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-bg transition-colors hover:bg-bg hover:text-ink;
+    @apply inline-flex items-center justify-center rounded-full border border-bg bg-transparent px-6 py-2.5 text-sm font-medium uppercase tracking-[0.12em] text-bg transition-[color,background-color,transform] duration-200 ease-out hover:bg-bg hover:text-ink active:scale-[0.98] md:text-xs md:tracking-[0.15em];
   }
 
   .btn-square {
-    @apply inline-flex items-center justify-center border border-ink bg-transparent px-5 py-2.5 text-xs font-medium uppercase tracking-[0.12em] text-ink transition-colors hover:bg-ink hover:text-bg;
+    @apply inline-flex items-center justify-center border border-ink bg-transparent px-5 py-2.5 text-sm font-medium uppercase tracking-[0.1em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.12em];
+  }
+
+  /** Order form + catalog: unified control chrome */
+  .form-input {
+    @apply w-full min-h-[2.75rem] max-w-full rounded-lg border border-ink/15 bg-[#FAFAF8] px-3 py-2 text-base text-ink antialiased outline-none transition-[border-color,box-shadow] placeholder:text-muted/60 focus-visible:border-ink/35 focus-visible:ring-2 focus-visible:ring-ink/10 md:text-sm;
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-muted md:text-[11px] md:tracking-[0.16em];
   }
 
   .link-subtle {

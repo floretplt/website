@@ -29,13 +29,13 @@ function FieldError({
   if (!message) return null;
   if (message === "decorRequestRequired") {
     return (
-      <p className="text-sm text-red-800">{tWedding("requestRequired")}</p>
+      <p className="text-base text-red-800 md:text-sm">{tWedding("requestRequired")}</p>
     );
   }
   if (message === "nameRequired" || message === "phoneUa") {
-    return <p className="text-sm text-red-800">{tVal(message)}</p>;
+    return <p className="text-base text-red-800 md:text-sm">{tVal(message)}</p>;
   }
-  return <p className="text-sm text-red-800">{message}</p>;
+  return <p className="text-base text-red-800 md:text-sm">{message}</p>;
 }
 
 export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
@@ -153,14 +153,14 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     className="mt-8 space-y-6"
                   >
                     <div className="space-y-2">
-                      <label className="block text-sm text-muted">
+                      <label className="block text-base text-muted md:text-sm">
                         <span className="mb-1 block uppercase tracking-wider">
                           {t("formRequest")}
                           {req}
                         </span>
                         <textarea
                           rows={4}
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-sm"
+                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
                           {...register("request")}
                         />
                       </label>
@@ -172,7 +172,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm text-muted">
+                      <label className="block text-base text-muted md:text-sm">
                         <span className="mb-1 block uppercase tracking-wider">
                           {t("formName")}
                           {req}
@@ -180,7 +180,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                         <input
                           type="text"
                           autoComplete="name"
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
                           {...register("customer_name")}
                         />
                       </label>
@@ -192,7 +192,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm text-muted">
+                      <label className="block text-base text-muted md:text-sm">
                         <span className="mb-1 block uppercase tracking-wider">
                           {t("formPhone")}
                           {req}
@@ -201,7 +201,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                           type="tel"
                           autoComplete="tel"
                           inputMode="tel"
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2"
+                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
                           {...register("customer_phone")}
                         />
                       </label>
@@ -213,11 +213,11 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <fieldset>
-                      <legend className="mb-3 text-sm uppercase tracking-wider text-muted">
+                      <legend className="mb-3 text-base uppercase tracking-wider text-muted md:text-sm">
                         {t("formContactPref")}
                         {req}
                       </legend>
-                      <div className="flex flex-col gap-3 text-sm">
+                      <div className="flex flex-col gap-3 text-base md:text-sm">
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -246,7 +246,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </fieldset>
 
                     {formError ? (
-                      <p className="text-sm text-red-800">{formError}</p>
+                      <p className="text-base text-red-800 md:text-sm">{formError}</p>
                     ) : null}
 
                     <button
