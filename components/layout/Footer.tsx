@@ -20,7 +20,7 @@ export async function Footer({ settings }: Props) {
     <footer className="border-t border-ink/10 bg-ink text-bg">
       <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-3 md:px-10">
         <div>
-          <Logo height={30} variant="light" fetchPriority="low" />
+          <Logo height={30} variant="light" />
           <p className="mt-6 text-sm leading-relaxed text-bg/80">
             @floret_poltava
           </p>

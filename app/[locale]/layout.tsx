@@ -1,12 +1,8 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { LocaleHtml } from "@/components/layout/LocaleHtml";
 import { routing } from "@/i18n/routing";
-import {
-  announcementForLocale,
-  getSiteSettings,
-} from "@/lib/data/settings";
+import { getSiteSettings } from "@/lib/data/settings";
 import { normalizeUaPhone } from "@/lib/phone";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -53,7 +49,6 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
   const settings = await getSiteSettings();
-  const ann = announcementForLocale(settings);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -76,7 +71,6 @@ export default async function LocaleLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <AnnouncementBar message={ann} />
         <Header />
         <main>{children}</main>
         <Footer settings={settings} />

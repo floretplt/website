@@ -9,7 +9,7 @@ type Props = {
 export function PreloaderMark({ className }: Props) {
   return (
     <div className={cn("flex flex-col items-center gap-8", className)}>
-      <Logo height={52} fetchPriority="high" />
+      <Logo height={52} />
       <div
         className="h-px w-24 origin-left bg-ink/20 motion-reduce:animate-none animate-preloaderBar"
         aria-hidden

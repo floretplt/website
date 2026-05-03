@@ -155,10 +155,10 @@ export function Header() {
           className="flex shrink-0 justify-self-center text-ink outline-none ring-ink focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           <span className="md:hidden">
-            <Logo height={42} fetchPriority="high" />
+            <Logo height={42} />
           </span>
           <span className="hidden md:inline">
-            <Logo height={48} fetchPriority="high" />
+            <Logo height={48} />
           </span>
         </Link>
 
