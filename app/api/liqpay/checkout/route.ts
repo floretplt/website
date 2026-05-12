@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       currency,
       description: `Floret #${order.order_number}`,
       order_id: order.id,
-      result_url: `${site}/order/liqpay/result?orderNumber=${order.order_number}`,
+      result_url: `${site}/order/liqpay/result`,
       server_url: `${site}/api/liqpay/callback`,
     };
 
