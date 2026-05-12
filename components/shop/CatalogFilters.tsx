@@ -124,7 +124,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
           <div className="min-h-0 overflow-hidden">
             <div className="space-y-8 border-t border-ink/10 px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
               <div>
-                <p className="mb-3 text-sm font-medium uppercase tracking-[0.12em] text-muted md:text-[11px] md:tracking-[0.15em]">
+                <p className="mb-3 text-xs font-medium uppercase tracking-[0.12em] text-muted md:tracking-[0.15em]">
                   {t("colorMood")}
                 </p>
                 <div className="grid grid-cols-3 gap-x-2 gap-y-4 sm:max-w-none">
@@ -150,7 +150,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
                           }}
                         />
                         <span
-                          className={`max-w-[5.25rem] text-center text-xs font-medium leading-tight md:max-w-[4.75rem] md:text-[10px] ${
+                          className={`max-w-[5.25rem] text-center text-[13px] font-medium leading-tight md:max-w-[4.75rem] ${
                             selected ? "text-ink" : "text-muted"
                           }`}
                         >
@@ -163,10 +163,10 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
               </div>
 
               <div>
-                <p className="mb-2 text-sm font-medium uppercase tracking-[0.12em] text-muted md:text-[11px] md:tracking-[0.15em]">
+                <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-muted md:tracking-[0.15em]">
                   {t("price")}
                 </p>
-                <div className="flex min-w-0 flex-wrap items-center gap-2 text-base sm:text-sm">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 text-base">
                   <input
                     type="number"
                     className="form-input min-w-0 flex-1 tabular-nums sm:min-w-[4.5rem] sm:flex-none"
@@ -184,7 +184,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
                     max={maxPrice}
                     onChange={(e) => setParam("max", e.target.value)}
                   />
-                  <span className="w-full pl-0.5 text-sm font-medium uppercase tracking-[0.06em] text-muted sm:ml-1 sm:w-auto md:text-[11px] md:tracking-[0.08em]">
+                  <span className="w-full pl-0.5 text-[13px] font-medium uppercase tracking-[0.06em] text-muted sm:ml-1 sm:w-auto sm:tracking-[0.08em]">
                     {priceSuffix}
                   </span>
                 </div>
@@ -194,7 +194,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="w-full rounded-full border border-ink/15 bg-[#F3F1EE] px-4 py-2.5 text-sm font-semibold uppercase tracking-[0.1em] text-ink transition-[background-color,border-color] hover:border-ink/25 hover:bg-[#ECE8E3] md:text-[11px] md:tracking-[0.14em]"
+                  className="w-full rounded-full border border-ink/15 bg-[#F3F1EE] px-4 py-2.5 text-[15px] font-semibold uppercase tracking-[0.1em] text-ink transition-[background-color,border-color] hover:border-ink/25 hover:bg-[#ECE8E3] md:text-sm md:tracking-[0.14em]"
                 >
                   {t("resetFilters")}
                 </button>

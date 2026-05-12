@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Logo } from "@/components/layout/Logo";
 import { InstagramIcon } from "@/components/icons/Instagram";
+import { PhoneIcon } from "@/components/icons/Phone";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +59,7 @@ export function Header() {
   }, [open]);
 
   const linkClass =
-    "text-sm font-medium uppercase tracking-[0.14em] text-ink transition-colors hover:text-rose md:text-[11px] md:tracking-[0.18em]";
+    "text-sm font-medium uppercase tracking-[0.14em] text-ink transition-colors hover:text-rose md:text-xs md:tracking-[0.18em]";
 
   const mobileMenuOpen = open;
 
@@ -172,6 +173,23 @@ export function Header() {
           >
             {t("orderStatus")}
           </Link>
+          <a
+            href="tel:+380662789828"
+            className="hidden h-10 shrink-0 items-center justify-center gap-2 text-ink transition-colors hover:text-rose sm:flex"
+            aria-label={`${t("phone")} 066 278 9828`}
+          >
+            <PhoneIcon className="h-[1.15rem] w-[1.15rem]" />
+            <span className="text-sm font-medium tracking-[0.04em] tabular-nums md:text-xs md:tracking-[0.06em]">
+              066 278 9828
+            </span>
+          </a>
+          <a
+            href="tel:+380662789828"
+            className="flex h-10 w-10 shrink-0 items-center justify-center text-ink transition-colors hover:text-rose sm:hidden"
+            aria-label={`${t("phone")} 066 278 9828`}
+          >
+            <PhoneIcon className="h-5 w-5" />
+          </a>
           <a
             href="https://www.instagram.com/floret_poltava/"
             target="_blank"

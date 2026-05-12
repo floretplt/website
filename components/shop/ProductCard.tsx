@@ -73,7 +73,7 @@ export function ProductCard({
                 imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               />
             ) : (
-              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted md:text-xs">
+              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted">
                 Floret
               </div>
             )}
@@ -82,7 +82,7 @@ export function ProductCard({
                 <span className="line-clamp-2 min-h-[2.75rem] font-display text-xl leading-snug text-ink transition-colors group-hover:text-rose md:text-lg">
                   {name}
                 </span>
-                <span className="shrink-0 pt-0.5 text-base tabular-nums text-ink md:text-sm">
+                <span className="shrink-0 pt-0.5 text-base tabular-nums text-ink">
                   {priceFromPrefix ? (
                     <>
                       <span className="text-muted">{priceFromPrefix}</span>{" "}
@@ -92,7 +92,7 @@ export function ProductCard({
                 </span>
               </div>
               {showSizeTiers ? (
-                <p className="mt-2 min-h-[2.5rem] text-left text-sm leading-snug text-muted tabular-nums md:min-h-[2.25rem] md:text-[11px]">
+                <p className="mt-2 min-h-[2.5rem] text-left text-base leading-relaxed text-muted tabular-nums md:min-h-[2.25rem]">
                   {tiers.map((s, i) => {
                     const pr = productPriceForSize(product, s);
                     if (pr == null) return null;
@@ -144,7 +144,7 @@ export function ProductCard({
             imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex aspect-square w-full items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted md:text-xs">
+          <div className="flex aspect-square w-full items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted">
             Floret
           </div>
         )}
@@ -153,11 +153,11 @@ export function ProductCard({
             {name}
           </span>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
-            <span className="text-sm uppercase tracking-[0.12em] text-muted md:text-xs">
+            <span className="text-[13px] font-medium uppercase tracking-[0.12em] text-muted">
               {moodLabel}
             </span>
           </div>
-          <p className="mt-2 text-base text-muted md:text-sm">
+          <p className="mt-2 text-base text-muted">
             {priceFromPrefix ? (
               <>
                 <span className="text-muted">{priceFromPrefix}</span>{" "}

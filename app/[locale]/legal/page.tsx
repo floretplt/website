@@ -46,21 +46,21 @@ export default async function LegalPage({
 
       <section id="payee" className="scroll-mt-28 pt-12">
         <h2 className="font-display text-2xl text-ink">{t("payeeTitle")}</h2>
-        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-muted md:text-[15px]">
+        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-muted">
           {t("payeeBody")}
         </p>
       </section>
 
       <section id="refund" className="scroll-mt-28 border-t border-ink/10 pt-12">
         <h2 className="font-display text-2xl text-ink">{t("refundTitle")}</h2>
-        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-muted md:text-[15px]">
+        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-muted">
           {t("refundBody")}
         </p>
       </section>
 
       <section id="delivery" className="scroll-mt-28 border-t border-ink/10 pt-12">
         <h2 className="font-display text-2xl text-ink">{t("navDelivery")}</h2>
-        <p className="mt-4 text-base leading-relaxed text-muted md:text-[15px]">
+        <p className="mt-4 text-base leading-relaxed text-muted">
           {t("deliveryIntro")}{" "}
           <Link href="/delivery" className="text-ink underline underline-offset-2 hover:text-rose">
             {t("deliveryLink")}

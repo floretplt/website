@@ -27,10 +27,6 @@ export const metadata: Metadata = {
   ),
   title: "Floret Poltava",
   description: "Квіткова студія Floret у Полтаві",
-  icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
-  },
 };
 
 export default function RootLayout({

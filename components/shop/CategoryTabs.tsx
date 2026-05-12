@@ -40,7 +40,7 @@ export function CategoryTabs() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "shrink-0 snap-start whitespace-nowrap text-sm font-semibold uppercase tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink md:text-[11px] md:tracking-[0.14em]",
+                    "shrink-0 snap-start whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink md:text-sm md:tracking-[0.14em]",
                     active
                       ? "border-b-2 border-ink pb-0.5 text-ink"
                       : "border-b-2 border-transparent pb-0.5 text-muted hover:text-ink",

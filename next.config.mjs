@@ -13,6 +13,22 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: [
+          "**/node_modules/**",
+          "**/.git/**",
+          "**/.cursor/**",
+          // Large camera dumps in repo root (not app imports) — fewer watchers, avoids EMFILE on macOS.
+          "**/IMG_*.jpg",
+          "**/IMG_*.JPG",
+        ],
+      };
+    }
+    return config;
+  },
   images: {
     /** Serve modern formats when the browser supports them (smaller than JPEG). */
     formats: ["image/avif", "image/webp"],

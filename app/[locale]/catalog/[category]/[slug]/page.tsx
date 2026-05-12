@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { ProductDetailGallery } from "@/components/shop/ProductDetailGallery";
+import { CmsProductDescription } from "@/components/shop/CmsProductDescription";
+import { ProductTrustStrip } from "@/components/shop/ProductTrustStrip";
 import { ProductStickyCta } from "@/components/shop/ProductStickyCta";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Reveal } from "@/components/animations/Reveal";
@@ -25,6 +27,7 @@ import {
   offeredSizes,
 } from "@/lib/product-display";
 import { formatMoney } from "@/lib/format";
+import { productDescriptionPlainForSchema } from "@/lib/cms-product-description";
 
 export default async function ProductPage({
   params,
@@ -49,7 +52,7 @@ export default async function ProductPage({
 
   const t = await getTranslations({ locale, namespace: "product" });
   const tm = await getTranslations({ locale, namespace: "moods" });
-  const tc = await getTranslations({ locale, namespace: "categories" });
+  const tn = await getTranslations({ locale, namespace: "nav" });
 
   const related = await getRelatedProducts(category, product.id, 4);
   const gallery = galleryUrls(product);
@@ -59,12 +62,14 @@ export default async function ProductPage({
   const lowPrice = productMinPrice(product);
   const highPrice = productMaxPrice(product);
   const tiers = offeredSizes(product);
+  const description = productDescription(product);
+  const descriptionPlainForLd = productDescriptionPlainForSchema(description);
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: productName(product),
-    description: productDescription(product),
+    description: descriptionPlainForLd || productName(product),
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: cur,
@@ -81,9 +86,33 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <article className="mx-auto max-w-6xl px-4 pb-[max(7rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] pt-10 sm:px-6 sm:pt-12 md:px-10 md:pb-16 md:pt-16">
-        <p className="eyebrow mb-2">{tc(category)}</p>
-        <div className="grid gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
-          <div className="space-y-4">
+        <nav
+          aria-label={t("breadcrumbNav")}
+          className="mb-8 text-[13px] text-muted md:mb-10 md:text-sm"
+        >
+          <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <li>
+              <Link href="/" className="transition-colors hover:text-ink">
+                {tn("home")}
+              </Link>
+            </li>
+            <li aria-hidden className="text-muted/70">
+              /
+            </li>
+            <li>
+              <Link href="/catalog" className="transition-colors hover:text-ink">
+                {tn("catalog")}
+              </Link>
+            </li>
+            <li aria-hidden className="text-muted/70">
+              /
+            </li>
+            <li className="min-w-0 text-ink/80">{productName(product)}</li>
+          </ol>
+        </nav>
+
+        <div className="grid gap-10 md:auto-rows-min md:gap-12 md:[grid-template-columns:minmax(0,55%)_minmax(0,45%)] lg:gap-16">
+          <div className="min-w-0 space-y-4">
             {gallery.length > 0 ? (
               <ProductDetailGallery
                 images={gallery}
@@ -92,11 +121,11 @@ export default async function ProductPage({
             ) : null}
           </div>
 
-          <div className="md:sticky md:top-28 md:self-start">
+          <div className="min-w-0 md:sticky md:top-28 md:self-start">
             <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
               {productName(product)}
             </h1>
-            <div className="mt-4 space-y-1 text-base text-muted md:text-sm">
+            <div className="mt-4 space-y-1 text-base text-muted">
               {tiers.map((size) => {
                 const amt = productPriceForSize(product, size);
                 if (amt == null) return null;
@@ -111,18 +140,34 @@ export default async function ProductPage({
                 );
               })}
             </div>
-            <p className="mt-4 text-base text-muted md:text-sm">
-              {t("mood")}: {tm(product.color_mood)}
+            <hr className="mt-4 border-0 border-t border-ink/10" />
+            <p className="mt-4 text-base text-muted">
+              <span className="text-ink">{t("mood")}:</span>{" "}
+              <span className="text-rose">{tm(product.color_mood)}</span>
             </p>
-            <p className="mt-4 text-base leading-relaxed text-muted md:text-sm">{t("styleNote")}</p>
-            <div className="mt-8 max-w-prose text-base leading-relaxed text-muted md:text-sm">
-              {productDescription(product) || "—"}
+            <div className="mt-4 max-w-prose space-y-4 text-base leading-relaxed text-muted prose">
+              <p>{t("styleNote")}</p>
+              {description ? (
+                <CmsProductDescription
+                  text={description}
+                  className="space-y-3 [&>p]:leading-relaxed"
+                />
+              ) : null}
             </div>
-            <Link href={orderHref} className="btn-pill mt-10 hidden md:inline-flex">
+            <Link
+              href={orderHref}
+              className="btn-pill mt-10 hidden w-full justify-center md:flex"
+            >
               {t("order")}
             </Link>
           </div>
         </div>
+
+        <ProductTrustStrip
+          freshLabel={t("trustFresh")}
+          deliveryLabel={t("trustDelivery")}
+          paymentLabel={t("trustPayment")}
+        />
 
         {related.length > 0 ? (
           <section className="mt-20 border-t border-ink/10 pt-16">

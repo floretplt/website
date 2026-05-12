@@ -29,13 +29,13 @@ function FieldError({
   if (!message) return null;
   if (message === "decorRequestRequired") {
     return (
-      <p className="text-base text-red-800 md:text-sm">{tHome("decorRequestRequired")}</p>
+      <p className="text-base text-red-800">{tHome("decorRequestRequired")}</p>
     );
   }
   if (message === "nameRequired" || message === "phoneUa") {
-    return <p className="text-base text-red-800 md:text-sm">{tVal(message)}</p>;
+    return <p className="text-base text-red-800">{tVal(message)}</p>;
   }
-  return <p className="text-base text-red-800 md:text-sm">{message}</p>;
+  return <p className="text-base text-red-800">{message}</p>;
 }
 
 export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
@@ -254,7 +254,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                     </fieldset>
 
                     {formError ? (
-                      <p className="text-base text-red-800 md:text-sm">{formError}</p>
+                      <p className="text-base text-red-800">{formError}</p>
                     ) : null}
 
                     <button

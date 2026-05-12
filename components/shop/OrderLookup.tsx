@@ -64,12 +64,12 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
               orderNumber: String(initialOrderNumber),
             })}
           </p>
-          <p className="text-base leading-relaxed text-muted md:text-sm">
+          <p className="text-base leading-relaxed text-muted">
             {tOrder("thanksReserveSub")}
           </p>
           <Link
             href={`/order/${initialOrderNumber}`}
-            className="mt-2 inline-block text-base font-medium text-ink underline-offset-4 hover:underline md:text-sm"
+            className="mt-2 inline-block text-base font-medium text-ink underline-offset-4 hover:underline"
           >
             {tOrder("thanksDismissBanner")}
           </Link>
@@ -100,7 +100,7 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
               placeholder="+380..."
             />
           </label>
-          {err ? <p className="text-base text-red-800 md:text-sm">{err}</p> : null}
+          {err ? <p className="text-base text-red-800">{err}</p> : null}
           <button type="button" className="btn-pill" onClick={lookup} disabled={loading}>
             {loading ? "…" : t("lookup")}
           </button>
@@ -117,7 +117,7 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
               {t(`status_${String(result.status)}` as "status_new")}
             </span>
           </p>
-          <p className="text-base text-muted md:text-sm">{String(result.product_name)}</p>
+          <p className="text-base text-muted">{String(result.product_name)}</p>
         </div>
       )}
     </div>

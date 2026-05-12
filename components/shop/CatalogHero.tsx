@@ -14,7 +14,7 @@ export function CatalogHero({ title, description }: CatalogHeroProps) {
             <h1 className="h-section text-balance">{title}</h1>
           </Reveal>
           <Reveal delayMs={50}>
-            <p className="mt-3 text-base leading-relaxed text-muted md:mt-4 md:text-[15px] md:leading-relaxed">
+            <p className="mt-3 text-base leading-relaxed text-muted md:mt-4">
               {description}
             </p>
           </Reveal>

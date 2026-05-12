@@ -31,7 +31,7 @@ export function StyleGallery({ items, title, subtitle, cta }: Props) {
         <Reveal>
           <h2 className="h-section text-center">{title}</h2>
           {subtitle?.trim() ? (
-            <p className="mx-auto mt-5 max-w-2xl text-center text-base leading-relaxed text-muted md:text-[15px]">
+            <p className="mx-auto mt-5 max-w-2xl text-center text-base leading-relaxed text-muted">
               {subtitle}
             </p>
           ) : null}

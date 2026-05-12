@@ -37,7 +37,7 @@ export function CategoryTile({
       </div>
       <div
         className={cn(
-          "mt-3 flex items-center justify-between gap-3 border border-ink px-4 py-3 text-sm font-medium uppercase tracking-[0.12em] md:text-[11px] md:tracking-[0.18em]",
+          "mt-3 flex items-center justify-between gap-3 border border-ink px-4 py-3 text-[15px] font-medium uppercase tracking-[0.12em] md:text-sm md:tracking-[0.18em]",
           interactive &&
             "transition-colors duration-300 group-hover:border-ink/80",
         )}

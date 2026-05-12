@@ -48,7 +48,7 @@ export function HomeFeatured({
         <Reveal>
           <h2 className="h-section text-center">{title}</h2>
           {subtitle ? (
-            <p className="mx-auto mt-5 max-w-xl text-center text-sm leading-relaxed text-muted">
+            <p className="mx-auto mt-5 max-w-xl text-center text-base leading-relaxed text-muted">
               {subtitle}
             </p>
           ) : null}

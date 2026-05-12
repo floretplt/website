@@ -22,6 +22,25 @@ body {
   overflow-x: clip;
 }
 
+/**
+ * Storefront body copy: matches «Оформлення закладів та подій» (Tailwind `text-base` = 1rem ≈ 16px at every breakpoint; no `md:` override on that block).
+ * Scoped to locale layout `<main>` so `/admin` is unaffected. Utility classes (e.g. `text-xl`, `form-hint`) still override where needed.
+ */
+@layer base {
+  main p,
+  main .prose p {
+    font-size: 1rem;
+    line-height: 1.625;
+  }
+
+  @media (min-width: 768px) {
+    main p,
+    main .prose p {
+      font-size: 1rem;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal-scope {
     opacity: 1 !important;
@@ -46,28 +65,33 @@ body {
   }
 
   .eyebrow {
-    @apply text-sm font-medium uppercase tracking-[0.16em] text-muted md:text-xs md:tracking-[0.2em];
+    @apply text-[13px] font-medium uppercase tracking-[0.16em] text-muted md:text-xs md:tracking-[0.2em];
   }
 
   .btn-pill {
-    @apply inline-flex items-center justify-center rounded-full border border-ink bg-transparent px-6 py-2.5 text-sm font-medium uppercase tracking-[0.12em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.15em];
+    @apply inline-flex items-center justify-center rounded-full border border-ink bg-transparent px-6 py-2.5 text-[15px] font-medium uppercase tracking-[0.12em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.15em];
   }
 
   .btn-pill-inverse {
-    @apply inline-flex items-center justify-center rounded-full border border-bg bg-transparent px-6 py-2.5 text-sm font-medium uppercase tracking-[0.12em] text-bg transition-[color,background-color,transform] duration-200 ease-out hover:bg-bg hover:text-ink active:scale-[0.98] md:text-xs md:tracking-[0.15em];
+    @apply inline-flex items-center justify-center rounded-full border border-bg bg-transparent px-6 py-2.5 text-[15px] font-medium uppercase tracking-[0.12em] text-bg transition-[color,background-color,transform] duration-200 ease-out hover:bg-bg hover:text-ink active:scale-[0.98] md:text-xs md:tracking-[0.15em];
   }
 
   .btn-square {
-    @apply inline-flex items-center justify-center border border-ink bg-transparent px-5 py-2.5 text-sm font-medium uppercase tracking-[0.1em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.12em];
+    @apply inline-flex items-center justify-center border border-ink bg-transparent px-5 py-2.5 text-[15px] font-medium uppercase tracking-[0.1em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.12em];
   }
 
   /** Order form + catalog: unified control chrome */
   .form-input {
-    @apply w-full min-h-[2.75rem] max-w-full rounded-lg border border-ink/15 bg-[#FAFAF8] px-3 py-2 text-base text-ink antialiased outline-none transition-[border-color,box-shadow] placeholder:text-muted/60 focus-visible:border-ink/35 focus-visible:ring-2 focus-visible:ring-ink/10 md:text-sm;
+    @apply w-full min-h-[2.75rem] max-w-full rounded-lg border border-ink/15 bg-[#FAFAF8] px-3 py-2 text-base text-ink antialiased outline-none transition-[border-color,box-shadow] placeholder:text-muted/60 focus-visible:border-ink/35 focus-visible:ring-2 focus-visible:ring-ink/10;
   }
 
   .form-label {
-    @apply mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-muted md:text-[11px] md:tracking-[0.16em];
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-muted md:text-xs md:tracking-[0.16em];
+  }
+
+  /** Hints under inputs — min 13px (avoid text-xs 12px) */
+  .form-hint {
+    @apply text-[13px] leading-relaxed text-muted;
   }
 
   .link-subtle {

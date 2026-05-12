@@ -21,5 +21,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // Include `/` explicitly so the locale middleware runs on the homepage (not only on nested paths).
+  matcher: ["/", "/((?!api|_next|_vercel|.*\\..*).*)"],
 };

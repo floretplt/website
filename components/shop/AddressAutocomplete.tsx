@@ -128,7 +128,7 @@ export function AddressAutocomplete({
           className={cn("form-input", className)}
         />
         {fallbackHint ? (
-          <p className="text-sm text-muted md:text-xs">{fallbackHint}</p>
+          <p className="form-hint">{fallbackHint}</p>
         ) : null}
       </div>
     );
@@ -148,7 +148,7 @@ export function AddressAutocomplete({
         autoComplete="off"
         className={cn("form-input", className)}
       />
-      {hint ? <p className="text-sm leading-relaxed text-muted md:text-[11px]">{hint}</p> : null}
+      {hint ? <p className="form-hint mt-1 leading-relaxed">{hint}</p> : null}
     </div>
   );
 }

@@ -28,8 +28,7 @@ export function StudioTeamSection({
 }: Props) {
   const { introBlocks, subheading, closingBlocks } = splitStudioAbout(aboutText);
 
-  const bodyClass =
-    "mt-4 text-[15px] leading-[1.75] text-muted md:mt-6 md:text-base md:leading-[1.7]";
+  const bodyClass = "mt-4 text-base leading-relaxed text-muted md:mt-6";
 
   return (
     <section
@@ -70,7 +69,7 @@ export function StudioTeamSection({
                   key={`close-${i}`}
                   className={
                     i === 0 && subheading
-                      ? "mt-4 text-[15px] leading-[1.75] text-muted md:mt-5 md:text-base md:leading-[1.7]"
+                      ? "mt-4 text-base leading-relaxed text-muted md:mt-5"
                       : bodyClass
                   }
                 >

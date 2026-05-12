@@ -37,27 +37,35 @@ export function ProductDetailGallery({ images, productName }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <div className="space-y-4">
-        <div className="relative mx-auto w-full max-w-xl md:mx-0">
-          <div className="relative h-[min(58vh,560px)] w-full sm:h-[min(52vh,520px)] md:h-[min(62vh,640px)]">
-            {main ? (
-              <Dialog.Trigger asChild>
-                <button
-                  type="button"
-                  className="relative block h-full w-full cursor-zoom-in outline-none ring-ink focus-visible:ring-2"
-                  aria-label={t("lightboxZoom")}
-                  onClick={() => setIdx(0)}
-                >
-                  <Image
-                    src={main}
-                    alt={productName}
-                    fill
-                    className="object-contain object-center"
-                    priority
-                    sizes="(max-width:768px) 100vw, 45vw"
-                  />
-                </button>
-              </Dialog.Trigger>
-            ) : null}
+        <div className="relative mx-auto w-full max-w-xl md:mx-0 md:max-w-none">
+          <div className="relative overflow-hidden rounded-2xl bg-bg/40 ring-1 ring-ink/[0.06]">
+            <div className="relative h-[min(58vh,560px)] w-full sm:h-[min(54vh,560px)] md:h-[min(72vh,720px)]">
+              {main ? (
+                <Dialog.Trigger asChild>
+                  <button
+                    type="button"
+                    className="relative block h-full w-full cursor-zoom-in outline-none ring-ink focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+                    aria-label={t("lightboxZoom")}
+                    onClick={() => setIdx(0)}
+                  >
+                    <Image
+                      src={main}
+                      alt={productName}
+                      fill
+                      className="object-contain object-center"
+                      priority
+                      sizes="(max-width:768px) 100vw, 55vw"
+                    />
+                    <span
+                      className="pointer-events-none absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-bg text-base shadow-md ring-1 ring-ink/10"
+                      aria-hidden
+                    >
+                      🔍
+                    </span>
+                  </button>
+                </Dialog.Trigger>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -136,7 +144,7 @@ export function ProductDetailGallery({ images, productName }: Props) {
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
-                <p className="mt-2 text-center text-sm text-bg/70 md:text-xs">
+                <p className="mt-2 text-center text-sm text-bg/80">
                   {idx + 1} / {images.length}
                 </p>
               </>

@@ -21,7 +21,7 @@ export default async function ContactPage({
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <h1 className="h-section">{t("title")}</h1>
       <div className="mt-12 grid gap-12 md:grid-cols-2">
-        <div className="space-y-8 text-base leading-relaxed text-muted md:text-sm">
+        <div className="space-y-8 text-base leading-relaxed text-muted">
           <div>
             <p className="eyebrow mb-2">{t("phone")}</p>
             <a href={voiceDialHref(settings.phone)} className="text-ink hover:text-rose">
