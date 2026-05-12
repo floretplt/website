@@ -92,8 +92,6 @@ export function OrderForm({
   defaultProductSize,
   minDeliveryDate,
   minPickupDate,
-  sameDayOrderCutoff,
-  sameDayDeliveryEnd,
   deliveryBands = [],
   deliveryDistricts = [],
   namedZones,
