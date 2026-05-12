@@ -74,14 +74,15 @@ export async function POST(req: Request) {
 
     const dataObj = {
       public_key: pub,
-      version: "3",
+      version: 3,
       action: "pay",
-      amount: amount.toFixed(2),
+      amount: Number(amount.toFixed(2)),
       currency,
       description: `Floret #${order.order_number}`,
       order_id: order.id,
       result_url: `${site}/order/liqpay/result`,
       server_url: `${site}/api/liqpay/callback`,
+      language: "uk",
     };
 
     const data = liqpayEncode(dataObj);
