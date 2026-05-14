@@ -24,18 +24,23 @@ export function SitePreloader() {
       window.setTimeout(() => setPhase("leave"), wait);
     };
 
-    const onLoad = () => scheduleLeave();
-
-    if (document.readyState === "complete") {
-      onLoad();
-    } else {
-      window.addEventListener("load", onLoad);
-    }
+    /** Safari (and others) may delay `load` until every subresource finishes; never rely on it alone. */
+    const onDomOrLoad = () => scheduleLeave();
 
     const maxTimer = window.setTimeout(scheduleLeave, MAX_WAIT_MS);
 
+    if (document.readyState === "complete") {
+      scheduleLeave();
+    } else if (document.readyState === "interactive") {
+      scheduleLeave();
+    } else {
+      document.addEventListener("DOMContentLoaded", onDomOrLoad, { once: true });
+      window.addEventListener("load", onDomOrLoad, { once: true });
+    }
+
     return () => {
-      window.removeEventListener("load", onLoad);
+      document.removeEventListener("DOMContentLoaded", onDomOrLoad);
+      window.removeEventListener("load", onDomOrLoad);
       window.clearTimeout(maxTimer);
     };
   }, []);
