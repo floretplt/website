@@ -25,20 +25,53 @@ export function Reveal({ children, className, delayMs = 0 }: Props) {
       return;
     }
 
+    const show = () => {
+      setShown(true);
+    };
+
+    /** Safari can fail to intersect when `rootMargin` uses %; also cover “already in view” before IO runs. */
+    const inView = () => {
+      const r = el.getBoundingClientRect();
+      const h = window.innerHeight || document.documentElement?.clientHeight || 0;
+      return r.top < h && r.bottom > 0;
+    };
+
+    if (inView()) {
+      show();
+      return;
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            setShown(true);
+            show();
             io.disconnect();
             break;
           }
         }
       },
-      { rootMargin: "0px 0px -6% 0px", threshold: 0.06 },
+      { rootMargin: "0px 0px -32px 0px", threshold: 0.01 },
     );
     io.observe(el);
-    return () => io.disconnect();
+
+    const raf = requestAnimationFrame(() => {
+      if (inView()) {
+        show();
+        io.disconnect();
+      }
+    });
+
+    const fallback = window.setTimeout(() => {
+      show();
+      io.disconnect();
+    }, 4000);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(fallback);
+      io.disconnect();
+    };
   }, []);
 
   return (
