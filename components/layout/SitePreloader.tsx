@@ -14,34 +14,24 @@ export function SitePreloader() {
 
   useEffect(() => {
     const started = Date.now();
-    let finished = false;
+    let leaveTimer: ReturnType<typeof setTimeout> | undefined;
 
     const scheduleLeave = () => {
-      if (finished) return;
-      finished = true;
       const elapsed = Date.now() - started;
       const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
-      window.setTimeout(() => setPhase("leave"), wait);
+      leaveTimer = window.setTimeout(() => setPhase("leave"), wait);
     };
 
-    /** Safari (and others) may delay `load` until every subresource finishes; never rely on it alone. */
-    const onDomOrLoad = () => scheduleLeave();
+    /** Hydration has run — do not wait for `window` "load" (Mac Safari can defer it indefinitely). */
+    scheduleLeave();
 
-    const maxTimer = window.setTimeout(scheduleLeave, MAX_WAIT_MS);
-
-    if (document.readyState === "complete") {
-      scheduleLeave();
-    } else if (document.readyState === "interactive") {
-      scheduleLeave();
-    } else {
-      document.addEventListener("DOMContentLoaded", onDomOrLoad, { once: true });
-      window.addEventListener("load", onDomOrLoad, { once: true });
-    }
+    const maxTimer = window.setTimeout(() => {
+      setPhase((p) => (p === "enter" ? "leave" : p));
+    }, MAX_WAIT_MS);
 
     return () => {
-      document.removeEventListener("DOMContentLoaded", onDomOrLoad);
-      window.removeEventListener("load", onDomOrLoad);
       window.clearTimeout(maxTimer);
+      if (leaveTimer !== undefined) window.clearTimeout(leaveTimer);
     };
   }, []);
 
