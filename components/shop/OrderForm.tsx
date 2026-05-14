@@ -192,6 +192,7 @@ export function OrderForm({
     setValue,
     getValues,
     trigger,
+    setFocus,
     formState: { errors },
   } = useForm<OrderCreateInput>({
     resolver: zodResolver(orderCreateSchema) as Resolver<OrderCreateInput>,
@@ -511,8 +512,12 @@ export function OrderForm({
   };
 
   const runSubmit = (payment_method: "reserve" | "prepay") => {
-    void handleSubmit((formValues) =>
-      onSubmit({ ...formValues, payment_method }),
+    void handleSubmit(
+      (formValues) => onSubmit({ ...formValues, payment_method }),
+      (invalid) => {
+        const first = Object.keys(invalid)[0] as keyof OrderCreateInput | undefined;
+        if (first) void setFocus(first, { shouldSelect: true });
+      },
     )();
   };
 

@@ -49,8 +49,8 @@ export function SitePreloader() {
       id="site-preloader"
       aria-hidden={phase === "leave"}
       className={cn(
-        "fixed inset-0 z-[200] flex flex-col items-center justify-center bg-bg transition-opacity duration-700 ease-out motion-reduce:duration-300",
-        phase === "leave" ? "pointer-events-none opacity-0" : "opacity-100",
+        "pointer-events-none fixed inset-0 z-[200] flex flex-col items-center justify-center bg-bg transition-opacity duration-700 ease-out motion-reduce:duration-300",
+        phase === "leave" ? "opacity-0" : "opacity-100",
       )}
       onTransitionEnd={(e) => {
         if (
