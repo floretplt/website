@@ -14,7 +14,7 @@ export function SitePreloader() {
 
   useEffect(() => {
     const started = Date.now();
-    let leaveTimer: ReturnType<typeof setTimeout> | undefined;
+    let leaveTimer: ReturnType<typeof window.setTimeout> | undefined;
 
     const scheduleLeave = () => {
       const elapsed = Date.now() - started;
