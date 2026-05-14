@@ -8,6 +8,6 @@ type Props = {
 };
 
 /** Stable wrapper (scroll-in animation removed — was unreliable in Safari). */
-export function Reveal({ children, className, delayMs: _delayMs = 0 }: Props) {
+export function Reveal({ children, className }: Props) {
   return <div className={cn("reveal-scope", className)}>{children}</div>;
 }
