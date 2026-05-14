@@ -40,6 +40,11 @@ export default function RootLayout({
         className={`${inter.variable} ${cormorant.variable} min-h-screen bg-bg font-sans text-ink antialiased [text-size-adjust:100%]`}
       >
         <SitePreloader />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){function hide(){var el=document.getElementById("site-preloader");if(el)el.style.setProperty("display","none","important");}setTimeout(hide,3000);})();`,
+          }}
+        />
         {children}
         <noscript>
           <style>{`#site-preloader{display:none!important}`}</style>
