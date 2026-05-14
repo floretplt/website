@@ -14,7 +14,8 @@ export function SitePreloader() {
 
   useEffect(() => {
     const started = Date.now();
-    let leaveTimer: ReturnType<typeof window.setTimeout> | undefined;
+    /** Browser timers are numeric IDs; avoid `NodeJS.Timeout` from `@types/node` in client code. */
+    let leaveTimer: number | undefined;
 
     const scheduleLeave = () => {
       const elapsed = Date.now() - started;
