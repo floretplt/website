@@ -7,7 +7,7 @@ import {
   parsePendingLiqPayCookie,
   type PendingLiqPayCookie,
 } from "@/lib/liqpay-pending-cookie";
-import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { getClientIp, rateLimitAsync } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   orderId: z.string().uuid(),
@@ -24,7 +24,7 @@ function resolvePending(
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers);
-  if (!rateLimit(ip)) {
+  if (!(await rateLimitAsync(ip))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 

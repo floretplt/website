@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { decorInquirySchema } from "@/lib/validators";
-import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { getClientIp, rateLimitAsync } from "@/lib/rate-limit";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { normalizeUaPhone } from "@/lib/phone";
 
@@ -19,7 +19,7 @@ function escapeHtml(s: string) {
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers);
-  if (!rateLimit(ip)) {
+  if (!(await rateLimitAsync(ip))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 

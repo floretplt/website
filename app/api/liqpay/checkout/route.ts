@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getUser, isAllowedAdminEmail } from "@/lib/auth";
 import { buildLiqPayCheckoutForOrder } from "@/lib/liqpay-build-order-checkout";
 import { notifyPrepayCheckoutStarted } from "@/lib/order-telegram-prepay-stages";
-import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { getClientIp, rateLimitAsync } from "@/lib/rate-limit";
 
 const schema = z.object({
   orderId: z.string().uuid(),
@@ -13,7 +13,7 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers);
-  if (!rateLimit(ip)) {
+  if (!(await rateLimitAsync(ip))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 

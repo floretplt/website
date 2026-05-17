@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orderCreateSchema } from "@/lib/validators";
-import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { getClientIp, rateLimitAsync } from "@/lib/rate-limit";
 import { sendTelegramOrderCreated } from "@/lib/telegram";
 import { buildNewOrderTelegramCaptionUk } from "@/lib/order-telegram-caption";
 import { publicAssetAbsoluteUrl } from "@/lib/public-asset-url";
@@ -9,6 +9,7 @@ import {
   primaryProductImageUrl,
   resolvePublicProductImageUrl,
 } from "@/lib/product-image";
+import { notifyPrepayOrderCreated } from "@/lib/order-telegram-prepay-stages";
 import { telegramOrderInlineKeyboard } from "@/lib/telegram-order-keyboard";
 import {
   DELIVERY_ADDRESS_PENDING_WITH_RECIPIENT_UK,
@@ -74,7 +75,7 @@ function isPickupDateInWeekWindow(ymd: string): boolean {
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers);
-  if (!rateLimit(ip)) {
+  if (!(await rateLimitAsync(ip))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
@@ -340,8 +341,11 @@ export async function POST(req: Request) {
     const del = deliveryFeeUah ?? 0;
     const totalDue = Number(data.price_paid) + del + pc;
 
-    /** Prepay: staff Telegram is sent from `/api/liqpay/callback` after LiqPay confirms payment. */
-    if (data.payment_method !== "prepay") {
+    if (data.payment_method === "prepay") {
+      void notifyPrepayOrderCreated(row.id).catch((e) =>
+        console.error("telegram prepay created", e),
+      );
+    } else {
       const caption = buildNewOrderTelegramCaptionUk({
         data,
         orderNumber: row.order_number,

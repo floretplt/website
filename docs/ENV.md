@@ -10,7 +10,7 @@ Variables prefixed with `NEXT_PUBLIC_` are embedded in the browser bundle. Treat
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_SITE_URL` | **Yes** (production) | Canonical site URL with **no** trailing slash, e.g. `https://floret.example.com`. Used for metadata base URL, sitemap/robots, JSON-LD, and LiqPay `result_url`. Local default in code is `http://localhost:3000` if unset. |
+| `NEXT_PUBLIC_SITE_URL` | **Yes** (production) | Canonical site URL with **no** trailing slash, e.g. `https://www.floret.poltava.ua`. Used for metadata base URL, sitemap/robots, JSON-LD, and LiqPay `result_url` / `server_url`. Must match the host registered in LiqPay (including `www` if that is your canonical domain). Local default in code is `http://localhost:3000` if unset. |
 | `NEXT_PUBLIC_SUPABASE_URL` | **Yes** | Supabase project URL (`https://<project-ref>.supabase.co`). Used by the Supabase client, image URLs for Storage, and `next.config.mjs` image `remotePatterns`. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` **or** `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Yes** | Same value: Supabase **anon / publishable** key (Project Settings → API). Either variable name works; publishable is checked first. Safe in the browser; RLS applies. |
 | `NEXT_PUBLIC_LIQPAY_PUBLIC_KEY` | For online pay | LiqPay public key. Required for `/api/liqpay/checkout` when customers choose “pay now”. |
@@ -26,6 +26,8 @@ Variables prefixed with `NEXT_PUBLIC_` are embedded in the browser bundle. Treat
 | `TELEGRAM_BOT_TOKEN` | Optional | Telegram Bot API token from [@BotFather](https://t.me/BotFather). If missing, order notifications and inquiry webhooks are skipped (warning logged). |
 | `TELEGRAM_CHAT_ID` | Optional | Target chat ID for bot messages (same bot must be able to post there). Used for order notifications, `POST /api/decor-inquiry`, and `POST /api/wedding-inquiry`. |
 | `TELEGRAM_WEBHOOK_SECRET` | **Yes in production** (for inline buttons) | Random secret; must match the `secret_token` sent when registering the webhook (`scripts/set-telegram-webhook.sh`). The app compares it to the `x-telegram-bot-api-secret-token` header on `POST /api/telegram/webhook`. If the deployed value and Telegram’s webhook disagree, callbacks return **401** and order status buttons do nothing. In **development**, the route accepts requests without the header when this variable is unset. |
+| `UPSTASH_REDIS_REST_URL` | Recommended in production | Upstash Redis REST endpoint. When set together with `UPSTASH_REDIS_REST_TOKEN`, public POST endpoints (`/api/orders`, `/api/orders/lookup`, `/api/decor-inquiry`, `/api/wedding-inquiry`, `/api/liqpay/checkout`, `/api/liqpay/confirm`) use a sliding-window rate limit shared across all Vercel instances. Without these, the app falls back to a per-instance in-memory limiter (still works, but each instance has its own bucket). Create the database in Upstash → free Redis tier → "REST" credentials. |
+| `UPSTASH_REDIS_REST_TOKEN` | Recommended in production | Companion to `UPSTASH_REDIS_REST_URL`. **Server-only.** |
 
 ---
 
@@ -49,9 +51,9 @@ Variables prefixed with `NEXT_PUBLIC_` are embedded in the browser bundle. Treat
 
 1. **Supabase** — Create a project; run `supabase/migrations/001_initial.sql`; create Storage bucket `products`; enable Email auth and create the admin user.
 2. **Local** — `cp .env.example .env.local` and fill all **Yes** rows.
-3. **LiqPay** — In the merchant cabinet, set the **server URL** (callback) to:  
-   `{NEXT_PUBLIC_SITE_URL}/api/liqpay/callback`  
-   Use the same base URL you deploy with (HTTPS in production).
+3. **LiqPay** — In the merchant cabinet, set URLs to match `NEXT_PUBLIC_SITE_URL` exactly (for Floret: `https://www.floret.poltava.ua`):  
+   - Result: `{NEXT_PUBLIC_SITE_URL}/order/liqpay/result`  
+   - Callback: `{NEXT_PUBLIC_SITE_URL}/api/liqpay/callback`
 4. **Vercel (or similar)** — Add every variable from `.env.example` in the project settings; set `NEXT_PUBLIC_SITE_URL` to your production domain.
 5. **Telegram order buttons** — Set `TELEGRAM_WEBHOOK_SECRET` in the host env to a long random string; run `bash scripts/set-telegram-webhook.sh` with the **same** value as `secret_token` (see script). Webhook URL must be `{NEXT_PUBLIC_SITE_URL}/api/telegram/webhook`. Verify with Bot API `getWebhookInfo`: URL, `has_custom_certificate`, and that updates include `callback_query`. If buttons still fail, check server logs for `401` on the webhook route (secret mismatch).
 
