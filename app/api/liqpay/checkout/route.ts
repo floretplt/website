@@ -1,25 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getLiqPayCheckoutUrl, liqpayEncode, liqpaySign } from "@/lib/liqpay";
+import { getUser, isAllowedAdminEmail } from "@/lib/auth";
+import { buildLiqPayCheckoutForOrder } from "@/lib/liqpay-build-order-checkout";
+import { notifyPrepayCheckoutStarted } from "@/lib/order-telegram-prepay-stages";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   orderId: z.string().uuid(),
+  /** Admin: shareable hosted checkout URL. */
+  returnLink: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers);
   if (!rateLimit(ip)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  }
-
-  const pub = process.env.NEXT_PUBLIC_LIQPAY_PUBLIC_KEY;
-  const priv = process.env.LIQPAY_PRIVATE_KEY;
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
-  if (!pub || !priv) {
-    return NextResponse.json({ error: "LiqPay not configured" }, { status: 503 });
   }
 
   let body: unknown;
@@ -35,63 +30,37 @@ export async function POST(req: Request) {
   }
 
   try {
-    const admin = createAdminClient();
-    const { data: order, error } = await admin
-      .from("orders")
-      .select("*")
-      .eq("id", parsed.data.orderId)
-      .single();
+    const { orderId, returnLink } = parsed.data;
 
-    if (error || !order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (returnLink) {
+      const user = await getUser();
+      if (!user || !isAllowedAdminEmail(user.email ?? undefined)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
 
-    if (order.paid) {
-      return NextResponse.json({ error: "Already paid" }, { status: 400 });
+    const result = await buildLiqPayCheckoutForOrder(orderId, { returnLink });
+
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    if (order.payment_method !== "prepay") {
-      return NextResponse.json({ error: "Wrong payment method" }, { status: 400 });
+    if ("redirectUrl" in result) {
+      return NextResponse.json({ redirectUrl: result.redirectUrl });
     }
 
-    const bouquet = Number(order.price_paid);
-    const o = order as {
-      delivery_fee_uah?: number | null;
-      postcard_fee_uah?: number | null;
-    };
-    const feeRaw = o.delivery_fee_uah;
-    const fee =
-      order.currency === "UAH" && feeRaw != null && Number.isFinite(Number(feeRaw))
-        ? Number(feeRaw)
-        : 0;
-    const pcRaw = o.postcard_fee_uah;
-    const postcard =
-      order.currency === "UAH" && pcRaw != null && Number.isFinite(Number(pcRaw))
-        ? Number(pcRaw)
-        : 0;
-    const amount = bouquet + fee + postcard;
-    const currency = order.currency === "EUR" ? "EUR" : "UAH";
-
-    const dataObj = {
-      public_key: pub,
-      version: 3,
-      action: "pay",
-      amount: Number(amount.toFixed(2)),
-      currency,
-      description: `Floret #${order.order_number}`,
-      order_id: order.id,
-      result_url: `${site}/order/liqpay/result`,
-      server_url: `${site}/api/liqpay/callback`,
-      language: "uk",
-    };
-
-    const data = liqpayEncode(dataObj);
-    const signature = liqpaySign(data, priv);
+    void notifyPrepayCheckoutStarted(
+      orderId,
+      result.amount,
+      result.currency,
+    ).catch((e) => console.error("telegram prepay checkout", e));
 
     return NextResponse.json({
-      data,
-      signature,
-      checkoutUrl: getLiqPayCheckoutUrl(),
+      data: result.data,
+      signature: result.signature,
+      checkoutUrl: result.checkoutUrl,
+      orderNumber: result.orderNumber,
+      liqpayOrderId: result.liqpayOrderId,
     });
   } catch (e) {
     console.error(e);

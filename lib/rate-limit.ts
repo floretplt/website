@@ -27,17 +27,22 @@ export function rateLimit(ip: string): boolean {
   return true;
 }
 
-// Vercel / most reverse-proxies set x-forwarded-for reliably.
-// We take only the *last* (rightmost) address added by a trusted proxy, not the
-// first (which a client can forge by sending their own x-forwarded-for header).
-// For Vercel this is safe because their edge always appends the real client IP.
+// Vercel rewrites x-forwarded-for so the *first* entry is the real client IP
+// (the edge node strips any spoofed values and prepends the verified address).
+// Vercel additionally exposes `x-real-ip` (single client IP) and
+// `x-vercel-forwarded-for` (mirror of XFF). We prefer x-real-ip and fall back
+// to the first entry of XFF — never the last, which would be the edge proxy
+// itself and would cause every request to share one bucket.
 export function getClientIp(headers: Headers): string {
-  const xff = headers.get("x-forwarded-for");
+  const realIp = headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
+  const xff =
+    headers.get("x-forwarded-for") ?? headers.get("x-vercel-forwarded-for");
   if (xff) {
-    const parts = xff.split(",").map((s) => s.trim()).filter(Boolean);
-    // Last entry is the one appended by the outermost trusted proxy.
-    const last = parts[parts.length - 1];
-    if (last) return last;
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
   }
-  return headers.get("x-real-ip") ?? "unknown";
+
+  return "unknown";
 }

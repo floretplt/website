@@ -1,1 +1,0 @@
-{"sessionId":"17be04","timestamp":1778596681809,"runId":"post-result-url","hypothesisId":"H6","location":"app/api/liqpay/checkout/route.ts:payloadShape","message":"liqpay checkout signed payload meta","data":{"siteHost":"floret.poltava.ua","resultUrlHasQuery":false,"dataB64Len":392,"currency":"UAH"}}

@@ -30,6 +30,11 @@ import { formatMoney } from "@/lib/format";
 import { AddressAutocomplete } from "@/components/shop/AddressAutocomplete";
 import { normalizeUaPhone } from "@/lib/phone";
 import { POSTCARD_FEE_UAH } from "@/lib/constants";
+import {
+  FLORET_LIQPAY_STORAGE_KEY,
+  pendingLiqPayCookieHeader,
+  serializePendingLiqPay,
+} from "@/lib/liqpay-pending-cookie";
 import { addCalendarDaysYYYYMMDD } from "@/lib/delivery-kyiv";
 import {
   bandDeliveryFeeUah,
@@ -74,14 +79,49 @@ const VALIDATION_CODES = [
 
 const API_MESSAGE_KEYS = new Set([...VALIDATION_CODES]);
 
-function FieldError({ messageKey }: { messageKey: string | undefined }) {
+type DeliveryHighlightStep =
+  | "addressMode"
+  | "zone"
+  | "when"
+  | "address"
+  | "recipient";
+
+const DELIVERY_STEP_SCROLL_ID: Record<DeliveryHighlightStep, string> = {
+  addressMode: "order-address-mode",
+  zone: "order-delivery-zone",
+  when: "order-delivery-when",
+  address: "order-delivery-address",
+  recipient: "order-delivery-recipient",
+};
+
+function recipientPhoneReady(phone: string | null | undefined): boolean {
+  const raw = phone?.trim();
+  if (!raw) return false;
+  return /^\+380\d{9}$/.test(normalizeUaPhone(raw));
+}
+
+function pickRhfMessage(err: unknown): string | undefined {
+  if (!err || typeof err !== "object") return undefined;
+  const o = err as { message?: unknown };
+  const { message } = o;
+  if (typeof message === "string" && message.length > 0) return message;
+  if (Array.isArray(message)) {
+    for (const item of message) {
+      if (typeof item === "string" && item.length > 0) return item;
+    }
+  }
+  return undefined;
+}
+
+function FieldError({ err }: { err?: unknown }) {
   const t = useTranslations("order.validation");
+  const messageKey = pickRhfMessage(err);
   if (!messageKey) return null;
   if (!VALIDATION_CODES.includes(messageKey as (typeof VALIDATION_CODES)[number])) {
-    return <p className="text-base text-red-800">{messageKey}</p>;
+    return <p className="text-error">{messageKey}</p>;
   }
   return (
-    <p className="text-base text-red-800">
+    <p className="text-error">
       {t(messageKey as (typeof VALIDATION_CODES)[number])}
     </p>
   );
@@ -104,6 +144,9 @@ export function OrderForm({
   const [submittingMethod, setSubmittingMethod] = useState<
     "reserve" | "prepay" | null
   >(null);
+  const [addressModeChosen, setAddressModeChosen] = useState(false);
+  const [deliveryHighlight, setDeliveryHighlight] =
+    useState<DeliveryHighlightStep | null>(null);
 
   const currency = productCurrency();
   const pickupSlots = useMemo(() => pickupTimeSlotValues(), []);
@@ -197,7 +240,7 @@ export function OrderForm({
   } = useForm<OrderCreateInput>({
     resolver: zodResolver(orderCreateSchema) as Resolver<OrderCreateInput>,
     defaultValues: defaultValues as OrderCreateInput,
-    mode: "onBlur",
+    mode: "onSubmit",
     reValidateMode: "onChange",
   });
 
@@ -210,8 +253,21 @@ export function OrderForm({
   const giftMessageWatch = watch("gift_message");
   const deliveryBandMaxKm = watch("delivery_band_max_km");
   const deliveryZoneId = watch("delivery_zone_id");
+  const watchDeliveryDate = watch("delivery_date");
+  const watchDeliveryAddress = watch("delivery_address");
+  const watchRecipientPhone = watch("recipient_phone");
+
+  const scrollToDeliveryStep = useCallback((step: DeliveryHighlightStep) => {
+    requestAnimationFrame(() => {
+      document
+        .getElementById(DELIVERY_STEP_SCROLL_ID[step])
+        ?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }, []);
 
   const switchToPickup = useCallback(() => {
+    setAddressModeChosen(false);
+    setDeliveryHighlight(null);
     setValue("delivery_type", "pickup", {
       shouldValidate: true,
       shouldDirty: true,
@@ -235,6 +291,8 @@ export function OrderForm({
   }, [minPickupDate, pickupSlots, setValue]);
 
   const switchToDelivery = useCallback(() => {
+    setAddressModeChosen(false);
+    setDeliveryHighlight(null);
     setValue("delivery_type", "delivery", {
       shouldValidate: true,
       shouldDirty: true,
@@ -256,6 +314,27 @@ export function OrderForm({
     setValue("delivery_band_max_km", null);
     setValue("delivery_zone_id", null);
   }, [minDeliveryDate, setValue]);
+
+  const selectAddressMode = useCallback(
+    (coordinateWithRecipient: boolean) => {
+      setAddressModeChosen(true);
+      setDeliveryHighlight((h) => (h === "addressMode" ? null : h));
+      setValue("coordinate_address_with_recipient", coordinateWithRecipient, {
+        shouldDirty: true,
+      });
+      setValue("delivery_date", minDeliveryDate, { shouldDirty: true });
+      setValue("delivery_time", null, { shouldDirty: true });
+      setValue("delivery_address", null);
+      setValue("delivery_entrance", null);
+      setValue("delivery_floor", null);
+      setValue("delivery_apartment", null);
+      setValue("recipient_phone", null);
+      setValue("delivery_district_id", null);
+      setValue("delivery_band_max_km", null);
+      setValue("delivery_zone_id", null);
+    },
+    [minDeliveryDate, setValue],
+  );
 
   useEffect(() => {
     if (coordinate) {
@@ -353,6 +432,94 @@ export function OrderForm({
     namedZones.length === 0 &&
     !hasDistrictMatrix &&
     !coordinate;
+
+  const zoneStepRequired =
+    addressModeChosen &&
+    !coordinate &&
+    currency === "UAH" &&
+    (namedZones.length > 0 ||
+      hasDistrictMatrix ||
+      (deliveryBands.length > 0 && namedZones.length === 0 && !hasDistrictMatrix));
+
+  const zoneStepComplete =
+    !zoneStepRequired ||
+    (namedZones.length > 0 && Boolean(deliveryZoneId?.trim())) ||
+    (hasDistrictMatrix && Boolean(deliveryDistrictId?.trim())) ||
+    (deliveryBands.length > 0 &&
+      namedZones.length === 0 &&
+      !hasDistrictMatrix &&
+      deliveryBandMaxKm != null);
+
+  const whenStepComplete =
+    Boolean(watchDeliveryDate?.trim()) && Boolean(watchDeliveryTime?.trim());
+
+  const addressStepComplete = Boolean(watchDeliveryAddress?.trim());
+
+  const showZoneStep = addressModeChosen && !coordinate && zoneStepRequired;
+  const showWhenStep = addressModeChosen && (coordinate || zoneStepComplete);
+  const showAddressStep =
+    addressModeChosen && !coordinate && whenStepComplete;
+  const showRecipientStep =
+    addressModeChosen &&
+    whenStepComplete &&
+    (coordinate || addressStepComplete);
+
+  const getFirstIncompleteDeliveryStep = useCallback((): DeliveryHighlightStep | null => {
+    if (deliveryType !== "delivery") return null;
+    if (!addressModeChosen) return "addressMode";
+    if (zoneStepRequired && !zoneStepComplete) return "zone";
+    const whenVisible = addressModeChosen && (coordinate || zoneStepComplete);
+    if (whenVisible && !whenStepComplete) return "when";
+    if (!coordinate && whenStepComplete && !addressStepComplete) return "address";
+    const recipientVisible =
+      addressModeChosen && whenStepComplete && (coordinate || addressStepComplete);
+    if (recipientVisible && !recipientPhoneReady(watchRecipientPhone)) {
+      return "recipient";
+    }
+    return null;
+  }, [
+    deliveryType,
+    addressModeChosen,
+    zoneStepRequired,
+    zoneStepComplete,
+    coordinate,
+    whenStepComplete,
+    addressStepComplete,
+    watchRecipientPhone,
+  ]);
+
+  const zoneStepErrorMessage = useCallback(() => {
+    if (namedZones.length > 0) return t("deliveryNamedZoneRequired");
+    if (hasDistrictMatrix) return t("deliveryDistrictRequired");
+    return t("deliveryTierRequired");
+  }, [namedZones.length, hasDistrictMatrix, t]);
+
+  useEffect(() => {
+    if (deliveryHighlight === "zone" && zoneStepComplete) {
+      setDeliveryHighlight(null);
+    }
+  }, [deliveryHighlight, zoneStepComplete]);
+
+  useEffect(() => {
+    if (deliveryHighlight === "when" && whenStepComplete) {
+      setDeliveryHighlight(null);
+    }
+  }, [deliveryHighlight, whenStepComplete]);
+
+  useEffect(() => {
+    if (deliveryHighlight === "address" && addressStepComplete) {
+      setDeliveryHighlight(null);
+    }
+  }, [deliveryHighlight, addressStepComplete]);
+
+  useEffect(() => {
+    if (
+      deliveryHighlight === "recipient" &&
+      recipientPhoneReady(watchRecipientPhone)
+    ) {
+      setDeliveryHighlight(null);
+    }
+  }, [deliveryHighlight, watchRecipientPhone]);
 
   const onSubmit = async (values: OrderCreateInput) => {
     setFormError(null);
@@ -483,11 +650,43 @@ export function OrderForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId: json.id }),
       });
-      const payJson = await pay.json();
-      if (!pay.ok || !payJson.data || !payJson.signature) {
+      const payJson = (await pay.json()) as {
+        data?: string;
+        signature?: string;
+        checkoutUrl?: string;
+        orderNumber?: number;
+        liqpayOrderId?: string;
+      };
+
+      if (
+        !pay.ok ||
+        !payJson.data ||
+        !payJson.signature ||
+        !payJson.checkoutUrl ||
+        !payJson.checkoutUrl.startsWith("https://www.liqpay.ua/")
+      ) {
         setFormError(t("error"));
         setLoading(false);
         return;
+      }
+
+      const orderNum = payJson.orderNumber ?? json.orderNumber;
+      const liqpayOrderId = payJson.liqpayOrderId ?? "";
+      if (orderNum != null && liqpayOrderId && json.id) {
+        const pending = {
+          orderId: json.id,
+          orderNumber: orderNum,
+          liqpayOrderId,
+        };
+        document.cookie = pendingLiqPayCookieHeader(pending);
+        try {
+          sessionStorage.setItem(
+            FLORET_LIQPAY_STORAGE_KEY,
+            serializePendingLiqPay(pending),
+          );
+        } catch {
+          /* private mode quota */
+        }
       }
 
       const formEl = document.createElement("form");
@@ -512,11 +711,31 @@ export function OrderForm({
   };
 
   const runSubmit = (payment_method: "reserve" | "prepay") => {
+    const incomplete = getFirstIncompleteDeliveryStep();
+    if (incomplete) {
+      setDeliveryHighlight(incomplete);
+      scrollToDeliveryStep(incomplete);
+      return;
+    }
+    setDeliveryHighlight(null);
     void handleSubmit(
       (formValues) => onSubmit({ ...formValues, payment_method }),
       (invalid) => {
-        const first = Object.keys(invalid)[0] as keyof OrderCreateInput | undefined;
-        if (first) void setFocus(first, { shouldSelect: true });
+        const blocked = getFirstIncompleteDeliveryStep();
+        if (blocked) {
+          setDeliveryHighlight(blocked);
+          scrollToDeliveryStep(blocked);
+          return;
+        }
+        const keys = Object.keys(invalid) as (keyof OrderCreateInput)[];
+        const first = keys[0];
+        if (!first) return;
+        void setFocus(first, { shouldSelect: true });
+        requestAnimationFrame(() => {
+          const name = String(first);
+          const el = document.querySelector<HTMLElement>(`[name="${name}"]`);
+          el?.scrollIntoView({ block: "center", behavior: "smooth" });
+        });
       },
     )();
   };
@@ -524,21 +743,39 @@ export function OrderForm({
   const req = t("requiredStar");
   const opt = t("optionalTag");
 
-  const sectionTitleClass =
-    "font-display text-lg font-normal tracking-tight text-ink md:text-xl";
+  const choiceOn =
+    "border-rose bg-rose/10 text-rose shadow-sm ring-1 ring-rose/35";
+  const choiceOff = "border-ink/20 text-muted hover:border-ink/35";
+  const choiceError =
+    "border-red-700 bg-red-50 text-red-900 ring-2 ring-red-600/35";
+  const inputErrorClass = "border-red-700 ring-2 ring-red-600/35";
+  const stepRingError = "rounded-lg ring-2 ring-red-600/35";
+  const zoneCardError =
+    "border-red-600/70 bg-red-50/50 hover:border-red-700";
+  const zoneCardOff = "border-ink/20 hover:border-ink/45";
+  const zoneCardOn = "border-ink bg-ink/[0.04] ring-1 ring-ink";
+  const chipOn = "border-rose bg-rose/20 text-ink ring-1 ring-rose/50";
+  const chipOff = "border-ink/20 text-muted hover:border-ink/40";
+  const highlightZone = deliveryHighlight === "zone" && !zoneStepComplete;
+  const highlightWhen = deliveryHighlight === "when" && !whenStepComplete;
+  const highlightAddress =
+    deliveryHighlight === "address" && !addressStepComplete;
+  const highlightRecipient =
+    deliveryHighlight === "recipient" &&
+    !recipientPhoneReady(watchRecipientPhone);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
       }}
-      className="mx-auto min-h-screen max-w-6xl bg-[#F4F3F1] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16"
+      className="order-form mx-auto min-h-screen max-w-6xl bg-[#F4F3F1] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16"
     >
-      <h1 className="h-section mb-8 lg:mb-10">{t("title")}</h1>
+      <h1>{t("title")}</h1>
 
       <div className="flex flex-col gap-8 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10 lg:gap-y-8">
           <section className="min-w-0 space-y-5 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:col-span-7 lg:col-start-1 lg:row-start-1">
-            <h2 className={sectionTitleClass}>{t("sectionProduct")}</h2>
+            <h2 className="form-section-title">{t("sectionProduct")}</h2>
             {initialProduct && previewSrc ? (
               <>
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
@@ -551,8 +788,8 @@ export function OrderForm({
                   />
                 </div>
                 <div className="min-w-0 flex-1 space-y-4">
-                  <p className="font-display text-2xl leading-tight">{defaultName}</p>
-                  <p className="text-base leading-relaxed text-muted">
+                  <p className="font-medium">{defaultName}</p>
+                  <p className="text-body-muted">
                     {sizeOptions.map((s, i) => {
                       const pr = productPriceForSize(initialProduct, s);
                       if (pr == null) return null;
@@ -591,10 +828,8 @@ export function OrderForm({
                                   shouldDirty: true,
                                 });
                               }}
-                              className={`min-w-[3rem] rounded-md border px-4 py-2 text-base font-medium uppercase tracking-wider transition-colors ${
-                                field.value === s
-                                  ? "border-rose bg-rose/20 text-ink ring-1 ring-rose/50"
-                                  : "border-ink/20 text-muted hover:border-ink/40"
+                              className={`form-chip ${
+                                field.value === s ? chipOn : chipOff
                               }`}
                             >
                               {s === "small" ? "S" : s === "medium" ? "M" : "L"}
@@ -603,7 +838,7 @@ export function OrderForm({
                         </div>
                       )}
                     />
-                    <FieldError messageKey={errors.product_size?.message} />
+                    <FieldError err={errors.product_size} />
                   </div>
                   <div>
                     <label className="block min-w-0">
@@ -638,12 +873,12 @@ export function OrderForm({
                         min: formatMoney(smallTierMin, currency),
                       })}
                     </p>
-                    <FieldError messageKey={errors.price_paid?.message} />
+                    <FieldError err={errors.price_paid} />
                     <input type="hidden" {...register("currency")} value={currency} />
                   </div>
                 </div>
                 </div>
-                <p className="mt-5 text-base leading-relaxed text-muted">
+                <p className="mt-5 text-body-muted">
                   {t("compositionDisclaimer")}
                 </p>
               </>
@@ -661,8 +896,8 @@ export function OrderForm({
                 ) : null}
                 {initialProduct ? (
                   <>
-                    <p className="font-display text-2xl">{defaultName}</p>
-                    <p className="mt-2 text-base leading-relaxed text-muted">
+                    <p className="font-medium">{defaultName}</p>
+                    <p className="mt-2 text-body-muted">
                       {sizeOptions.map((s, i) => {
                         const pr = productPriceForSize(initialProduct, s);
                         if (pr == null) return null;
@@ -686,7 +921,7 @@ export function OrderForm({
                       </span>
                       <input className="form-input" {...register("product_name")} />
                     </label>
-                    <FieldError messageKey={errors.product_name?.message} />
+                    <FieldError err={errors.product_name} />
                   </div>
                 )}
                 <div className="pt-2">
@@ -716,10 +951,8 @@ export function OrderForm({
                                   shouldDirty: true,
                                 });
                               }}
-                              className={`min-w-[3rem] rounded-md border px-4 py-2 text-base font-medium uppercase tracking-wider ${
-                                field.value === s
-                                  ? "border-rose bg-rose/20 text-ink ring-1 ring-rose/50"
-                                  : "border-ink/20 text-muted hover:border-ink/40"
+                              className={`form-chip ${
+                                field.value === s ? chipOn : chipOff
                               }`}
                             >
                               {s === "small" ? "S" : s === "medium" ? "M" : "L"}
@@ -729,7 +962,7 @@ export function OrderForm({
                       </div>
                     )}
                   />
-                  <FieldError messageKey={errors.product_size?.message} />
+                  <FieldError err={errors.product_size} />
                 </div>
                 <div className="pt-2">
                   <label className="block min-w-0">
@@ -769,10 +1002,10 @@ export function OrderForm({
                       </p>
                     </>
                   ) : null}
-                  <FieldError messageKey={errors.price_paid?.message} />
+                  <FieldError err={errors.price_paid} />
                   <input type="hidden" {...register("currency")} value={currency} />
                 </div>
-                <p className="mt-4 text-base leading-relaxed text-muted">
+                <p className="mt-4 text-body-muted">
                   {t("compositionDisclaimer")}
                 </p>
               </div>
@@ -780,18 +1013,16 @@ export function OrderForm({
           </section>
 
           <section className="min-w-0 space-y-5 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:col-span-7 lg:col-start-1 lg:row-start-2">
-            <h2 className={sectionTitleClass}>{t("sectionDelivery")}</h2>
-            <div className="grid w-full grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+            <h2 className="form-section-title">{t("sectionDelivery")}</h2>
+            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={switchToPickup}
-                className={`flex min-h-[3.25rem] min-w-0 items-center justify-center gap-2 rounded-xl border-2 px-4 py-3.5 text-center text-base font-medium transition-colors ${
-                  deliveryType === "pickup"
-                    ? "border-rose bg-rose/10 text-rose shadow-sm ring-1 ring-rose/35"
-                    : "border-ink/20 text-muted hover:border-ink/35"
+                className={`form-choice ${
+                  deliveryType === "pickup" ? choiceOn : choiceOff
                 }`}
               >
-                <span className="text-lg leading-none" aria-hidden>
+                <span className="text-base leading-none" aria-hidden>
                   🛍
                 </span>
                 <span>{t("pickup")}</span>
@@ -799,13 +1030,11 @@ export function OrderForm({
               <button
                 type="button"
                 onClick={switchToDelivery}
-                className={`flex min-h-[3.25rem] min-w-0 items-center justify-center gap-2 rounded-xl border-2 px-4 py-3.5 text-center text-base font-medium transition-colors ${
-                  deliveryType === "delivery"
-                    ? "border-rose bg-rose/10 text-rose shadow-sm ring-1 ring-rose/35"
-                    : "border-ink/20 text-muted hover:border-ink/35"
+                className={`form-choice ${
+                  deliveryType === "delivery" ? choiceOn : choiceOff
                 }`}
               >
-                <span className="text-lg leading-none" aria-hidden>
+                <span className="text-base leading-none" aria-hidden>
                   🚚
                 </span>
                 <span>{t("deliveryOption")}</span>
@@ -814,7 +1043,7 @@ export function OrderForm({
 
         {deliveryType === "pickup" ? (
           <div className="grid min-w-0 gap-4 md:grid-cols-2">
-            <div className="min-w-0 text-base text-muted">
+            <div className="min-w-0">
               <label className="block min-w-0">
                 <span className="form-label">
                   {t("pickupDate")}
@@ -829,10 +1058,9 @@ export function OrderForm({
                   {...register("delivery_date")}
                 />
               </label>
-              <p className="mt-1 form-hint">{t("pickupDateRangeHint")}</p>
-              <FieldError messageKey={errors.delivery_date?.message} />
+              <FieldError err={errors.delivery_date} />
             </div>
-            <div className="min-w-0 text-base text-muted">
+            <div className="min-w-0 text-body-muted">
               <label className="block min-w-0">
                 <span className="form-label">
                   {t("pickupTime")}
@@ -846,21 +1074,76 @@ export function OrderForm({
                   ))}
                 </select>
               </label>
-              <p className="mt-1 form-hint">
-                {t("pickupTimeHint")}
-              </p>
-              <FieldError messageKey={errors.delivery_time?.message} />
+              <FieldError err={errors.delivery_time} />
             </div>
           </div>
         ) : null}
 
         {deliveryType === "delivery" ? (
           <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <div id="order-address-mode" className="md:col-span-2 space-y-3">
+              <p className="form-label mb-2">{t("addressModeTitle")}</p>
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => selectAddressMode(false)}
+                  className={`form-choice ${
+                    deliveryHighlight === "addressMode" && !addressModeChosen
+                      ? choiceError
+                      : addressModeChosen && !coordinate
+                        ? choiceOn
+                        : choiceOff
+                  }`}
+                >
+                  {t("addressModeKnow")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectAddressMode(true)}
+                  className={`form-choice ${
+                    deliveryHighlight === "addressMode" && !addressModeChosen
+                      ? choiceError
+                      : addressModeChosen && coordinate
+                        ? choiceOn
+                        : choiceOff
+                  }`}
+                >
+                  {t("coordinateAddressLabel")}
+                </button>
+              </div>
+              {!addressModeChosen ? (
+                <p
+                  className={
+                    deliveryHighlight === "addressMode"
+                      ? "text-error"
+                      : "form-hint"
+                  }
+                  role={
+                    deliveryHighlight === "addressMode" ? "alert" : undefined
+                  }
+                >
+                  {deliveryHighlight === "addressMode"
+                    ? t("addressModeRequired")
+                    : t("addressModeHint")}
+                </p>
+              ) : null}
+              {addressModeChosen && coordinate ? (
+                <p className="form-hint">{t("coordinateAddressHelp")}</p>
+              ) : null}
+            </div>
+
+            {showZoneStep ? (
+              <div
+                id="order-delivery-zone"
+                className={`md:col-span-2 space-y-4 ${
+                  highlightZone ? stepRingError : ""
+                }`}
+              >
             {showBandHintTable ? (
-              <div className="rounded-lg border border-ink/15 bg-ink/[0.02] p-4 md:col-span-2">
+              <div className="rounded-lg border border-ink/15 bg-ink/[0.02] p-4">
                 <p className="form-label mb-0">{t("deliveryPricingTitle")}</p>
                 <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-                  <table className="mt-3 w-full min-w-[16rem] max-w-md text-base">
+                  <table className="text-body-muted mt-3 w-full min-w-[16rem] max-w-md">
                     <tbody>
                       {deliveryBands.map((b) => (
                         <tr
@@ -900,15 +1183,18 @@ export function OrderForm({
                           <button
                             key={`${b.max_km}-${b.price_uah}`}
                             type="button"
-                            onClick={() =>
-                              field.onChange(
-                                selected ? null : b.max_km,
-                              )
-                            }
-                            className={`flex flex-col gap-1 border px-4 py-3 text-left text-base transition-colors ${
+                            onClick={() => {
+                              field.onChange(selected ? null : b.max_km);
+                              setDeliveryHighlight((h) =>
+                                h === "zone" ? null : h,
+                              );
+                            }}
+                            className={`text-body flex flex-col gap-1 border-2 px-4 py-3 text-left transition-colors ${
                               selected
-                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
-                                : "border-ink/20 hover:border-ink/50"
+                                ? zoneCardOn
+                                : highlightZone
+                                  ? zoneCardError
+                                  : zoneCardOff
                             }`}
                           >
                             <span className="font-medium text-ink">
@@ -928,12 +1214,12 @@ export function OrderForm({
                 )}
               />
             ) : null}
-            {currency === "UAH" && namedZones.length > 0 && !coordinate ? (
+            {currency === "UAH" && namedZones.length > 0 ? (
               <Controller
                 name="delivery_zone_id"
                 control={control}
                 render={({ field }) => (
-                  <div className="text-base text-muted md:col-span-2 space-y-3">
+                  <div className="text-body-muted md:col-span-2 space-y-3">
                     <p className="form-label mb-0">
                       {t("deliveryNamedZoneTitle")}
                       {req}
@@ -947,11 +1233,18 @@ export function OrderForm({
                           <button
                             key={z.id}
                             type="button"
-                            onClick={() => field.onChange(z.id)}
+                            onClick={() => {
+                              field.onChange(z.id);
+                              setDeliveryHighlight((h) =>
+                                h === "zone" ? null : h,
+                              );
+                            }}
                             className={`relative flex w-full flex-col gap-1 border-2 px-4 py-3.5 pr-11 text-left transition-colors ${
                               selected
-                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
-                                : "border-ink/20 hover:border-ink/45"
+                                ? zoneCardOn
+                                : highlightZone
+                                  ? zoneCardError
+                                  : zoneCardOff
                             }`}
                           >
                             {selected ? (
@@ -980,12 +1273,12 @@ export function OrderForm({
                 )}
               />
             ) : null}
-            {currency === "UAH" && hasDistrictMatrix && !coordinate ? (
+            {currency === "UAH" && hasDistrictMatrix ? (
               <Controller
                 name="delivery_district_id"
                 control={control}
                 render={({ field }) => (
-                  <div className="text-base text-muted md:col-span-2 space-y-3">
+                  <div className="text-body-muted md:col-span-2 space-y-3">
                     <p className="form-label mb-0">
                       {t("deliveryDistrict")}
                       {req}
@@ -1025,11 +1318,18 @@ export function OrderForm({
                           <button
                             key={d.id}
                             type="button"
-                            onClick={() => field.onChange(d.id)}
+                            onClick={() => {
+                              field.onChange(d.id);
+                              setDeliveryHighlight((h) =>
+                                h === "zone" ? null : h,
+                              );
+                            }}
                             className={`relative flex w-full flex-col gap-1 border-2 px-4 py-3.5 pr-11 text-left transition-colors ${
                               selected
-                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
-                                : "border-ink/20 hover:border-ink/45"
+                                ? zoneCardOn
+                                : highlightZone
+                                  ? zoneCardError
+                                  : zoneCardOff
                             }`}
                           >
                             {selected ? (
@@ -1053,7 +1353,21 @@ export function OrderForm({
                 )}
               />
             ) : null}
-            <div className="min-w-0 text-base text-muted">
+                {highlightZone ? (
+                  <p className="text-error" role="alert">
+                    {zoneStepErrorMessage()}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {showWhenStep ? (
+              <div
+                id="order-delivery-when"
+                className={`md:col-span-2 grid gap-4 md:grid-cols-2 ${
+                  highlightWhen ? stepRingError : ""
+                }`}
+              >
+            <div className="min-w-0 text-body-muted">
               <label className="block min-w-0">
                 <span className="form-label">
                   {t("deliveryDate")}
@@ -1063,19 +1377,30 @@ export function OrderForm({
                   type="date"
                   min={minDeliveryDate}
                   lang="uk"
-                  className="form-input max-w-full"
+                  className={`form-input max-w-full ${
+                    highlightWhen && !watchDeliveryDate?.trim()
+                      ? inputErrorClass
+                      : ""
+                  }`}
                   {...register("delivery_date")}
                 />
               </label>
-              <FieldError messageKey={errors.delivery_date?.message} />
+              <FieldError err={errors.delivery_date} />
             </div>
-            <div className="min-w-0 text-base text-muted">
+            <div className="min-w-0 text-body-muted">
               <label className="block min-w-0">
                 <span className="form-label">
                   {t("deliveryTime")}
                   {req}
                 </span>
-                <select className="form-input" {...register("delivery_time")}>
+                <select
+                  className={`form-input ${
+                    highlightWhen && !watchDeliveryTime?.trim()
+                      ? inputErrorClass
+                      : ""
+                  }`}
+                  {...register("delivery_time")}
+                >
                   <option value="">—</option>
                   <option value="morning">{t("timeMorning")}</option>
                   <option value="afternoon">{t("timeAfternoon")}</option>
@@ -1085,26 +1410,23 @@ export function OrderForm({
               <p className="mt-1 form-hint">
                 {t("deliveryTimeApproxHint")}
               </p>
-              <FieldError messageKey={errors.delivery_time?.message} />
+              <FieldError err={errors.delivery_time} />
             </div>
-            <label className="flex cursor-pointer items-start gap-3 text-base text-muted md:col-span-2">
-              <input
-                type="checkbox"
-                className="mt-1"
-                {...register("coordinate_address_with_recipient")}
-              />
-              <span>
-                <span className="block font-medium text-ink">
-                  {t("coordinateAddressLabel")}
-                </span>
-                <span className="mt-1 block form-hint">
-                  {t("coordinateAddressHelp")}
-                </span>
-              </span>
-            </label>
-            {!coordinate && (
+                {highlightWhen ? (
+                  <p className="md:col-span-2 text-error" role="alert">
+                    {t("deliveryWhenRequired")}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {showAddressStep ? (
               <>
-                <div className="min-w-0 md:col-span-2">
+                <div
+                  id="order-delivery-address"
+                  className={`min-w-0 md:col-span-2 space-y-0 ${
+                    highlightAddress ? stepRingError : ""
+                  }`}
+                >
                   <span className="form-label">
                     {t("address")}
                     {req}
@@ -1119,13 +1441,20 @@ export function OrderForm({
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         apiKey={mapsKey}
-                        className="form-input"
+                        className={`form-input ${
+                          highlightAddress ? inputErrorClass : ""
+                        }`}
                         placeholder={t("addressPlaceholder")}
                         fallbackHint={!mapsKey ? t("addressManualFallback") : undefined}
                       />
                     )}
                   />
-                  <FieldError messageKey={errors.delivery_address?.message} />
+                  <FieldError err={errors.delivery_address} />
+                  {highlightAddress ? (
+                    <p className="mt-1 text-error" role="alert">
+                      {t("validation.deliveryAddressRequired")}
+                    </p>
+                  ) : null}
                 </div>
                 <label className="min-w-0 md:col-span-2">
                   <span className="form-label">
@@ -1149,8 +1478,16 @@ export function OrderForm({
                   <input className="form-input" {...register("delivery_apartment")} />
                 </label>
               </>
-            )}
-            <label className="min-w-0 md:col-span-2">
+            ) : null}
+            {showRecipientStep ? (
+              <>
+            <div
+              id="order-delivery-recipient"
+              className={`min-w-0 md:col-span-2 ${
+                highlightRecipient ? stepRingError : ""
+              }`}
+            >
+            <label className="block min-w-0">
               <span className="form-label">
                 {t("recipientPhone")}
                 {req}
@@ -1158,11 +1495,19 @@ export function OrderForm({
               <input
                 type="tel"
                 placeholder="+380..."
-                className="form-input"
+                className={`form-input ${
+                  highlightRecipient ? inputErrorClass : ""
+                }`}
                 {...register("recipient_phone")}
               />
             </label>
-            <FieldError messageKey={errors.recipient_phone?.message} />
+            <FieldError err={errors.recipient_phone} />
+            {highlightRecipient ? (
+              <p className="mt-1 text-error" role="alert">
+                {t("validation.recipientPhoneRequired")}
+              </p>
+            ) : null}
+            </div>
             <label className="min-w-0 md:col-span-2">
               <span className="form-label">
                 {t("giftMessage")}
@@ -1174,12 +1519,14 @@ export function OrderForm({
                 {...register("gift_message")}
               />
             </label>
+              </>
+            ) : null}
           </div>
         ) : null}
       </section>
 
           <section className="min-w-0 space-y-4 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:col-span-7 lg:col-start-1 lg:row-start-3">
-            <h2 className={sectionTitleClass}>{t("sectionContact")}</h2>
+            <h2 className="form-section-title">{t("sectionContact")}</h2>
             <label className="block min-w-0">
               <span className="form-label">
                 {t("customerName")}
@@ -1187,7 +1534,7 @@ export function OrderForm({
               </span>
               <input className="form-input" {...register("customer_name")} />
             </label>
-            <FieldError messageKey={errors.customer_name?.message} />
+            <FieldError err={errors.customer_name} />
             <label className="block min-w-0">
               <span className="form-label">
                 {t("customerPhone")}
@@ -1200,8 +1547,8 @@ export function OrderForm({
                 {...register("customer_phone")}
               />
             </label>
-            <FieldError messageKey={errors.customer_phone?.message} />
-            <label className="flex items-start gap-3 text-base text-muted">
+            <FieldError err={errors.customer_phone} />
+            <label className="flex items-start gap-3 text-body-muted">
               <input
                 type="checkbox"
                 {...register("prefer_messenger_contact")}
@@ -1211,7 +1558,7 @@ export function OrderForm({
             </label>
           </section>
 
-        <div className="contents lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-3 lg:flex lg:flex-col lg:gap-6 lg:self-start lg:sticky lg:top-24">
+        <div className="flex min-w-0 flex-col gap-8 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-3 lg:flex lg:flex-col lg:gap-6 lg:self-start lg:sticky lg:top-24">
           <section className="min-w-0 space-y-3 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:order-2">
             <label className="block min-w-0">
               <span className="form-label">{t("sidebarNotesLabel")}</span>
@@ -1225,8 +1572,8 @@ export function OrderForm({
           </section>
 
           <section className="min-w-0 space-y-4 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:order-1">
-            <h2 className={sectionTitleClass}>{t("orderTotalTitle")}</h2>
-            <div className="flex justify-between gap-4 text-base">
+            <h2 className="form-section-title">{t("orderTotalTitle")}</h2>
+            <div className="flex justify-between gap-4 text-body-muted">
               <span className="text-muted">{t("bouquetLine")}</span>
               <span className="shrink-0 tabular-nums text-ink">
                 {formatMoney(
@@ -1235,8 +1582,8 @@ export function OrderForm({
                 )}
               </span>
             </div>
-            <div className="flex justify-between gap-4 text-base">
-              <span className="text-muted">{t("deliveryLine")}</span>
+            <div className="flex justify-between gap-4 text-body-muted">
+              <span>{t("deliveryLine")}</span>
               <span className="shrink-0 text-right tabular-nums text-ink">
                 {deliveryType === "pickup" ? (
                   <span className="text-muted">{t("totalPendingQuote")}</span>
@@ -1254,14 +1601,14 @@ export function OrderForm({
               </span>
             </div>
             {currency === "UAH" && postcardFeeUah > 0 ? (
-              <div className="flex justify-between gap-4 text-base">
-                <span className="text-muted">{t("postcardLine")}</span>
+              <div className="flex justify-between gap-4 text-body-muted">
+                <span>{t("postcardLine")}</span>
                 <span className="shrink-0 tabular-nums text-ink">
                   {formatMoney(postcardFeeUah, "UAH")}
                 </span>
               </div>
             ) : null}
-            <div className="flex justify-between gap-4 border-t border-ink/20 pt-4 font-display text-lg font-medium tracking-tight">
+            <div className="flex justify-between gap-4 border-t border-ink/20 pt-4 font-semibold">
               <span>{t("totalEstimated")}</span>
               <span className="shrink-0 tabular-nums">
                 {deliveryFeeKnown ? (
@@ -1279,22 +1626,17 @@ export function OrderForm({
                 {t("totalPendingQuoteHint")}
               </p>
             ) : null}
-            {deliveryType === "delivery" && coordinate && currency === "UAH" ? (
-              <p className="form-hint">
-                {t("prepayBouquetOnlyNote")}
-              </p>
-            ) : null}
           </section>
 
           <section className="min-w-0 space-y-5 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:order-3">
-            <h2 className={sectionTitleClass}>{t("payment")}</h2>
+            <h2 className="form-section-title">{t("payment")}</h2>
 
             <div className="flex flex-col gap-3">
               <button
                 type="button"
                 disabled={loading}
                 onClick={() => runSubmit("reserve")}
-                className="w-full rounded-xl border border-ink bg-ink px-4 py-3.5 text-center text-[15px] font-medium uppercase tracking-[0.12em] text-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 md:text-xs md:tracking-[0.14em]"
+                className="btn-cta"
               >
                 {loading && submittingMethod === "reserve"
                   ? t("submitting")
@@ -1304,7 +1646,7 @@ export function OrderForm({
                 type="button"
                 disabled={loading}
                 onClick={() => runSubmit("prepay")}
-                className="w-full rounded-xl border-2 border-ink bg-bg px-4 py-3.5 text-center text-[15px] font-medium uppercase tracking-[0.12em] text-ink transition-colors hover:bg-ink/[0.04] disabled:cursor-not-allowed disabled:opacity-60 md:text-xs md:tracking-[0.14em]"
+                className="btn-cta-outline"
               >
                 {loading && submittingMethod === "prepay"
                   ? t("submitting")
@@ -1313,7 +1655,7 @@ export function OrderForm({
             </div>
 
             <div className="space-y-2 border-t border-ink/10 pt-4">
-              <label className="flex cursor-pointer items-start gap-3 text-base text-muted">
+              <label className="flex cursor-pointer items-start gap-3 text-body-muted">
                 <input
                   type="checkbox"
                   {...register("privacy_accepted")}
@@ -1330,11 +1672,11 @@ export function OrderForm({
                   <span className="whitespace-nowrap text-ink">{req}</span>
                 </span>
               </label>
-              <FieldError messageKey={errors.privacy_accepted?.message} />
+              <FieldError err={errors.privacy_accepted} />
             </div>
 
             {formError ? (
-              <p className="text-base text-red-800">{formError}</p>
+              <p className="text-error">{formError}</p>
             ) : null}
           </section>
         </div>

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -32,7 +33,10 @@ export async function POST(req: Request) {
   const got = req.headers.get("x-telegram-bot-api-secret-token")?.trim();
 
   if (secret) {
-    if (got !== secret) {
+    const a = Buffer.from(got ?? "");
+    const b = Buffer.from(secret);
+    const tokenOk = a.length === b.length && timingSafeEqual(a, b);
+    if (!tokenOk) {
       console.error(
         "Telegram webhook: secret token mismatch (check TELEGRAM_WEBHOOK_SECRET matches setWebhook secret_token; trim newlines in env).",
       );
