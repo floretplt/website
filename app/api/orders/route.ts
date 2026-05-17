@@ -285,6 +285,10 @@ export async function POST(req: Request) {
       if (smallFloor == null) {
         return NextResponse.json({ error: "INVALID_SIZE" }, { status: 400 });
       }
+      // Intentional: form lets the client pick an "agreed amount" >= the S
+      // floor for the product (see `agreedAmountHint` in messages/uk.json).
+      // We deliberately do NOT enforce price_paid >= tier price for the
+      // selected size — the operator may agree a discount with the client.
       if (data.price_paid + 1e-6 < smallFloor) {
         return NextResponse.json({ error: "PRICE_TOO_LOW" }, { status: 400 });
       }
