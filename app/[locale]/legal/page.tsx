@@ -24,7 +24,7 @@ export default async function LegalPage({
   const locale = params.locale as Locale;
   const t = await getTranslations({ locale, namespace: "legal" });
   const linkClass =
-    "text-sm font-medium uppercase tracking-[0.12em] text-muted underline-offset-4 hover:text-ink hover:underline md:text-xs md:tracking-[0.15em]";
+    "text-meta font-medium uppercase tracking-[0.12em] underline-offset-4 hover:text-ink hover:underline";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
@@ -45,22 +45,22 @@ export default async function LegalPage({
       </nav>
 
       <section id="payee" className="scroll-mt-28 pt-12">
-        <h2 className="font-display text-2xl text-ink">{t("payeeTitle")}</h2>
-        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-muted">
+        <h2 className="h-subsection">{t("payeeTitle")}</h2>
+        <p className="text-body-muted mt-4 whitespace-pre-line">
           {t("payeeBody")}
         </p>
       </section>
 
       <section id="refund" className="scroll-mt-28 border-t border-ink/10 pt-12">
-        <h2 className="font-display text-2xl text-ink">{t("refundTitle")}</h2>
-        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-muted">
+        <h2 className="h-subsection">{t("refundTitle")}</h2>
+        <p className="text-body-muted mt-4 whitespace-pre-line">
           {t("refundBody")}
         </p>
       </section>
 
       <section id="delivery" className="scroll-mt-28 border-t border-ink/10 pt-12">
-        <h2 className="font-display text-2xl text-ink">{t("navDelivery")}</h2>
-        <p className="mt-4 text-base leading-relaxed text-muted">
+        <h2 className="h-subsection">{t("navDelivery")}</h2>
+        <p className="text-body-muted mt-4">
           {t("deliveryIntro")}{" "}
           <Link href="/delivery" className="text-ink underline underline-offset-2 hover:text-rose">
             {t("deliveryLink")}

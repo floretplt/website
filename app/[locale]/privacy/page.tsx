@@ -28,25 +28,25 @@ export default async function PrivacyPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20 md:px-10 md:py-28">
       <h1 className="h-section">{t("title")}</h1>
-      <div className="mt-12 space-y-12 text-base leading-relaxed text-muted">
+      <div className="text-body-muted mt-12 space-y-12">
         <section>
-          <h2 className="font-display text-xl text-ink">{t("introTitle")}</h2>
+          <h2 className="h-subsection">{t("introTitle")}</h2>
           <p className="mt-4 whitespace-pre-line">{t("introBody")}</p>
         </section>
         <section>
-          <h2 className="font-display text-xl text-ink">{t("collectionTitle")}</h2>
+          <h2 className="h-subsection">{t("collectionTitle")}</h2>
           <p className="mt-4 whitespace-pre-line">{t("collectionBody")}</p>
         </section>
         <section>
-          <h2 className="font-display text-xl text-ink">{t("disclosureTitle")}</h2>
+          <h2 className="h-subsection">{t("disclosureTitle")}</h2>
           <p className="mt-4 whitespace-pre-line">{t("disclosureBody")}</p>
         </section>
         <section>
-          <h2 className="font-display text-xl text-ink">{t("securityTitle")}</h2>
+          <h2 className="h-subsection">{t("securityTitle")}</h2>
           <p className="mt-4 whitespace-pre-line">{t("securityBody")}</p>
         </section>
         <section>
-          <h2 className="font-display text-xl text-ink">{t("companyTitle")}</h2>
+          <h2 className="h-subsection">{t("companyTitle")}</h2>
           <p className="mt-4 whitespace-pre-line">{t("companyBody")}</p>
         </section>
       </div>

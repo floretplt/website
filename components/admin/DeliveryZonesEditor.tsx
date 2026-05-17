@@ -60,7 +60,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-zinc-500">
+      <p className="admin-meta">
         Названі зони з фіксованою ціною доставки (₴). Якщо залишити порожнім і не
         заповнювати «райони за часом» та «відстань км», на сайті підставляться
         стандартні зони Полтави з актуальним прайсом у коді.
@@ -71,7 +71,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
             key={row.key}
             className="grid gap-2 rounded-lg border border-zinc-200 p-3 sm:grid-cols-2 lg:grid-cols-6"
           >
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">ID (латиницею)</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -85,7 +85,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
                 placeholder="poltava_center"
               />
             </label>
-            <label className="text-xs text-zinc-600 sm:col-span-2">
+            <label className="admin-label sm:col-span-2">
               <span className="mb-1 block">Назва (UK)</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -98,7 +98,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600 sm:col-span-2">
+            <label className="admin-label sm:col-span-2">
               <span className="mb-1 block">Назва (EN)</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -111,7 +111,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">Ціна ₴</span>
               <input
                 type="text"
@@ -128,7 +128,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600 sm:col-span-3 lg:col-span-6">
+            <label className="admin-label sm:col-span-3 lg:col-span-6">
               <span className="mb-1 block">Підпис (UK), необов’язково</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -144,7 +144,7 @@ export function DeliveryZonesEditor({ initialZones }: Props) {
                 placeholder="Села, орієнтири…"
               />
             </label>
-            <label className="text-xs text-zinc-600 sm:col-span-3 lg:col-span-6">
+            <label className="admin-label sm:col-span-3 lg:col-span-6">
               <span className="mb-1 block">Підпис (EN), optional</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"

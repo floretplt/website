@@ -40,9 +40,9 @@ export function CardHeader({
       )}
     >
       <div className="space-y-1">
-        <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+        <h2 className="admin-section-title">{title}</h2>
         {description ? (
-          <p className="text-xs text-zinc-500">{description}</p>
+          <p className="admin-meta">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -69,11 +69,9 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-          {title}
-        </h1>
+        <h1 className="admin-page-title">{title}</h1>
         {description ? (
-          <p className="text-sm text-zinc-500">{description}</p>
+          <p className="admin-meta">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -186,14 +184,14 @@ export function Field({
   return (
     <label className={cn("block space-y-1.5", className)}>
       {label ? (
-        <span className="flex items-center gap-1 text-sm font-medium text-zinc-800">
+        <span className="admin-label flex items-center gap-1">
           {label}
           {required ? <span className="text-rose-500">*</span> : null}
         </span>
       ) : null}
       {children}
       {hint && !error ? (
-        <span className="block text-xs text-zinc-500">{hint}</span>
+        <span className="admin-meta block">{hint}</span>
       ) : null}
       {error ? (
         <span className="block text-xs text-red-600">{error}</span>
@@ -248,7 +246,7 @@ export function Switch({
         onChange={(e) => onChange?.(e.target.checked)}
       />
       {label ? (
-        <span className="text-sm text-zinc-700">{label}</span>
+        <span className="admin-body">{label}</span>
       ) : null}
     </label>
   );
@@ -312,9 +310,9 @@ export function EmptyState({
         </div>
       ) : null}
       <div className="space-y-1">
-        <p className="text-sm font-medium text-zinc-900">{title}</p>
+        <p className="admin-section-title">{title}</p>
         {description ? (
-          <p className="text-xs text-zinc-500">{description}</p>
+          <p className="admin-meta">{description}</p>
         ) : null}
       </div>
       {action}

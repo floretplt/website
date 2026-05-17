@@ -58,8 +58,7 @@ export function Header() {
     };
   }, [open]);
 
-  const linkClass =
-    "text-sm font-medium uppercase tracking-[0.14em] text-ink transition-colors hover:text-rose md:text-xs md:tracking-[0.18em]";
+  const linkClass = "nav-link";
 
   const mobileMenuOpen = open;
 
@@ -179,7 +178,7 @@ export function Header() {
             aria-label={`${t("phone")} 066 278 9828`}
           >
             <PhoneIcon className="h-[1.15rem] w-[1.15rem]" />
-            <span className="text-sm font-medium tracking-[0.04em] tabular-nums md:text-xs md:tracking-[0.06em]">
+            <span className="text-sm font-medium tabular-nums text-ink">
               066 278 9828
             </span>
           </a>
@@ -224,7 +223,7 @@ export function Header() {
               <Link
                 key={href}
                 href={href}
-                className="rounded-2xl px-5 py-4 text-[1.0625rem] font-medium uppercase tracking-[0.07em] text-ink transition-[background-color,color] duration-200 ease-out hover:bg-ink/[0.05] active:bg-ink/[0.07]"
+                className="rounded-2xl px-5 py-4 text-base font-medium text-ink transition-[background-color,color] duration-200 ease-out hover:bg-ink/[0.05] active:bg-ink/[0.07]"
                 onClick={() => setOpen(false)}
               >
                 {t(key)}
@@ -233,7 +232,7 @@ export function Header() {
             <div className="mt-6 border-t border-ink/[0.08] pt-6">
               <Link
                 href="/order-status"
-                className="flex min-h-[3.25rem] items-center justify-between gap-4 rounded-2xl bg-sage/25 px-5 py-4 text-[1.0625rem] font-semibold uppercase tracking-[0.06em] text-ink ring-1 ring-ink/[0.06] transition-[background-color,ring-color,transform] duration-200 ease-out hover:bg-sage/35 hover:ring-ink/12 active:scale-[0.99]"
+                className="flex min-h-[3.25rem] items-center justify-between gap-4 rounded-2xl bg-sage/25 px-5 py-4 text-base font-semibold text-ink ring-1 ring-ink/[0.06] transition-[background-color,ring-color,transform] duration-200 ease-out hover:bg-sage/35 hover:ring-ink/12 active:scale-[0.99]"
                 onClick={() => setOpen(false)}
               >
                 <span>{t("orderStatus")}</span>

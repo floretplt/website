@@ -89,6 +89,40 @@ export function buildNewOrderTelegramCaptionUk(params: {
   return lines.join("\n");
 }
 
+/** Prepay: order saved, client has not opened LiqPay yet. */
+export function buildPrepayAwaitingPaymentCaptionUk(params: {
+  orderNumber: number;
+  productName: string;
+  productSize: string | null;
+  totalDueUah: number;
+  currency: string;
+  customerName: string;
+  customerPhone: string;
+}): string {
+  const size = bouquetSizeLetter(params.productSize);
+  return [
+    `<b>🛒 Оформлення #${params.orderNumber}</b>`,
+    `<i>Передоплата — очікуємо оплату на LiqPay</i>`,
+    "",
+    `<b>Товар:</b> ${escapeHtml(params.productName)} · ${size}`,
+    `<b>До сплати:</b> ${params.totalDueUah.toFixed(0)} ${params.currency}`,
+    `<b>Клієнт:</b> ${escapeHtml(params.customerName)} ${escapeHtml(params.customerPhone)}`,
+  ].join("\n");
+}
+
+/** Prepay: client opened LiqPay checkout (redirect from site). */
+export function buildPrepayCheckoutStartedCaptionUk(params: {
+  orderNumber: number;
+  amount: number;
+  currency: string;
+}): string {
+  return [
+    `<b>💳 Оплата на LiqPay #${params.orderNumber}</b>`,
+    `<i>Клієнт на сторінці оплати</i>`,
+    `<b>Сума:</b> ${params.amount.toFixed(2)} ${params.currency}`,
+  ].join("\n");
+}
+
 /** Telegram caption after LiqPay server callback confirms payment (status success). */
 export function buildPrepayConfirmedTelegramCaptionUk(params: {
   orderNumber: number;
@@ -116,7 +150,7 @@ export function buildPrepayConfirmedTelegramCaptionUk(params: {
   const timeUk = formatStoredDeliveryTimeUk(params.deliveryTime);
 
   const lines: string[] = [
-    `<b>Оплачено замовлення #${params.orderNumber}</b>`,
+    `<b>✅ Оплачено замовлення #${params.orderNumber}</b>`,
     `<b>Платіж отримано</b> (LiqPay) — замовлення можна брати в роботу.`,
     "",
     `<b>Товар:</b> ${escapeHtml(params.productName)}`,

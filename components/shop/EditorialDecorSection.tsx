@@ -29,13 +29,13 @@ function FieldError({
   if (!message) return null;
   if (message === "decorRequestRequired") {
     return (
-      <p className="text-base text-red-800">{tHome("decorRequestRequired")}</p>
+      <p className="text-error">{tHome("decorRequestRequired")}</p>
     );
   }
   if (message === "nameRequired" || message === "phoneUa") {
-    return <p className="text-base text-red-800">{tVal(message)}</p>;
+    return <p className="text-error">{tVal(message)}</p>;
   }
-  return <p className="text-base text-red-800">{message}</p>;
+  return <p className="text-error">{message}</p>;
 }
 
 export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
@@ -117,7 +117,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
         </div>
         <div>
           <h2 className="h-section">{t("editorialTitle")}</h2>
-          <p className="mt-6 text-base leading-relaxed text-muted">
+          <p className="text-body-muted mt-6">
             {t("editorialBody")}
           </p>
 
@@ -136,7 +136,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                 className="fixed left-1/2 top-1/2 z-[101] max-h-[min(90vh,720px)] w-[min(calc(100vw-2rem),28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-ink/10 bg-bg p-6 shadow-xl focus:outline-none"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <Dialog.Title className="h-section text-2xl">
+                  <Dialog.Title className="h-section">
                     {t("decorFormTitle")}
                   </Dialog.Title>
                   <Dialog.Close
@@ -152,7 +152,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                 </Dialog.Description>
 
                 {sent ? (
-                  <p className="mt-8 text-base leading-relaxed text-muted">
+                  <p className="text-body-muted mt-8">
                     {t("decorFormSuccess")}
                   </p>
                 ) : (
@@ -161,14 +161,14 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                     className="mt-8 space-y-6"
                   >
                     <div className="space-y-2">
-                      <label className="block text-base text-muted md:text-sm">
-                        <span className="mb-1 block uppercase tracking-wider">
+                      <label className="block">
+                        <span className="form-label">
                           {t("decorFormRequest")}
                           {req}
                         </span>
                         <textarea
                           rows={4}
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
+                          className="form-input min-h-[6rem] resize-y"
                           {...register("request")}
                         />
                       </label>
@@ -180,15 +180,15 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-base text-muted md:text-sm">
-                        <span className="mb-1 block uppercase tracking-wider">
+                      <label className="block">
+                        <span className="form-label">
                           {t("decorFormName")}
                           {req}
                         </span>
                         <input
                           type="text"
                           autoComplete="name"
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
+                          className="form-input"
                           {...register("customer_name")}
                         />
                       </label>
@@ -200,8 +200,8 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-base text-muted md:text-sm">
-                        <span className="mb-1 block uppercase tracking-wider">
+                      <label className="block">
+                        <span className="form-label">
                           {t("decorFormPhone")}
                           {req}
                         </span>
@@ -209,7 +209,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                           type="tel"
                           autoComplete="tel"
                           inputMode="tel"
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
+                          className="form-input"
                           {...register("customer_phone")}
                         />
                       </label>
@@ -221,11 +221,11 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <fieldset>
-                      <legend className="mb-3 text-base uppercase tracking-wider text-muted md:text-sm">
+                      <legend className="form-label mb-3">
                         {t("decorFormContactPref")}
                         {req}
                       </legend>
-                      <div className="flex flex-col gap-3 text-base md:text-sm">
+                      <div className="text-body-muted flex flex-col gap-3">
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -254,7 +254,7 @@ export function EditorialDecorSection({ imageSrc, imageAlt }: Props) {
                     </fieldset>
 
                     {formError ? (
-                      <p className="text-base text-red-800">{formError}</p>
+                      <p className="text-error">{formError}</p>
                     ) : null}
 
                     <button

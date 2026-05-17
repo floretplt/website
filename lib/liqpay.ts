@@ -7,27 +7,42 @@ export function liqpayEncode(data: object): string {
   return Buffer.from(json).toString("base64");
 }
 
-export function liqpaySign(dataBase64: string, privateKey: string): string {
+function liqpaySignWith(
+  algo: "sha1" | "sha3-256",
+  dataBase64: string,
+  privateKey: string,
+): string {
   return crypto
-    .createHash("sha1")
+    .createHash(algo)
     .update(privateKey + dataBase64 + privateKey)
     .digest("base64");
 }
 
-export function liqpayVerify(
-  dataBase64: string,
-  signature: string,
-  privateKey: string,
-): boolean {
-  const expected = liqpaySign(dataBase64, privateKey);
+export function liqpaySign(dataBase64: string, privateKey: string): string {
+  return liqpaySignWith("sha1", dataBase64, privateKey);
+}
+
+function signaturesMatch(received: string, expected: string): boolean {
   try {
-    const a = Buffer.from(signature);
+    const a = Buffer.from(received);
     const b = Buffer.from(expected);
     if (a.length !== b.length) return false;
     return crypto.timingSafeEqual(a, b);
   } catch {
     return false;
   }
+}
+
+/** Accept SHA1 (checkout) or SHA3-256 (newer callbacks) signatures. */
+export function liqpayVerify(
+  dataBase64: string,
+  signature: string,
+  privateKey: string,
+): boolean {
+  const sha1 = liqpaySignWith("sha1", dataBase64, privateKey);
+  if (signaturesMatch(signature, sha1)) return true;
+  const sha3 = liqpaySignWith("sha3-256", dataBase64, privateKey);
+  return signaturesMatch(signature, sha3);
 }
 
 export function decodeLiqPayData<T = Record<string, unknown>>(dataBase64: string): T {
@@ -37,4 +52,29 @@ export function decodeLiqPayData<T = Record<string, unknown>>(dataBase64: string
 
 export function getLiqPayCheckoutUrl() {
   return `${LIQPAY_HOST}3/checkout`;
+}
+
+/** POST signed payload to LiqPay and return the hosted checkout URL (302 Location). */
+export async function liqpayCreateCheckoutRedirect(
+  data: string,
+  signature: string,
+): Promise<{ redirectUrl: string } | { error: string; status: number }> {
+  const body = new URLSearchParams({ data, signature });
+  const res = await fetch(getLiqPayCheckoutUrl(), {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+    redirect: "manual",
+  });
+
+  const location = res.headers.get("location");
+  if (res.status === 302 && location) {
+    return { redirectUrl: location };
+  }
+
+  const detail = await res.text().catch(() => "");
+  return {
+    error: detail.slice(0, 200) || `LiqPay HTTP ${res.status}`,
+    status: res.status,
+  };
 }

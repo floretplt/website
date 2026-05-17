@@ -57,7 +57,7 @@ export function ProductCard({
 
     return (
       <article className="group relative flex h-full min-h-0 flex-col">
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm ring-1 ring-ink/[0.04]">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-ink/[0.08] bg-white">
           <div className="pointer-events-none relative z-0 flex min-h-0 flex-1 flex-col">
             {/* 4:5 — same proportion as typical Instagram feed posts (e.g. 1080×1350) */}
             {img ? (
@@ -73,26 +73,26 @@ export function ProductCard({
                 imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               />
             ) : (
-              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-sm uppercase tracking-widest text-muted">
+              <div className="flex aspect-[4/5] w-full shrink-0 items-center justify-center bg-bg text-sm text-muted">
                 Floret
               </div>
             )}
-            <div className="flex min-h-0 flex-1 flex-col border-t border-ink/10 px-3 pb-3 pt-3">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 text-left">
-                <span className="line-clamp-2 min-h-[2.75rem] font-display text-xl leading-snug text-ink transition-colors group-hover:text-rose md:text-lg">
+            <div className="flex min-h-0 flex-1 flex-col px-3.5 pb-3.5 pt-3.5">
+              <div className="flex items-baseline justify-between gap-3 text-left">
+                <span className="h-card line-clamp-2 min-w-0 transition-colors group-hover:text-rose/90">
                   {name}
                 </span>
-                <span className="shrink-0 pt-0.5 text-base tabular-nums text-ink">
+                <span className="text-ui-muted shrink-0 tabular-nums">
                   {priceFromPrefix ? (
                     <>
-                      <span className="text-muted">{priceFromPrefix}</span>{" "}
+                      <span>{priceFromPrefix}</span>{" "}
                     </>
                   ) : null}
                   {formatMoney(listPrice, cur)}
                 </span>
               </div>
               {showSizeTiers ? (
-                <p className="mt-2 min-h-[2.5rem] text-left text-base leading-relaxed text-muted tabular-nums md:min-h-[2.25rem]">
+                <p className="text-ui-muted mt-1.5 text-left tabular-nums">
                   {tiers.map((s, i) => {
                     const pr = productPriceForSize(product, s);
                     if (pr == null) return null;
@@ -110,14 +110,14 @@ export function ProductCard({
           </div>
           <Link
             href={href}
-            className="absolute inset-0 z-10 rounded-2xl outline-none ring-ink focus-visible:ring-2"
+            className="absolute inset-0 z-10 rounded-xl outline-none ring-ink focus-visible:ring-2"
             aria-label={name}
           />
           {showOrderCta ? (
             <div className="relative z-20 px-3 pb-3 pt-0">
               <Link
                 href={orderHref}
-                className="btn-square mt-3 block w-full shrink-0 rounded-lg text-center"
+                className="btn-catalog mt-3 block w-full shrink-0 text-center"
               >
                 {orderLabel}
               </Link>
@@ -149,15 +149,15 @@ export function ProductCard({
           </div>
         )}
         <div className="mt-4 flex flex-col items-center text-center">
-          <span className="font-display text-xl text-ink transition-colors group-hover:text-rose md:text-lg">
+          <span className="h-card transition-colors group-hover:text-rose">
             {name}
           </span>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
-            <span className="text-[13px] font-medium uppercase tracking-[0.12em] text-muted">
+            <span className="text-meta font-medium uppercase tracking-[0.12em]">
               {moodLabel}
             </span>
           </div>
-          <p className="mt-2 text-base text-muted">
+          <p className="text-body-muted mt-2">
             {priceFromPrefix ? (
               <>
                 <span className="text-muted">{priceFromPrefix}</span>{" "}

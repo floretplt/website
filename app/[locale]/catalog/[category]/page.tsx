@@ -100,7 +100,7 @@ export default async function CatalogCategoryPage({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm uppercase tracking-[0.1em] text-muted md:text-[11px] md:tracking-[0.15em]">
+              <p className="text-ui-muted">
                 {t("showing", {
                   from: displayProducts.length ? 1 : 0,
                   to: displayProducts.length,
@@ -114,7 +114,7 @@ export default async function CatalogCategoryPage({
             {displayProducts.length === 0 ? (
               <p className="mt-10 text-muted">{t("empty")}</p>
             ) : (
-              <div className="mt-8 grid grid-cols-1 gap-10 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
                 {displayProducts.map((p, i) => (
                   <Reveal key={p.id} delayMs={(i % 6) * 60} className="h-full min-h-0">
                     <ProductCard

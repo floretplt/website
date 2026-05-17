@@ -57,10 +57,10 @@ export function TeamSection({
                   </div>
                 )}
               </div>
-              <h3 className="mt-5 font-display text-xl font-medium tracking-tight text-ink md:mt-6 md:text-2xl">
+              <h3 className="h-card mt-5 font-medium md:mt-6">
                 {names[member.id]}
               </h3>
-              <p className="mt-3 max-w-prose font-sans text-base font-normal leading-relaxed text-muted md:mt-4">
+              <p className="text-body-muted mt-3 max-w-prose md:mt-4">
                 {bios[member.id]}
               </p>
             </article>

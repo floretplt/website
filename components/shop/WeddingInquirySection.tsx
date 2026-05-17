@@ -29,13 +29,13 @@ function FieldError({
   if (!message) return null;
   if (message === "decorRequestRequired") {
     return (
-      <p className="text-base text-red-800">{tWedding("requestRequired")}</p>
+      <p className="text-error">{tWedding("requestRequired")}</p>
     );
   }
   if (message === "nameRequired" || message === "phoneUa") {
-    return <p className="text-base text-red-800">{tVal(message)}</p>;
+    return <p className="text-error">{tVal(message)}</p>;
   }
-  return <p className="text-base text-red-800">{message}</p>;
+  return <p className="text-error">{message}</p>;
 }
 
 export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
@@ -116,7 +116,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
         </div>
         <div>
           <h1 className="h-section">{t("title")}</h1>
-          <p className="mt-6 text-base leading-relaxed text-muted">{t("intro")}</p>
+          <p className="text-body-muted mt-6">{t("intro")}</p>
 
           <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Trigger asChild>
@@ -128,7 +128,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
               <Dialog.Overlay className="fixed inset-0 z-[100] bg-ink/40" />
               <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] max-h-[min(90vh,720px)] w-[min(calc(100vw-2rem),28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-ink/10 bg-bg p-6 shadow-xl focus:outline-none">
                 <div className="flex items-start justify-between gap-4">
-                  <Dialog.Title className="h-section text-2xl">
+                  <Dialog.Title className="h-section">
                     {t("formTitle")}
                   </Dialog.Title>
                   <Dialog.Close
@@ -144,7 +144,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                 </Dialog.Description>
 
                 {sent ? (
-                  <p className="mt-8 text-base leading-relaxed text-muted">
+                  <p className="text-body-muted mt-8">
                     {t("formSuccess")}
                   </p>
                 ) : (
@@ -153,14 +153,14 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     className="mt-8 space-y-6"
                   >
                     <div className="space-y-2">
-                      <label className="block text-base text-muted md:text-sm">
-                        <span className="mb-1 block uppercase tracking-wider">
+                      <label className="block">
+                        <span className="form-label">
                           {t("formRequest")}
                           {req}
                         </span>
                         <textarea
                           rows={4}
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
+                          className="form-input min-h-[6rem] resize-y"
                           {...register("request")}
                         />
                       </label>
@@ -172,15 +172,15 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-base text-muted md:text-sm">
-                        <span className="mb-1 block uppercase tracking-wider">
+                      <label className="block">
+                        <span className="form-label">
                           {t("formName")}
                           {req}
                         </span>
                         <input
                           type="text"
                           autoComplete="name"
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
+                          className="form-input"
                           {...register("customer_name")}
                         />
                       </label>
@@ -192,8 +192,8 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-base text-muted md:text-sm">
-                        <span className="mb-1 block uppercase tracking-wider">
+                      <label className="block">
+                        <span className="form-label">
                           {t("formPhone")}
                           {req}
                         </span>
@@ -201,7 +201,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                           type="tel"
                           autoComplete="tel"
                           inputMode="tel"
-                          className="w-full border border-ink/20 bg-transparent px-3 py-2 text-base md:text-sm"
+                          className="form-input"
                           {...register("customer_phone")}
                         />
                       </label>
@@ -213,11 +213,11 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </div>
 
                     <fieldset>
-                      <legend className="mb-3 text-base uppercase tracking-wider text-muted md:text-sm">
+                      <legend className="form-label mb-3">
                         {t("formContactPref")}
                         {req}
                       </legend>
-                      <div className="flex flex-col gap-3 text-base md:text-sm">
+                      <div className="text-body-muted flex flex-col gap-3">
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -246,7 +246,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                     </fieldset>
 
                     {formError ? (
-                      <p className="text-base text-red-800">{formError}</p>
+                      <p className="text-error">{formError}</p>
                     ) : null}
 
                     <button

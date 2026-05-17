@@ -48,12 +48,12 @@ export function HomeFeatured({
         <Reveal>
           <h2 className="h-section text-center">{title}</h2>
           {subtitle ? (
-            <p className="mx-auto mt-5 max-w-xl text-center text-base leading-relaxed text-muted">
+            <p className="text-ui-muted mx-auto mt-4 max-w-xl text-center">
               {subtitle}
             </p>
           ) : null}
         </Reveal>
-        <div className="mt-8 -mx-4 flex justify-start gap-4 overflow-x-auto overscroll-x-contain px-4 pb-1 text-sm font-medium uppercase tracking-[0.12em] text-muted [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 sm:text-[11px] sm:tracking-[0.2em] [&::-webkit-scrollbar]:hidden">
+        <div className="mt-8 -mx-4 flex justify-start gap-5 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-7 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => {
             const label =
               t.id === "all"
@@ -67,9 +67,8 @@ export function HomeFeatured({
                 type="button"
                 onClick={() => setTab(t.id)}
                 className={
-                  (tab === t.id
-                    ? "border-b border-ink text-ink"
-                    : "border-b border-transparent hover:text-ink") + " shrink-0 whitespace-nowrap py-1"
+                  (tab === t.id ? "tab-link tab-link-active" : "tab-link border-b border-transparent pb-0.5") +
+                  " shrink-0 whitespace-nowrap py-1"
                 }
               >
                 {label}

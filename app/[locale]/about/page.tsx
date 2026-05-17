@@ -19,15 +19,15 @@ export default async function AboutPage({
       <div className="grid gap-12 md:grid-cols-2 md:items-start">
         <div>
           <SectionHeading title={t("title")} />
-          <p className="mt-8 font-display text-xl leading-relaxed text-muted md:text-2xl">
+          <p className="h-subsection mt-8 text-muted">
             {short ?? t("body")}
           </p>
-          <p className="mt-6 leading-relaxed text-muted">{t("body")}</p>
+          <p className="text-body-muted mt-6">{t("body")}</p>
           <a
             href="https://www.instagram.com/floret_poltava/"
             target="_blank"
             rel="noopener noreferrer"
-            className="link-subtle mt-8 inline-block text-sm uppercase tracking-[0.15em]"
+            className="text-meta link-subtle mt-8 inline-block uppercase tracking-[0.15em]"
           >
             @floret_poltava
           </a>

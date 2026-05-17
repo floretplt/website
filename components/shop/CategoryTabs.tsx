@@ -28,7 +28,7 @@ export function CategoryTabs() {
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <nav
-            className="flex snap-x snap-mandatory flex-nowrap items-center gap-x-4 py-1.5 md:flex-wrap md:gap-x-7 md:gap-y-2 md:py-2 md:snap-none"
+            className="flex snap-x snap-mandatory flex-nowrap items-center justify-center gap-x-5 py-3 md:flex-wrap md:gap-x-8 md:gap-y-2 md:py-3.5 md:snap-none"
           >
             {items.map((item) => {
               const isAll = item.id === "all";
@@ -40,10 +40,8 @@ export function CategoryTabs() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "shrink-0 snap-start whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink md:text-sm md:tracking-[0.14em]",
-                    active
-                      ? "border-b-2 border-ink pb-0.5 text-ink"
-                      : "border-b-2 border-transparent pb-0.5 text-muted hover:text-ink",
+                    "tab-link shrink-0 snap-start whitespace-nowrap py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink",
+                    active ? "tab-link-active" : "border-b border-transparent pb-0.5",
                   )}
                 >
                   {item.label}

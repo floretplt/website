@@ -8,9 +8,15 @@ type Props = {
   initialOrderNumber?: number;
   /** After reserve checkout: show thank-you before lookup form. */
   initialThanks?: boolean;
+  /** After LiqPay prepay: show paid thank-you copy. */
+  initialPaidThanks?: boolean;
 };
 
-export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props) {
+export function OrderLookup({
+  initialOrderNumber,
+  initialThanks = false,
+  initialPaidThanks = false,
+}: Props) {
   const t = useTranslations("orderStatus");
   const tOrder = useTranslations("order");
   const [orderNumber, setOrderNumber] = useState(
@@ -56,20 +62,28 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
 
       {showThanks ? (
         <div className="mt-10 space-y-4 rounded-lg border border-ink/15 bg-bg/80 p-6 md:p-8">
-          <p className="font-display text-2xl tracking-tight text-ink">
-            {tOrder("thanksReserveTitle")}
+          <p className="h-subsection">
+            {initialPaidThanks
+              ? tOrder("thanksPaidTitle")
+              : tOrder("thanksReserveTitle")}
           </p>
-          <p className="text-base leading-relaxed text-ink">
-            {tOrder("thanksReserveLead", {
-              orderNumber: String(initialOrderNumber),
-            })}
+          <p className="text-body">
+            {initialPaidThanks
+              ? tOrder("thanksPaidLead", {
+                  orderNumber: String(initialOrderNumber),
+                })
+              : tOrder("thanksReserveLead", {
+                  orderNumber: String(initialOrderNumber),
+                })}
           </p>
-          <p className="text-base leading-relaxed text-muted">
-            {tOrder("thanksReserveSub")}
+          <p className="text-body-muted">
+            {initialPaidThanks
+              ? tOrder("thanksPaidSub")
+              : tOrder("thanksReserveSub")}
           </p>
           <Link
             href={`/order/${initialOrderNumber}`}
-            className="mt-2 inline-block text-base font-medium text-ink underline-offset-4 hover:underline"
+            className="text-body mt-2 inline-block font-medium underline-offset-4 hover:underline"
           >
             {tOrder("thanksDismissBanner")}
           </Link>
@@ -82,25 +96,25 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
             showThanks ? "mt-10 space-y-6 border-t border-ink/10 pt-10" : "mt-10 space-y-6"
           }
         >
-          <label className="block text-base text-muted md:text-sm">
-            <span className="mb-1 block uppercase tracking-wider">{t("orderNumber")}</span>
+          <label className="block">
+            <span className="form-label">{t("orderNumber")}</span>
             <input
-              className="w-full border border-ink/20 bg-transparent px-3 py-2"
+              className="form-input"
               value={orderNumber}
               onChange={(e) => setOrderNumber(e.target.value)}
             />
           </label>
-          <label className="block text-base text-muted md:text-sm">
-            <span className="mb-1 block uppercase tracking-wider">{t("enterPhone")}</span>
+          <label className="block">
+            <span className="form-label">{t("enterPhone")}</span>
             <input
               type="tel"
-              className="w-full border border-ink/20 bg-transparent px-3 py-2"
+              className="form-input"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+380..."
             />
           </label>
-          {err ? <p className="text-base text-red-800">{err}</p> : null}
+          {err ? <p className="text-error">{err}</p> : null}
           <button type="button" className="btn-pill" onClick={lookup} disabled={loading}>
             {loading ? "…" : t("lookup")}
           </button>
@@ -117,7 +131,7 @@ export function OrderLookup({ initialOrderNumber, initialThanks = false }: Props
               {t(`status_${String(result.status)}` as "status_new")}
             </span>
           </p>
-          <p className="text-base text-muted">{String(result.product_name)}</p>
+          <p className="text-body-muted">{String(result.product_name)}</p>
         </div>
       )}
     </div>

@@ -61,23 +61,103 @@ body {
   }
 
   .h-section {
-    @apply font-display text-[clamp(1.5rem,4.5vw,1.875rem)] font-normal tracking-tight text-ink min-[400px]:text-3xl md:text-4xl;
+    @apply font-display text-[clamp(1.5rem,3.5vw,1.75rem)] font-normal tracking-tight text-ink min-[400px]:text-2xl md:text-3xl;
+  }
+
+  .h-subsection {
+    @apply font-display text-xl font-normal tracking-tight text-ink md:text-2xl;
+  }
+
+  /** In-content page title (smaller than .h-section) */
+  .h-page {
+    @apply font-display text-xl font-normal tracking-tight text-ink md:text-2xl;
+  }
+
+  /** Product / card titles — sans, same scale as body */
+  .h-card {
+    @apply font-sans text-base font-medium leading-snug text-ink;
+  }
+
+  .text-body {
+    @apply text-base leading-relaxed text-ink;
+  }
+
+  .text-body-muted {
+    @apply text-base leading-relaxed text-muted;
+  }
+
+  .text-meta {
+    @apply text-sm font-normal leading-relaxed text-muted;
+  }
+
+  /** Catalog tabs, filter labels, counts — one quiet sans size */
+  .text-ui {
+    @apply text-sm font-medium leading-normal text-ink;
+  }
+
+  .text-ui-muted {
+    @apply text-sm font-normal leading-normal text-muted;
+  }
+
+  /** Form card section titles — sans, same size as body (no extra serif levels) */
+  .form-section-title {
+    @apply text-base font-semibold text-ink;
+  }
+
+  /** Toggle cards: pickup / delivery / address mode */
+  .form-choice {
+    @apply flex min-h-[3.25rem] min-w-0 items-center justify-center gap-2 rounded-xl border-2 px-4 py-3.5 text-center text-base font-medium transition-colors;
+  }
+
+  /** S / M / L and similar compact toggles */
+  .form-chip {
+    @apply min-w-[3rem] rounded-md border px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-colors;
+  }
+
+  .text-error {
+    @apply text-base text-red-800;
   }
 
   .eyebrow {
-    @apply text-[13px] font-medium uppercase tracking-[0.16em] text-muted md:text-xs md:tracking-[0.2em];
+    @apply text-sm font-medium leading-normal text-muted;
   }
 
   .btn-pill {
-    @apply inline-flex items-center justify-center rounded-full border border-ink bg-transparent px-6 py-2.5 text-[15px] font-medium uppercase tracking-[0.12em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.15em];
+    @apply inline-flex items-center justify-center rounded-full border border-ink/25 bg-transparent px-6 py-2.5 text-sm font-medium text-ink transition-[color,background-color,transform] duration-200 ease-out hover:border-ink hover:bg-ink hover:text-bg active:scale-[0.98];
   }
 
   .btn-pill-inverse {
-    @apply inline-flex items-center justify-center rounded-full border border-bg bg-transparent px-6 py-2.5 text-[15px] font-medium uppercase tracking-[0.12em] text-bg transition-[color,background-color,transform] duration-200 ease-out hover:bg-bg hover:text-ink active:scale-[0.98] md:text-xs md:tracking-[0.15em];
+    @apply inline-flex items-center justify-center rounded-full border border-bg/60 bg-transparent px-6 py-2.5 text-sm font-medium text-bg transition-[color,background-color,transform] duration-200 ease-out hover:border-bg hover:bg-bg hover:text-ink active:scale-[0.98];
   }
 
   .btn-square {
-    @apply inline-flex items-center justify-center border border-ink bg-transparent px-5 py-2.5 text-[15px] font-medium uppercase tracking-[0.1em] text-ink transition-[color,background-color,transform] duration-200 ease-out hover:bg-ink hover:text-bg active:scale-[0.98] md:text-xs md:tracking-[0.12em];
+    @apply inline-flex items-center justify-center border border-ink/20 bg-transparent px-5 py-2.5 text-sm font-medium text-ink transition-[color,background-color,border-color] duration-200 ease-out hover:border-ink/40 hover:bg-ink/[0.04] active:scale-[0.99];
+  }
+
+  /** Catalog product CTA — lighter than .btn-square */
+  .btn-catalog {
+    @apply inline-flex items-center justify-center rounded-lg border border-ink/15 bg-transparent px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink/30 hover:bg-ink/[0.03];
+  }
+
+  /** Full-width order / checkout CTAs */
+  .btn-cta {
+    @apply w-full rounded-xl border border-ink bg-ink px-4 py-3.5 text-center text-sm font-medium uppercase tracking-[0.1em] text-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-cta-outline {
+    @apply w-full rounded-xl border-2 border-ink bg-bg px-4 py-3.5 text-center text-sm font-medium uppercase tracking-[0.1em] text-ink transition-colors hover:bg-ink/[0.04] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .nav-link {
+    @apply text-sm font-medium text-ink transition-colors hover:text-rose;
+  }
+
+  .tab-link {
+    @apply text-sm font-medium text-muted transition-colors hover:text-ink;
+  }
+
+  .tab-link-active {
+    @apply border-b border-ink pb-0.5 text-ink;
   }
 
   /** Order form + catalog: unified control chrome */
@@ -86,15 +166,81 @@ body {
   }
 
   .form-label {
-    @apply mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-muted md:text-xs md:tracking-[0.16em];
+    @apply mb-1.5 block text-sm font-medium text-muted;
   }
 
   /** Hints under inputs — min 13px (avoid text-xs 12px) */
   .form-hint {
-    @apply text-[13px] leading-relaxed text-muted;
+    @apply text-meta;
   }
 
   .link-subtle {
     @apply text-ink underline-offset-4 transition-colors hover:text-rose;
+  }
+
+  /* Admin panel typography */
+  .admin-page-title {
+    @apply text-2xl font-semibold tracking-tight text-zinc-900;
+  }
+
+  .admin-section-title {
+    @apply text-sm font-semibold text-zinc-900;
+  }
+
+  .admin-body {
+    @apply text-sm text-zinc-800;
+  }
+
+  .admin-meta {
+    @apply text-xs text-zinc-500;
+  }
+
+  .admin-label {
+    @apply text-xs font-medium text-zinc-600;
+  }
+
+  /**
+   * Checkout — one size (16px), sans only. Hierarchy = weight + color, not caps/size.
+   */
+  .order-form {
+    @apply font-sans text-base leading-relaxed text-ink;
+  }
+
+  .order-form h1 {
+    @apply mb-8 text-xl font-semibold tracking-tight text-ink lg:mb-10;
+  }
+
+  .order-form h2,
+  .order-form .form-section-title {
+    @apply text-base font-semibold text-ink;
+  }
+
+  .order-form .form-label {
+    @apply mb-1.5 block text-base font-medium normal-case tracking-normal text-muted;
+  }
+
+  .order-form .form-hint {
+    @apply mt-1 block text-base font-normal text-muted;
+  }
+
+  .order-form .form-input,
+  .order-form .form-choice,
+  .order-form .form-chip,
+  .order-form .btn-cta,
+  .order-form .btn-cta-outline {
+    @apply text-base normal-case tracking-normal;
+  }
+
+  .order-form .form-chip {
+    @apply font-medium;
+  }
+
+  .order-form .text-body,
+  .order-form .text-body-muted {
+    @apply text-base leading-relaxed;
+  }
+
+  .order-form .text-error {
+    @apply text-base text-red-800;
   }
 }

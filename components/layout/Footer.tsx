@@ -28,7 +28,7 @@ export async function Footer({ settings }: Props) {
             href="https://www.instagram.com/floret_poltava/"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 text-base uppercase tracking-[0.12em] text-bg/90 transition-colors hover:text-bg md:text-sm md:tracking-[0.15em]"
+            className="text-meta mt-4 inline-flex items-center gap-2 uppercase tracking-[0.12em] text-bg/90 transition-colors hover:text-bg"
           >
             <InstagramIcon className="h-4 w-4" />
             Instagram
@@ -49,20 +49,20 @@ export async function Footer({ settings }: Props) {
           <div className="mt-8 flex flex-col gap-3">
             <Link
               href="/order"
-              className="inline-block text-base font-medium uppercase tracking-[0.12em] text-bg underline-offset-4 hover:underline md:text-sm md:tracking-[0.15em]"
+              className="text-meta inline-block font-medium uppercase tracking-[0.12em] text-bg underline-offset-4 hover:underline"
             >
               Замовити
             </Link>
             <Link
               href="/order-status"
-              className="inline-block text-base font-medium uppercase tracking-[0.12em] text-bg/90 underline-offset-4 hover:underline md:text-sm md:tracking-[0.15em]"
+              className="text-meta inline-block font-medium uppercase tracking-[0.12em] text-bg/90 underline-offset-4 hover:underline"
             >
               Статус замовлення
             </Link>
           </div>
         </div>
       </div>
-      <div className="border-t border-bg/10 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-center text-[13px] uppercase tracking-[0.14em] text-bg/50 sm:px-6 md:text-xs md:tracking-[0.2em]">
+      <div className="text-meta border-t border-bg/10 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-center uppercase tracking-[0.14em] text-bg/50 sm:px-6 md:tracking-[0.2em]">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link href="/legal" className="text-bg/70 underline-offset-4 hover:text-bg hover:underline">
             {t("legal")}

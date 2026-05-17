@@ -95,7 +95,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
         >
           <span className="flex min-w-0 flex-1 items-center gap-2.5">
             <SlidersHorizontal className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} aria-hidden />
-            <span className="eyebrow mb-0 inline-flex items-center gap-2">
+            <span className="text-ui mb-0 inline-flex items-center gap-2">
               <span>{t("filters")}</span>
               <ChevronDown
                 className={cn(
@@ -150,7 +150,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
                           }}
                         />
                         <span
-                          className={`max-w-[5.25rem] text-center text-[13px] font-medium leading-tight md:max-w-[4.75rem] ${
+                          className={`text-meta max-w-[5.25rem] text-center font-medium leading-tight md:max-w-[4.75rem] ${
                             selected ? "text-ink" : "text-muted"
                           }`}
                         >
@@ -163,10 +163,10 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
               </div>
 
               <div>
-                <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-muted md:tracking-[0.15em]">
+                <p className="form-label mb-2">
                   {t("price")}
                 </p>
-                <div className="flex min-w-0 flex-wrap items-center gap-2 text-base">
+                <div className="text-body-muted flex min-w-0 flex-wrap items-center gap-2">
                   <input
                     type="number"
                     className="form-input min-w-0 flex-1 tabular-nums sm:min-w-[4.5rem] sm:flex-none"
@@ -184,7 +184,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
                     max={maxPrice}
                     onChange={(e) => setParam("max", e.target.value)}
                   />
-                  <span className="w-full pl-0.5 text-[13px] font-medium uppercase tracking-[0.06em] text-muted sm:ml-1 sm:w-auto sm:tracking-[0.08em]">
+                  <span className="text-meta w-full pl-0.5 font-medium uppercase tracking-[0.06em] sm:ml-1 sm:w-auto sm:tracking-[0.08em]">
                     {priceSuffix}
                   </span>
                 </div>

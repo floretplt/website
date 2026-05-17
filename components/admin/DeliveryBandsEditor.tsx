@@ -23,14 +23,14 @@ export function DeliveryBandsEditor({ initialBands }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-zinc-500">
+      <p className="admin-meta">
         Відстань — максимум кілометрів для рядка (наприклад 5 = «до 5 км»). Ціни
         орієнтовні; узгоджуйте фінальну суму з клієнтом.
       </p>
       <div className="space-y-2">
         {rows.map((row, index) => (
           <div key={row.key} className="flex flex-wrap items-end gap-2">
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">До (км)</span>
               <input
                 type="text"
@@ -45,7 +45,7 @@ export function DeliveryBandsEditor({ initialBands }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">Ціна (₴)</span>
               <input
                 type="text"

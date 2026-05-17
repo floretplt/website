@@ -28,7 +28,7 @@ export function StudioTeamSection({
 }: Props) {
   const { introBlocks, subheading, closingBlocks } = splitStudioAbout(aboutText);
 
-  const bodyClass = "mt-4 text-base leading-relaxed text-muted md:mt-6";
+  const bodyClass = "text-body-muted mt-4 md:mt-6";
 
   return (
     <section
@@ -49,7 +49,7 @@ export function StudioTeamSection({
                 i === 0 ? (
                   <p
                     key={`intro-${i}`}
-                    className="font-display text-[1.35rem] font-normal leading-snug tracking-tight text-ink md:text-[1.65rem] md:leading-snug"
+                    className="h-subsection"
                   >
                     {p}
                   </p>
@@ -60,7 +60,7 @@ export function StudioTeamSection({
                 ),
               )}
               {subheading ? (
-                <h3 className="mt-6 font-display text-lg font-medium leading-snug tracking-tight text-rose max-md:mt-5 md:mt-9 md:text-xl">
+                <h3 className="h-card mt-6 font-medium text-rose max-md:mt-5 md:mt-9">
                   {subheading}
                 </h3>
               ) : null}
@@ -69,7 +69,7 @@ export function StudioTeamSection({
                   key={`close-${i}`}
                   className={
                     i === 0 && subheading
-                      ? "mt-4 text-base leading-relaxed text-muted md:mt-5"
+                      ? "text-body-muted mt-4 md:mt-5"
                       : bodyClass
                   }
                 >

@@ -158,7 +158,7 @@ export default async function HomePage({
       <section className="bg-sage/40 py-20 md:py-28">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 md:px-10">
           <Reveal>
-            <p className="font-display text-2xl leading-snug text-ink md:text-3xl">
+            <p className="h-subsection">
               {t("ctaStrip")}
             </p>
             <Link href="/order" className="btn-pill mt-10 inline-flex">

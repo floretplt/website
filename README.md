@@ -22,13 +22,13 @@ npm run dev
 
 ## Payments (LiqPay)
 
-- Checkout: `POST /api/liqpay/checkout` with `{ orderId }` after creating an order with `payment_method: prepay`.
+- Checkout: after prepay order creation, the browser opens `/order/liqpay/pay?orderId=…`, which POSTs signed `data` + `signature` to LiqPay (`POST /api/liqpay/checkout` returns the payload).
 - Callback: `POST /api/liqpay/callback` — configure the same URL in LiqPay merchant settings as **server_url**.
 
 ## Deploy (Vercel)
 
 - Connect repo, set env vars from `.env.example`.
-- Set `NEXT_PUBLIC_SITE_URL` to the production URL (used in LiqPay redirects and SEO).
+- Set `NEXT_PUBLIC_SITE_URL` to the canonical production URL with `www` if that is your primary host (e.g. `https://www.floret.poltava.ua`; used in LiqPay redirects and SEO).
 
 ## Logo
 

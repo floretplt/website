@@ -88,7 +88,7 @@ export default async function ProductPage({
       <article className="mx-auto max-w-6xl px-4 pb-[max(7rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] pt-10 sm:px-6 sm:pt-12 md:px-10 md:pb-16 md:pt-16">
         <nav
           aria-label={t("breadcrumbNav")}
-          className="mb-8 text-[13px] text-muted md:mb-10 md:text-sm"
+          className="text-meta mb-8 md:mb-10"
         >
           <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <li>
@@ -122,10 +122,10 @@ export default async function ProductPage({
           </div>
 
           <div className="min-w-0 md:sticky md:top-28 md:self-start">
-            <h1 className="font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+            <h1 className="h-section">
               {productName(product)}
             </h1>
-            <div className="mt-4 space-y-1 text-base text-muted">
+            <div className="text-body-muted mt-4 space-y-1">
               {tiers.map((size) => {
                 const amt = productPriceForSize(product, size);
                 if (amt == null) return null;
@@ -141,11 +141,11 @@ export default async function ProductPage({
               })}
             </div>
             <hr className="mt-4 border-0 border-t border-ink/10" />
-            <p className="mt-4 text-base text-muted">
+            <p className="text-body-muted mt-4">
               <span className="text-ink">{t("mood")}:</span>{" "}
               <span className="text-rose">{tm(product.color_mood)}</span>
             </p>
-            <div className="mt-4 max-w-prose space-y-4 text-base leading-relaxed text-muted prose">
+            <div className="text-body-muted mt-4 max-w-prose space-y-4 prose">
               <p>{t("styleNote")}</p>
               {description ? (
                 <CmsProductDescription

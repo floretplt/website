@@ -165,7 +165,7 @@ function SidebarContent({
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 admin-body text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
         >
           <IconExternal size={16} />
           <span>На сайт</span>
@@ -173,7 +173,7 @@ function SidebarContent({
         <form action={signOutAction}>
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 admin-body text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
           >
             <IconLogout size={16} />
             <span>Вийти</span>

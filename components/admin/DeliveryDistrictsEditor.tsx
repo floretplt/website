@@ -55,7 +55,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-zinc-500">
+      <p className="admin-meta">
         Район / зона та ціна доставки (₴) за орієнтовний інтервал часу. На вітрині
         клієнт обирає район і «ранок / день / вечір» — сума доставки додається до
         оплати (лише UAH).
@@ -66,7 +66,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
             key={row.key}
             className="grid gap-2 rounded-lg border border-zinc-200 p-3 sm:grid-cols-2 lg:grid-cols-6"
           >
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">ID (латиницею)</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -80,7 +80,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
                 placeholder="center"
               />
             </label>
-            <label className="text-xs text-zinc-600 sm:col-span-2">
+            <label className="admin-label sm:col-span-2">
               <span className="mb-1 block">Назва (UK)</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -93,7 +93,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600 sm:col-span-2">
+            <label className="admin-label sm:col-span-2">
               <span className="mb-1 block">Назва (EN)</span>
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
@@ -106,7 +106,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">Ранок ₴</span>
               <input
                 type="text"
@@ -123,7 +123,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">День ₴</span>
               <input
                 type="text"
@@ -140,7 +140,7 @@ export function DeliveryDistrictsEditor({ initialDistricts }: Props) {
                 }}
               />
             </label>
-            <label className="text-xs text-zinc-600">
+            <label className="admin-label">
               <span className="mb-1 block">Вечір ₴</span>
               <input
                 type="text"

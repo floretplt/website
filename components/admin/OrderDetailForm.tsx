@@ -56,8 +56,8 @@ function Row({
 }) {
   return (
     <div className="grid grid-cols-[120px_1fr] items-start gap-3 py-2">
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-      <dd className="text-sm text-zinc-800">{children}</dd>
+      <dt className="admin-label uppercase tracking-wide">{label}</dt>
+      <dd className="admin-body">{children}</dd>
     </div>
   );
 }
@@ -83,19 +83,20 @@ export function OrderDetailForm({ order }: { order: Order }) {
       const res = await fetch("/api/liqpay/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ orderId: order.id, returnLink: true }),
       });
       const json = await res.json();
       if (!res.ok) {
         setMsg(json.error ?? "Помилка");
         return;
       }
-      const url = json.checkoutUrl;
-      const form = `data=${encodeURIComponent(json.data)}&signature=${encodeURIComponent(json.signature)}`;
-      await navigator.clipboard.writeText(
-        `POST ${url} (form: ${form.slice(0, 80)}...)`,
-      );
-      setMsg("Скопійовано чернетку — надішліть клієнту посилання.");
+      const url = json.redirectUrl as string | undefined;
+      if (!url) {
+        setMsg(json.error ?? "Помилка");
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setMsg("Посилання на оплату скопійовано — надішліть клієнту.");
     } catch {
       setMsg("Помилка");
     } finally {
@@ -180,7 +181,7 @@ export function OrderDetailForm({ order }: { order: Order }) {
                     {order.customer_phone}
                   </a>
                   {order.prefer_messenger_contact ? (
-                    <span className="text-xs text-zinc-500">
+                    <span className="admin-meta">
                       Не дзвонити — Viber / WhatsApp / Telegram
                     </span>
                   ) : null}
@@ -292,8 +293,8 @@ export function OrderDetailForm({ order }: { order: Order }) {
 
             <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-2">
               <div>
-                <p className="text-sm font-medium text-zinc-800">Оплачено</p>
-                <p className="text-xs text-zinc-500">
+                <p className="admin-body font-medium">Оплачено</p>
+                <p className="admin-meta">
                   Позначити оплату вручну.
                 </p>
               </div>

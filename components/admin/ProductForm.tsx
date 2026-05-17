@@ -268,7 +268,7 @@ export function ProductForm({ product }: Props) {
             />
             <CardBody className="space-y-6">
               <div>
-                <span className="mb-2 block text-sm font-medium text-zinc-800">
+                <span className="mb-2 block admin-label">
                   Головне фото
                 </span>
                 {mainPreview ? (
@@ -324,10 +324,10 @@ export function ProductForm({ product }: Props) {
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-500 shadow-sm">
                       <IconUpload size={16} />
                     </span>
-                    <span className="text-sm font-medium text-zinc-800">
+                    <span className="admin-label">
                       Перетягніть фото сюди або натисніть
                     </span>
-                    <span className="text-xs text-zinc-500">
+                    <span className="admin-meta">
                       PNG, JPG, WEBP до 10 МБ
                     </span>
                   </button>
@@ -348,7 +348,7 @@ export function ProductForm({ product }: Props) {
 
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="block text-sm font-medium text-zinc-800">
+                  <span className="block admin-label">
                     Додаткові фото
                   </span>
                   <Button
@@ -382,7 +382,7 @@ export function ProductForm({ product }: Props) {
                   )}
                 >
                   {extraPaths.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-1 py-6 text-center text-xs text-zinc-500">
+                    <div className="flex flex-col items-center justify-center gap-1 py-6 text-center admin-meta">
                       <IconImage size={18} />
                       <span>Перетягніть сюди додаткові фото</span>
                     </div>
@@ -449,10 +449,10 @@ export function ProductForm({ product }: Props) {
             <CardBody className="space-y-5">
               <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-2">
                 <div>
-                  <p className="text-sm font-medium text-zinc-800">
+                  <p className="admin-label">
                     На головній
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="admin-meta">
                     Товар потрапить у добірку.
                   </p>
                 </div>
@@ -477,7 +477,7 @@ export function ProductForm({ product }: Props) {
             </CardBody>
           </Card>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 text-xs text-zinc-500">
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 admin-meta">
             Євро в магазині перераховується з гривні. Мінімальна сума замовлення
             для цього стилю — не нижче за найменшу вказану ціну розміру.
           </div>
@@ -492,7 +492,7 @@ export function ProductForm({ product }: Props) {
 
       <div className="sticky bottom-4 z-10 flex items-center justify-end gap-2 rounded-xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur">
         {uploading ? (
-          <span className="mr-auto text-xs text-zinc-500">
+          <span className="mr-auto admin-meta">
             Завантаження фото…
           </span>
         ) : null}

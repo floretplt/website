@@ -39,8 +39,8 @@ export function LoginForm() {
         <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-sm font-semibold text-white">
           F
         </div>
-        <h1 className="text-lg font-semibold text-zinc-900">FLORET · Адмін</h1>
-        <p className="text-xs text-zinc-500">
+        <h1 className="admin-page-title text-lg">FLORET · Адмін</h1>
+        <p className="admin-meta">
           Увійдіть, щоб керувати замовленнями і каталогом.
         </p>
       </div>
