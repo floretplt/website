@@ -70,7 +70,7 @@ export function ProductDetailGallery({ images, productName }: Props) {
         </div>
 
         {images.length > 1 ? (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {images.slice(1, 5).map((src, i) => {
               const realIndex = i + 1;
               return (

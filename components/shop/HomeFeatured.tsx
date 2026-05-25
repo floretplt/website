@@ -68,7 +68,7 @@ export function HomeFeatured({
                 onClick={() => setTab(t.id)}
                 className={
                   (tab === t.id ? "tab-link tab-link-active" : "tab-link border-b border-transparent pb-0.5") +
-                  " shrink-0 whitespace-nowrap py-1"
+                  " shrink-0 whitespace-nowrap py-3 min-h-[44px] inline-flex items-center"
                 }
               >
                 {label}

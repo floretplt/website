@@ -18,11 +18,15 @@ export type LiqPayPaymentPayload = {
 };
 
 export function liqpayPaymentIsPaid(status: string | undefined): boolean {
-  return status === "success" || status === "sandbox";
+  if (status === "success") return true;
+  if (status === "sandbox" && process.env.NODE_ENV !== "production") {
+    return true;
+  }
+  return false;
 }
 
 export function liqpayPaymentNotifyTelegram(status: string | undefined): boolean {
-  return status === "success" || status === "sandbox";
+  return liqpayPaymentIsPaid(status);
 }
 
 /** LiqPay statuses where polling / retry will not help. */
@@ -59,26 +63,28 @@ export function liqpayTransactionId(payload: LiqPayPaymentPayload): string | nul
   return null;
 }
 
-/** Log amount/currency drift; do not block marking paid when LiqPay status is success. */
-async function liqpayOrderExistsForPayload(
+type OrderAmountRow = {
+  order_number: number;
+  price_paid: number;
+  currency: string;
+  delivery_fee_uah: number | null;
+  postcard_fee_uah: number | null;
+};
+
+async function loadOrderAmountRow(
   admin: ReturnType<typeof createAdminClient>,
   orderId: string,
-  payload: LiqPayPaymentPayload,
-): Promise<boolean> {
+): Promise<OrderAmountRow | null> {
   const { data, error } = await admin
     .from("orders")
-    .select("price_paid, currency, delivery_fee_uah, postcard_fee_uah")
+    .select("order_number, price_paid, currency, delivery_fee_uah, postcard_fee_uah")
     .eq("id", orderId)
     .maybeSingle();
-  if (error || !data) return false;
+  if (error || !data) return null;
+  return data as OrderAmountRow;
+}
 
-  const row = data as {
-    price_paid: number;
-    currency: string;
-    delivery_fee_uah: number | null;
-    postcard_fee_uah: number | null;
-  };
-
+function expectedOrderTotal(row: OrderAmountRow): number {
   const fee =
     row.currency === "UAH" && row.delivery_fee_uah != null
       ? Number(row.delivery_fee_uah)
@@ -87,26 +93,41 @@ async function liqpayOrderExistsForPayload(
     row.currency === "UAH" && row.postcard_fee_uah != null
       ? Number(row.postcard_fee_uah)
       : 0;
-  const expected = Number(row.price_paid) + fee + postcard;
+  return Number(row.price_paid) + fee + postcard;
+}
+
+/** Verify order exists and LiqPay amount/currency match stored total. */
+async function liqpayPayloadMatchesOrder(
+  admin: ReturnType<typeof createAdminClient>,
+  orderId: string,
+  payload: LiqPayPaymentPayload,
+): Promise<boolean> {
+  const row = await loadOrderAmountRow(admin, orderId);
+  if (!row) return false;
+
+  const expected = expectedOrderTotal(row);
 
   if (
     typeof payload.amount === "number" &&
     Number.isFinite(payload.amount) &&
     Math.abs(payload.amount - expected) > 0.01
   ) {
-    console.error("LiqPay amount mismatch (still marking paid)", {
+    console.error("LiqPay amount mismatch — not marking paid", {
       orderId,
+      order_number: row.order_number,
       expected,
       got: payload.amount,
     });
+    return false;
   }
 
   if (typeof payload.currency === "string" && payload.currency !== row.currency) {
-    console.error("LiqPay currency mismatch (still marking paid)", {
+    console.error("LiqPay currency mismatch — not marking paid", {
       orderId,
       expected: row.currency,
       got: payload.currency,
     });
+    return false;
   }
 
   return true;
@@ -127,7 +148,7 @@ export async function processLiqPayPayment(
 
   const admin = createAdminClient();
 
-  if (!(await liqpayOrderExistsForPayload(admin, orderId, payload))) {
+  if (!(await liqpayPayloadMatchesOrder(admin, orderId, payload))) {
     return { orderNumber: null, markedPaid: false };
   }
 

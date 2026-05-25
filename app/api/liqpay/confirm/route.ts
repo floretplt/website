@@ -15,7 +15,19 @@ import {
   getOrderPaidStateByLiqPayOrderId,
   parseLiqPayPaymentPayload,
 } from "@/lib/liqpay-process-payment";
-import { getClientIp, rateLimitAsync } from "@/lib/rate-limit";
+import {
+  orderCheckoutCookieName,
+  readOrderCheckoutTokenFromCookie,
+  verifyOrderCheckoutToken,
+} from "@/lib/order-checkout-token";
+import { getClientIp, rateLimitLiqPayConfirmAsync } from "@/lib/rate-limit";
+
+function verifyPendingAccess(pending: PendingLiqPayCookie): boolean {
+  const token = readOrderCheckoutTokenFromCookie(
+    cookies().get(orderCheckoutCookieName())?.value,
+  );
+  return verifyOrderCheckoutToken(token, pending.orderId);
+}
 
 const bodySchema = z.object({
   orderId: z.string().uuid().optional(),
@@ -34,7 +46,7 @@ function resolvePending(
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers);
-  if (!(await rateLimitAsync(ip))) {
+  if (!(await rateLimitLiqPayConfirmAsync(ip))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
@@ -100,6 +112,10 @@ export async function POST(req: Request) {
   const pending = resolvePending(fromBody);
   if (!pending) {
     return NextResponse.json({ paid: false, error: "no_pending" }, { status: 404 });
+  }
+
+  if (!verifyPendingAccess(pending)) {
+    return NextResponse.json({ paid: false, error: "unauthorized" }, { status: 403 });
   }
 
   try {

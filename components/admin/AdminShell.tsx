@@ -73,7 +73,7 @@ export function AdminShell({
           type="button"
           aria-label="Меню"
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
         >
           {open ? <IconX size={18} /> : <IconMenu size={18} />}
         </button>

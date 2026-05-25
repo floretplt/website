@@ -133,7 +133,7 @@ export function WeddingInquirySection({ imageSrc, imageAlt }: Props) {
                   </Dialog.Title>
                   <Dialog.Close
                     type="button"
-                    className="rounded border border-transparent p-1 text-muted transition-colors hover:border-ink/20 hover:text-ink"
+                    className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded border border-transparent p-2 text-muted transition-colors hover:border-ink/20 hover:text-ink"
                     aria-label={t("formClose")}
                   >
                     <X className="h-5 w-5" strokeWidth={1.5} />

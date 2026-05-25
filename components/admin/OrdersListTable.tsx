@@ -32,7 +32,13 @@ export function OrdersListTable({ rows }: { rows: OrdersListRow[] }) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm">
+    <>
+      <div className="space-y-3 md:hidden">
+        {rows.map((o) => (
+          <OrderCard key={o.id} order={o} onUpdated={() => router.refresh()} />
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm md:block">
       <table className="w-full min-w-[800px] text-left text-sm">
         <thead className="border-b border-zinc-100 bg-zinc-50/80 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
           <tr>
@@ -54,6 +60,81 @@ export function OrdersListTable({ rows }: { rows: OrdersListRow[] }) {
           ))}
         </tbody>
       </table>
+    </div>
+    </>
+  );
+}
+
+function OrderCard({
+  order: o,
+  onUpdated,
+}: {
+  order: OrdersListRow;
+  onUpdated: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const statusOptions = orderStatusesForDeliveryType(o.delivery_type).includes(
+    o.status,
+  )
+    ? orderStatusesForDeliveryType(o.delivery_type)
+    : [...orderStatusesForDeliveryType(o.delivery_type), o.status];
+  const meta = ORDER_STATUS_META[o.status];
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm",
+        pending && "opacity-70",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold text-zinc-900">#{o.order_number}</p>
+          <p className="mt-1 text-sm text-zinc-600">{o.product_name}</p>
+        </div>
+        <Link
+          href={`/admin/orders/${o.id}`}
+          className="text-xs font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
+        >
+          Відкрити
+        </Link>
+      </div>
+      <p className="mt-2 text-sm text-zinc-500">
+        {o.customer_name} ·{" "}
+        <a href={voiceDialHref(o.customer_phone)} className="underline">
+          {o.customer_phone}
+        </a>
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Badge tone={meta.tone}>{meta.label}</Badge>
+        {o.paid ? (
+          <Badge tone="emerald">Оплачено</Badge>
+        ) : o.payment_method === "reserve" ? (
+          <Badge tone="neutral">Бронь</Badge>
+        ) : (
+          <Badge tone="neutral">Оплата ініційована</Badge>
+        )}
+      </div>
+      <div className="mt-3">
+        <Select
+          value={o.status}
+          disabled={pending}
+          onChange={(e) => {
+            const v = e.target.value as OrderStatus;
+            startTransition(async () => {
+              await updateOrderStatus(o.id, v);
+              onUpdated();
+            });
+          }}
+          className="w-full"
+        >
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>
+              {ORDER_STATUS_META[s].label}
+            </option>
+          ))}
+        </Select>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { OrderLookup } from "@/components/shop/OrderLookup";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function OrderStatusPage({
   params,
@@ -17,11 +18,19 @@ export default async function OrderStatusPage({
     thanksRaw === "1" ||
     thanksRaw === "true" ||
     (Array.isArray(thanksRaw) && thanksRaw.includes("1"));
-  const paidRaw = searchParams.paid;
-  const paidThanks =
-    paidRaw === "1" ||
-    paidRaw === "true" ||
-    (Array.isArray(paidRaw) && paidRaw.includes("1"));
+
+  let paidInDb = false;
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("orders")
+    .select("paid")
+    .eq("order_number", orderNumber)
+    .maybeSingle();
+  if (data && (data as { paid: boolean }).paid === true) {
+    paidInDb = true;
+  }
+
+  const paidThanks = thanks && paidInDb;
 
   return (
     <OrderLookup

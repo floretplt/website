@@ -1,8 +1,14 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser, isAllowedAdminEmail } from "@/lib/auth";
 import { buildLiqPayCheckoutForOrder } from "@/lib/liqpay-build-order-checkout";
 import { notifyPrepayCheckoutStarted } from "@/lib/order-telegram-prepay-stages";
+import {
+  orderCheckoutCookieName,
+  readOrderCheckoutTokenFromCookie,
+  verifyOrderCheckoutToken,
+} from "@/lib/order-checkout-token";
 import { getClientIp, rateLimitAsync } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -36,6 +42,13 @@ export async function POST(req: Request) {
       const user = await getUser();
       if (!user || !isAllowedAdminEmail(user.email ?? undefined)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    } else {
+      const token = readOrderCheckoutTokenFromCookie(
+        cookies().get(orderCheckoutCookieName())?.value,
+      );
+      if (!verifyOrderCheckoutToken(token, orderId)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     }
 

@@ -9,6 +9,7 @@ import {
   primaryProductImageUrl,
   resolvePublicProductImageUrl,
 } from "@/lib/product-image";
+import { orderCheckoutCookieHeader } from "@/lib/order-checkout-token";
 import { telegramOrderInlineKeyboard } from "@/lib/telegram-order-keyboard";
 import {
   DELIVERY_ADDRESS_PENDING_WITH_RECIPIENT_UK,
@@ -353,7 +354,6 @@ export async function POST(req: Request) {
         postcardFeeUah,
         totalDueUah: totalDue,
       });
-
       await sendTelegramOrderCreated({
         caption,
         photoUrl: publicAssetAbsoluteUrl(productImageSnapshot),
@@ -367,10 +367,14 @@ export async function POST(req: Request) {
       console.error("telegram order created", e);
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       id: row.id,
       orderNumber: row.order_number,
     });
+    if (data.payment_method === "prepay") {
+      res.headers.append("Set-Cookie", orderCheckoutCookieHeader(row.id));
+    }
+    return res;
   } catch (e) {
     console.error(e);
     const msg = e instanceof Error ? e.message : String(e);

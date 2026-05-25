@@ -16,7 +16,7 @@ export function ProductTrustStrip({
 }: Props) {
   return (
     <div className="mt-12 w-full border-t border-ink/10 pt-8 md:mt-20 md:pt-14">
-      <ul className="text-body-muted mx-auto grid max-w-5xl grid-cols-3 items-start gap-x-2 gap-y-3 px-0.5 text-center sm:gap-x-8 sm:gap-y-4 sm:px-0 md:gap-x-10">
+      <ul className="text-body-muted mx-auto grid max-w-5xl grid-cols-1 items-start gap-y-4 px-0.5 text-center min-[360px]:grid-cols-3 min-[360px]:gap-x-2 min-[360px]:gap-y-3 sm:gap-x-8 sm:gap-y-4 sm:px-0 md:gap-x-10">
         <li className="flex min-w-0 flex-col items-center gap-1 sm:gap-2">
           <span className="text-xl leading-none" aria-hidden>
             🌸

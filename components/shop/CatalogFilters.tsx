@@ -137,7 +137,7 @@ export function CatalogFilters({ minPrice, maxPrice, priceSuffix }: Props) {
                         type="button"
                         title={tm(m)}
                         onClick={() => setParam("mood", selected ? null : m)}
-                        className={`flex flex-col items-center gap-1.5 rounded-lg p-1 transition-colors hover:bg-ink/[0.03] ${
+                        className={`flex min-h-[44px] flex-col items-center justify-center gap-1.5 rounded-lg p-2 transition-colors hover:bg-ink/[0.03] ${
                           selected ? "bg-ink/[0.04]" : ""
                         }`}
                       >

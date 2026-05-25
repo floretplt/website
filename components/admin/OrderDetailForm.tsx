@@ -55,7 +55,7 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[120px_1fr] items-start gap-3 py-2">
+    <div className="grid grid-cols-1 items-start gap-1 py-2 sm:grid-cols-[120px_1fr] sm:gap-3">
       <dt className="admin-label uppercase tracking-wide">{label}</dt>
       <dd className="admin-body">{children}</dd>
     </div>
@@ -95,8 +95,13 @@ export function OrderDetailForm({ order }: { order: Order }) {
         setMsg(json.error ?? "Помилка");
         return;
       }
-      await navigator.clipboard.writeText(url);
-      setMsg("Посилання на оплату скопійовано — надішліть клієнту.");
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setMsg("Посилання на оплату скопійовано — надішліть клієнту.");
+      } else {
+        window.prompt("Посилання на оплату (скопіюйте):", url);
+        setMsg("Посилання готово — скопіюйте з поля вище.");
+      }
     } catch {
       setMsg("Помилка");
     } finally {

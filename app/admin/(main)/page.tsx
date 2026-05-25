@@ -216,7 +216,45 @@ export default async function AdminDashboardPage() {
             description="Щойно прийде перше замовлення, воно з'явиться тут."
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm">
+          <>
+          <div className="space-y-3 md:hidden">
+            {(recent ?? []).map((o) => {
+              const meta =
+                ORDER_STATUS_META[o.status as OrderStatus] ??
+                ORDER_STATUS_META.new;
+              const pm = ((o as { payment_method?: string }).payment_method ??
+                "reserve") as PaymentMethod;
+              return (
+                <div
+                  key={o.id}
+                  className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold text-zinc-900">#{o.order_number}</p>
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="text-xs font-medium text-zinc-600 underline-offset-2 hover:underline"
+                    >
+                      Відкрити
+                    </Link>
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-600">{o.product_name}</p>
+                  <p className="mt-2 text-sm text-zinc-500">{o.customer_name}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge tone={meta.tone}>{meta.label}</Badge>
+                    {o.paid ? (
+                      <Badge tone="emerald">Оплачено</Badge>
+                    ) : pm === "reserve" ? (
+                      <Badge tone="neutral">Бронь</Badge>
+                    ) : (
+                      <Badge tone="neutral">Оплата ініційована</Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm md:block">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-zinc-100 bg-zinc-50/80 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
                 <tr>
@@ -317,6 +355,7 @@ export default async function AdminDashboardPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Card>
     </div>

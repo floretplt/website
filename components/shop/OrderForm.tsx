@@ -140,6 +140,9 @@ export function OrderForm({
   const ts = useTranslations("sizes");
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [prepayFailedOrderNumber, setPrepayFailedOrderNumber] = useState<
+    number | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [submittingMethod, setSubmittingMethod] = useState<
     "reserve" | "prepay" | null
@@ -523,6 +526,7 @@ export function OrderForm({
 
   const onSubmit = async (values: OrderCreateInput) => {
     setFormError(null);
+    setPrepayFailedOrderNumber(null);
     if (initialProduct) {
       if (values.price_paid + 1e-9 < smallTierMin) {
         setFormError(
@@ -665,7 +669,13 @@ export function OrderForm({
         !payJson.checkoutUrl ||
         !payJson.checkoutUrl.startsWith("https://www.liqpay.ua/")
       ) {
-        setFormError(t("error"));
+        const num = json.orderNumber ?? payJson.orderNumber;
+        if (num != null) {
+          setPrepayFailedOrderNumber(num);
+          setFormError(t("prepayCheckoutFailed", { orderNumber: num }));
+        } else {
+          setFormError(t("error"));
+        }
         setLoading(false);
         return;
       }
@@ -769,7 +779,7 @@ export function OrderForm({
       onSubmit={(e) => {
         e.preventDefault();
       }}
-      className="order-form mx-auto min-h-screen max-w-6xl bg-[#F4F3F1] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16"
+      className="order-form mx-auto min-h-screen max-w-6xl bg-[#F4F3F1] px-4 py-10 pb-36 sm:px-6 sm:py-12 sm:pb-36 lg:px-8 lg:py-16 lg:pb-16"
     >
       <h1>{t("title")}</h1>
 
@@ -1628,8 +1638,8 @@ export function OrderForm({
             ) : null}
           </section>
 
-          <section className="min-w-0 space-y-5 rounded-xl border border-ink/12 bg-bg p-5 shadow-sm md:p-6 lg:order-3">
-            <h2 className="form-section-title">{t("payment")}</h2>
+          <section className="fixed bottom-0 left-0 right-0 z-30 min-w-0 space-y-5 border-t border-ink/15 bg-bg/95 p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm max-lg:pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 lg:relative lg:bottom-auto lg:z-auto lg:order-3 lg:rounded-xl lg:border lg:border-ink/12 lg:bg-bg lg:p-5 lg:shadow-sm md:lg:p-6 lg:backdrop-blur-none">
+            <h2 className="form-section-title max-lg:sr-only">{t("payment")}</h2>
 
             <div className="flex flex-col gap-3">
               <button
@@ -1669,7 +1679,7 @@ export function OrderForm({
                   >
                     {t("privacyPolicyLink")}
                   </Link>
-                  <span className="whitespace-nowrap text-ink">{req}</span>
+                  <span className="text-ink">{req}</span>
                 </span>
               </label>
               <FieldError err={errors.privacy_accepted} />
@@ -1677,6 +1687,14 @@ export function OrderForm({
 
             {formError ? (
               <p className="text-error">{formError}</p>
+            ) : null}
+            {prepayFailedOrderNumber != null ? (
+              <Link
+                href={`/order/${prepayFailedOrderNumber}?thanks=1`}
+                className="btn-pill inline-flex w-full justify-center text-center"
+              >
+                {t("prepayCheckoutFailedCta")}
+              </Link>
             ) : null}
           </section>
         </div>

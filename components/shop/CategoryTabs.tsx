@@ -40,7 +40,7 @@ export function CategoryTabs() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "tab-link shrink-0 snap-start whitespace-nowrap py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink",
+                    "tab-link shrink-0 snap-start whitespace-nowrap py-3 min-h-[44px] inline-flex items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink",
                     active ? "tab-link-active" : "border-b border-transparent pb-0.5",
                   )}
                 >

@@ -53,11 +53,11 @@ export async function sendTelegramOrderCreated(args: {
   caption: string;
   photoUrl?: string | null;
   replyMarkup?: TelegramInlineKeyboard;
-}) {
-  const { chatId } = telegramEnv();
-  if (!chatId) {
+}): Promise<boolean> {
+  const { token, chatId } = telegramEnv();
+  if (!chatId || !token) {
     console.warn("Telegram not configured");
-    return;
+    return false;
   }
   const payload: Record<string, unknown> = {
     chat_id: chatId,
@@ -73,7 +73,7 @@ export async function sendTelegramOrderCreated(args: {
       ...payload,
       photo: args.photoUrl,
     });
-    if (photoRes.ok) return;
+    if (photoRes.ok) return true;
     const detail = "error" in photoRes ? photoRes.error : "unknown error";
     console.warn("Telegram sendPhoto failed, falling back to sendMessage", {
       photoUrlPreview: args.photoUrl.slice(0, 120),
@@ -81,12 +81,13 @@ export async function sendTelegramOrderCreated(args: {
     });
   }
 
-  await telegramPost("sendMessage", {
+  const msgRes = await telegramPost("sendMessage", {
     chat_id: chatId,
     text: args.caption,
     parse_mode: "HTML",
     ...(args.replyMarkup ? { reply_markup: args.replyMarkup } : {}),
   });
+  return msgRes.ok;
 }
 
 export async function answerTelegramCallbackQuery(
