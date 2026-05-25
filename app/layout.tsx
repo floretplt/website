@@ -21,12 +21,50 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const SITE_DESCRIPTION =
+  "Квіткова студія Floret у Полтаві — авторські букети, оформлення весіль і подій, доставка по Полтаві та самовивіз. Працюємо з 2015 року.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  ),
-  title: "Floret Poltava",
-  description: "Квіткова студія Floret у Полтаві",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Floret Poltava — квіткова студія в Полтаві",
+    template: "%s · Floret Poltava",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: "Floret Poltava",
+  keywords: [
+    "квіткова студія Полтава",
+    "букети Полтава",
+    "доставка квітів Полтава",
+    "весільні букети",
+    "флорист Полтава",
+    "Floret",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Floret Poltava",
+    locale: "uk_UA",
+    url: SITE_URL,
+    title: "Floret Poltava — квіткова студія в Полтаві",
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/images/hero.jpg",
+        width: 1024,
+        height: 683,
+        alt: "Авторський букет Floret",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Floret Poltava — квіткова студія в Полтаві",
+    description: SITE_DESCRIPTION,
+    images: ["/images/hero.jpg"],
+  },
 };
 
 export default function RootLayout({

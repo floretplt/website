@@ -1,3 +1,4 @@
+import type React from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
 import Link from "next/link";
@@ -81,32 +82,56 @@ export default async function AdminDashboardPage() {
     .order("created_at", { ascending: false })
     .limit(8);
 
-  const stats = [
+  const stats: Array<
+    | {
+        kind: "simple";
+        label: string;
+        value: string;
+        icon: React.ReactNode;
+        tint: string;
+      }
+    | {
+        kind: "delivery-split";
+        label: string;
+        hint: string;
+        delivery: number;
+        pickup: number;
+        icon: React.ReactNode;
+        tint: string;
+      }
+  > = [
     {
+      kind: "simple",
       label: "Замовлень сьогодні",
       value: String(todayOrders ?? 0),
       icon: <IconOrders size={18} />,
       tint: "bg-blue-50 text-blue-700",
     },
     {
+      kind: "simple",
       label: "Нових (неопрацьовано)",
       value: String(pending ?? 0),
       icon: <IconInbox size={18} />,
       tint: "bg-amber-50 text-amber-700",
     },
     {
+      kind: "simple",
       label: "Неоплачені активні",
       value: String(unpaidActive ?? 0),
       icon: <IconInbox size={18} />,
       tint: "bg-orange-50 text-orange-800",
     },
     {
-      label: "Сьогодні за датою (Київ)",
-      value: `${todayDelivery ?? 0} доставка · ${todayPickup ?? 0} самовивіз`,
+      kind: "delivery-split",
+      label: "Сьогодні",
+      hint: "За датою доставки · Київ",
+      delivery: todayDelivery ?? 0,
+      pickup: todayPickup ?? 0,
       icon: <IconCalendar size={18} />,
       tint: "bg-violet-50 text-violet-800",
     },
     {
+      kind: "simple",
       label: "Тиждень, оплачено",
       value: `${Math.round(weekTotalUah).toLocaleString("uk-UA")} ₴`,
       icon: <IconTrendUp size={18} />,
@@ -124,14 +149,42 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
           <Card key={s.label}>
-            <CardBody className="flex items-start justify-between gap-4">
+            <CardBody className="flex items-start justify-between gap-3">
               <div className="min-w-0 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  {s.label}
-                </p>
-                <p className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">
-                  {s.value}
-                </p>
+                <div className="space-y-0.5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    {s.label}
+                  </p>
+                  {s.kind === "delivery-split" ? (
+                    <p className="text-[11px] leading-snug text-zinc-400">{s.hint}</p>
+                  ) : null}
+                </div>
+                {s.kind === "delivery-split" ? (
+                  <div className="flex items-end gap-3 pt-0.5">
+                    <div className="min-w-0">
+                      <p className="text-xl font-semibold tabular-nums tracking-tight text-zinc-900 sm:text-2xl">
+                        {s.delivery}
+                      </p>
+                      <p className="text-[11px] text-zinc-500">доставка</p>
+                    </div>
+                    <span
+                      className="mb-5 shrink-0 text-sm text-zinc-300"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xl font-semibold tabular-nums tracking-tight text-zinc-900 sm:text-2xl">
+                        {s.pickup}
+                      </p>
+                      <p className="text-[11px] text-zinc-500">самовивіз</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xl font-semibold tabular-nums tracking-tight text-zinc-900 sm:text-2xl">
+                    {s.value}
+                  </p>
+                )}
               </div>
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.tint}`}

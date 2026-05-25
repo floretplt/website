@@ -23,14 +23,40 @@ export async function generateMetadata({
     return { title: "Floret" };
   }
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const title = "Floret Poltava";
+  const title = "Floret Poltava — квіткова студія в Полтаві";
   const desc =
-    "Квіткова студія Floret у Полтаві — букети, декор, весільні композиції.";
+    "Квіткова студія Floret у Полтаві — авторські букети, оформлення весіль і подій, доставка по Полтаві та самовивіз. Працюємо з 2015 року.";
   return {
-    title: { default: title, template: `%s · Floret` },
+    title: { default: title, template: `%s · Floret Poltava` },
     description: desc,
     alternates: {
       canonical: `${base}/`,
+      languages: {
+        uk: `${base}/uk`,
+        ru: `${base}/ru`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      siteName: "Floret Poltava",
+      locale: locale === "ru" ? "ru_UA" : "uk_UA",
+      url: `${base}/${locale}`,
+      title,
+      description: desc,
+      images: [
+        {
+          url: "/images/hero.jpg",
+          width: 1024,
+          height: 683,
+          alt: "Авторський букет Floret",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: desc,
+      images: ["/images/hero.jpg"],
     },
   };
 }
@@ -50,11 +76,15 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const settings = await getSiteSettings();
 
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Florist",
     name: "Floret Poltava",
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    url: siteUrl,
+    logo: `${siteUrl}/icon1.png`,
+    image: `${siteUrl}/images/hero.jpg`,
     telephone: normalizeUaPhone(settings.phone),
     address: {
       "@type": "PostalAddress",
