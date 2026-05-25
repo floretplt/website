@@ -23,7 +23,7 @@ export function buildNewOrderTelegramCaptionUk(params: {
     totalDueUah,
   } = params;
   const reserve = data.payment_method === "reserve";
-  const paymentLabel = reserve ? "Бронь" : "Передоплата";
+  const paymentLabel = reserve ? "Бронь" : "Оплата ініційована (LiqPay)";
   const size = bouquetSizeLetter(data.product_size);
 
   const lines: string[] = [

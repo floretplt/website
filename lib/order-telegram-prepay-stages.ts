@@ -1,20 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  buildPrepayAwaitingPaymentCaptionUk,
-  buildPrepayCheckoutStartedCaptionUk,
-} from "@/lib/order-telegram-caption";
+import { buildPrepayCheckoutStartedCaptionUk } from "@/lib/order-telegram-caption";
 import { sendTelegramMessage } from "@/lib/telegram";
 
 type OrderTelegramRow = {
   order_number: number;
-  product_name: string;
-  product_size: string | null;
-  price_paid: number;
-  currency: string;
-  customer_name: string;
-  customer_phone: string;
-  delivery_fee_uah: number | null;
-  postcard_fee_uah: number | null;
   payment_method: string;
   paid: boolean;
 };
@@ -23,9 +12,7 @@ async function loadOrder(orderId: string): Promise<OrderTelegramRow | null> {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("orders")
-    .select(
-      "order_number, product_name, product_size, price_paid, currency, customer_name, customer_phone, delivery_fee_uah, postcard_fee_uah, payment_method, paid",
-    )
+    .select("order_number, payment_method, paid")
     .eq("id", orderId)
     .maybeSingle();
   if (error || !data) {
@@ -35,39 +22,7 @@ async function loadOrder(orderId: string): Promise<OrderTelegramRow | null> {
   return data as OrderTelegramRow;
 }
 
-function totalDueUah(row: OrderTelegramRow): number {
-  const bouquet = Number(row.price_paid);
-  const fee =
-    row.currency === "UAH" && row.delivery_fee_uah != null
-      ? Number(row.delivery_fee_uah)
-      : 0;
-  const pc =
-    row.currency === "UAH" && row.postcard_fee_uah != null
-      ? Number(row.postcard_fee_uah)
-      : 0;
-  return bouquet + fee + pc;
-}
-
-/** Stage 1: prepay order created in DB (before LiqPay). */
-export async function notifyPrepayOrderCreated(orderId: string): Promise<boolean> {
-  const row = await loadOrder(orderId);
-  if (!row || row.payment_method !== "prepay" || row.paid) return false;
-
-  const caption = buildPrepayAwaitingPaymentCaptionUk({
-    orderNumber: row.order_number,
-    productName: row.product_name,
-    productSize: row.product_size,
-    totalDueUah: totalDueUah(row),
-    currency: row.currency === "EUR" ? "EUR" : "UAH",
-    customerName: row.customer_name,
-    customerPhone: row.customer_phone,
-  });
-  const ok = await sendTelegramMessage(caption);
-  if (!ok) console.error("telegram prepay stage1 failed", { orderId });
-  return ok;
-}
-
-/** Stage 2: client redirected to LiqPay checkout. */
+/** Stage 2: client redirected to LiqPay checkout (optional follow-up after full order alert). */
 export async function notifyPrepayCheckoutStarted(
   orderId: string,
   amount: number,
@@ -82,6 +37,6 @@ export async function notifyPrepayCheckoutStarted(
     currency,
   });
   const ok = await sendTelegramMessage(caption);
-  if (!ok) console.error("telegram prepay stage2 failed", { orderId });
+  if (!ok) console.error("telegram prepay checkout started failed", { orderId });
   return ok;
 }

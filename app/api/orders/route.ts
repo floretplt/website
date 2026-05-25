@@ -9,7 +9,6 @@ import {
   primaryProductImageUrl,
   resolvePublicProductImageUrl,
 } from "@/lib/product-image";
-import { notifyPrepayOrderCreated } from "@/lib/order-telegram-prepay-stages";
 import { telegramOrderInlineKeyboard } from "@/lib/telegram-order-keyboard";
 import {
   DELIVERY_ADDRESS_PENDING_WITH_RECIPIENT_UK,
@@ -345,13 +344,7 @@ export async function POST(req: Request) {
     const del = deliveryFeeUah ?? 0;
     const totalDue = Number(data.price_paid) + del + pc;
 
-    if (data.payment_method === "prepay") {
-      try {
-        await notifyPrepayOrderCreated(row.id);
-      } catch (e) {
-        console.error("telegram prepay created", e);
-      }
-    } else {
+    try {
       const caption = buildNewOrderTelegramCaptionUk({
         data,
         orderNumber: row.order_number,
@@ -370,6 +363,8 @@ export async function POST(req: Request) {
           delivery_type: data.delivery_type,
         }),
       });
+    } catch (e) {
+      console.error("telegram order created", e);
     }
 
     return NextResponse.json({
