@@ -57,5 +57,10 @@ export function formatPendingLiqPayCookieValue(
 export function pendingLiqPayCookieHeader(
   pending: Omit<PendingLiqPayCookie, "ts">,
 ): string {
-  return `${FLORET_LIQPAY_COOKIE}=${formatPendingLiqPayCookieValue(pending)}; Path=/; Max-Age=7200; SameSite=Lax`;
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const secure =
+    site.startsWith("https://") || process.env.NODE_ENV === "production"
+      ? "; Secure"
+      : "";
+  return `${FLORET_LIQPAY_COOKIE}=${formatPendingLiqPayCookieValue(pending)}; Path=/; Max-Age=7200; SameSite=Lax${secure}`;
 }

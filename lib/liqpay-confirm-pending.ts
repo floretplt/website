@@ -22,9 +22,10 @@ export async function confirmLiqPayFromPayload(
   }
 
   const { orderNumber, markedPaid } = await processLiqPayPayment(payload, opts);
+  const num = orderNumber ?? 0;
   return {
-    paid: markedPaid || orderNumber != null,
-    orderNumber: orderNumber ?? 0,
+    paid: markedPaid || num > 0,
+    orderNumber: num,
     status,
   };
 }
@@ -42,6 +43,15 @@ export async function confirmLiqPayFromPendingCookie(
     return { paid: false, orderNumber: pending.orderNumber, status };
   }
 
+  const amount =
+    typeof remote.amount === "number"
+      ? remote.amount
+      : typeof remote.amount === "string"
+        ? Number(remote.amount)
+        : undefined;
+  const currency =
+    typeof remote.currency === "string" ? remote.currency : undefined;
+
   return confirmLiqPayFromPayload(
     {
       order_id: pending.liqpayOrderId,
@@ -52,6 +62,8 @@ export async function confirmLiqPayFromPendingCookie(
           : undefined,
       payment_id:
         typeof remote.payment_id === "number" ? remote.payment_id : undefined,
+      amount: Number.isFinite(amount) ? amount : undefined,
+      currency,
     },
     { notifyTelegram: true },
   );

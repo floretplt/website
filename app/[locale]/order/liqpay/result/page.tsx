@@ -1,7 +1,5 @@
 import { cookies } from "next/headers";
-import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { Link } from "@/i18n/navigation";
 import { LiqPayResultPending } from "@/components/shop/LiqPayResultPending";
 import { liqpayVerify } from "@/lib/liqpay";
 import {
@@ -15,7 +13,6 @@ import {
 import {
   getOrderPaidStateByLiqPayOrderId,
   liqpayPaymentIsPaid,
-  liqpayPaymentIsTerminalFailure,
   parseLiqPayPaymentPayload,
 } from "@/lib/liqpay-process-payment";
 
@@ -28,16 +25,11 @@ function firstString(
 }
 
 export default async function LiqPayResultPage({
-  params,
   searchParams,
 }: {
   params: { locale: string };
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const locale = params.locale;
-  const t = await getTranslations({ locale, namespace: "order" });
-  const te = await getTranslations({ locale, namespace: "errors" });
-
   const dataB64 = firstString(searchParams.data);
   const signature = firstString(searchParams.signature);
   const priv = process.env.LIQPAY_PRIVATE_KEY;
@@ -47,14 +39,14 @@ export default async function LiqPayResultPage({
 
   let paid = false;
   let orderNumber = 0;
-  let returnStatus: string | undefined;
-  let hasVerifiedReturn = false;
 
-  if (dataB64 && signature && priv && liqpayVerify(dataB64, signature, priv)) {
-    hasVerifiedReturn = true;
+  const verifiedReturn = Boolean(
+    dataB64 && signature && priv && liqpayVerify(dataB64, signature, priv),
+  );
+
+  if (verifiedReturn && dataB64 && signature) {
     try {
       const payload = parseLiqPayPaymentPayload(dataB64);
-      returnStatus = payload.status;
 
       const dbState = await getOrderPaidStateByLiqPayOrderId(payload.order_id);
       if (dbState.paid && dbState.orderNumber != null) {
@@ -68,30 +60,27 @@ export default async function LiqPayResultPage({
         });
         paid = result.paid;
         orderNumber = result.orderNumber;
-        returnStatus = result.status ?? returnStatus;
       }
     } catch (e) {
       console.error("liqpay result confirm", e);
-      paid = false;
     }
   }
 
   if (!paid && pending) {
     try {
-      const result = await confirmLiqPayFromPendingCookie(pending);
-      paid = result.paid;
-      if (result.orderNumber > 0) orderNumber = result.orderNumber;
-      if (!returnStatus && result.status) returnStatus = result.status;
+      const dbState = await getOrderPaidStateByLiqPayOrderId(pending.liqpayOrderId);
+      if (dbState.paid && dbState.orderNumber != null) {
+        paid = true;
+        orderNumber = dbState.orderNumber;
+      }
+
+      if (!paid) {
+        const result = await confirmLiqPayFromPendingCookie(pending);
+        paid = result.paid;
+        if (result.orderNumber > 0) orderNumber = result.orderNumber;
+      }
     } catch (e) {
       console.error("liqpay result pending confirm", e);
-    }
-  }
-
-  if (!paid && pending) {
-    const dbState = await getOrderPaidStateByLiqPayOrderId(pending.liqpayOrderId);
-    if (dbState.paid && dbState.orderNumber != null) {
-      paid = true;
-      orderNumber = dbState.orderNumber;
     }
   }
 
@@ -101,29 +90,11 @@ export default async function LiqPayResultPage({
     redirect(`/order/${orderNumber}?thanks=1&paid=1`);
   }
 
-  const terminalFailure =
-    returnStatus != null && liqpayPaymentIsTerminalFailure(returnStatus);
-
-  if (!hasVerifiedReturn || !terminalFailure) {
-    return (
-      <LiqPayResultPending
-        orderNumber={pending?.orderNumber ?? (orderNumberOk ? orderNumber : undefined)}
-      />
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6 sm:py-24">
-      <h1 className="h-section">{te("paymentFailed")}</h1>
-      <p className="text-body-muted mt-4">{te("paymentFailedHint")}</p>
-      {orderNumberOk ? (
-        <p className="text-body-muted mt-2">
-          {t("thanksPaidLead", { orderNumber })}
-        </p>
-      ) : null}
-      <Link href="/catalog/bouquets" className="btn-pill mt-10 inline-flex">
-        До каталогу
-      </Link>
-    </div>
+    <LiqPayResultPending
+      orderNumber={pending?.orderNumber ?? (orderNumberOk ? orderNumber : undefined)}
+      returnData={verifiedReturn ? dataB64 : undefined}
+      returnSignature={verifiedReturn ? signature : undefined}
+    />
   );
 }

@@ -27,16 +27,19 @@ async function telegramPost(method: string, body: Record<string, unknown>) {
 }
 
 export async function sendTelegramMessage(text: string) {
-  const { chatId } = telegramEnv();
-  if (!chatId) {
-    console.warn("Telegram not configured");
+  const { token, chatId } = telegramEnv();
+  if (!token || !chatId) {
+    console.warn("Telegram not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID)");
     return;
   }
-  await telegramPost("sendMessage", {
+  const res = await telegramPost("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
   });
+  if (!res.ok && !("skipped" in res && res.skipped)) {
+    console.error("Telegram sendMessage failed", res);
+  }
 }
 
 /**
