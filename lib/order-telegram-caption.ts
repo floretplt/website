@@ -102,7 +102,7 @@ export function buildPrepayAwaitingPaymentCaptionUk(params: {
   const size = bouquetSizeLetter(params.productSize);
   return [
     `<b>🛒 Оформлення #${params.orderNumber}</b>`,
-    `<i>Передоплата — очікуємо оплату на LiqPay</i>`,
+    `<i>Оплата ініційована (LiqPay)</i>`,
     "",
     `<b>Товар:</b> ${escapeHtml(params.productName)} · ${size}`,
     `<b>До сплати:</b> ${params.totalDueUah.toFixed(0)} ${params.currency}`,
@@ -118,7 +118,7 @@ export function buildPrepayCheckoutStartedCaptionUk(params: {
 }): string {
   return [
     `<b>💳 Оплата на LiqPay #${params.orderNumber}</b>`,
-    `<i>Клієнт на сторінці оплати</i>`,
+    `<i>Клієнт перейшов на оплату</i>`,
     `<b>Сума:</b> ${params.amount.toFixed(2)} ${params.currency}`,
   ].join("\n");
 }

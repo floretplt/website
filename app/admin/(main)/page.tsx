@@ -292,7 +292,7 @@ export default async function AdminDashboardPage() {
                         ) : pm === "reserve" ? (
                           <Badge tone="neutral">Забронювати — передзвонимо</Badge>
                         ) : (
-                          <Badge tone="neutral">Оплатити зараз (LiqPay)</Badge>
+                          <Badge tone="neutral">Оплата ініційована</Badge>
                         )}
                       </td>
                       <td className="px-4 py-3 text-zinc-500">

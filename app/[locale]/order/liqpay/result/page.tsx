@@ -13,7 +13,9 @@ import {
   parsePendingLiqPayCookie,
 } from "@/lib/liqpay-pending-cookie";
 import {
+  getOrderPaidStateByLiqPayOrderId,
   liqpayPaymentIsPaid,
+  liqpayPaymentIsTerminalFailure,
   parseLiqPayPaymentPayload,
 } from "@/lib/liqpay-process-payment";
 
@@ -45,27 +47,51 @@ export default async function LiqPayResultPage({
 
   let paid = false;
   let orderNumber = 0;
+  let returnStatus: string | undefined;
+  let hasVerifiedReturn = false;
 
   if (dataB64 && signature && priv && liqpayVerify(dataB64, signature, priv)) {
+    hasVerifiedReturn = true;
     try {
       const payload = parseLiqPayPaymentPayload(dataB64);
-      if (liqpayPaymentIsPaid(payload.status ?? "")) {
+      returnStatus = payload.status;
+
+      const dbState = await getOrderPaidStateByLiqPayOrderId(payload.order_id);
+      if (dbState.paid && dbState.orderNumber != null) {
+        paid = true;
+        orderNumber = dbState.orderNumber;
+      }
+
+      if (!paid && liqpayPaymentIsPaid(payload.status ?? "")) {
         const result = await confirmLiqPayFromPayload(payload, {
           notifyTelegram: true,
         });
         paid = result.paid;
         orderNumber = result.orderNumber;
+        returnStatus = result.status ?? returnStatus;
       }
-    } catch {
+    } catch (e) {
+      console.error("liqpay result confirm", e);
       paid = false;
     }
-  } else if (pending) {
+  }
+
+  if (!paid && pending) {
     try {
       const result = await confirmLiqPayFromPendingCookie(pending);
       paid = result.paid;
-      orderNumber = result.orderNumber;
-    } catch {
-      paid = false;
+      if (result.orderNumber > 0) orderNumber = result.orderNumber;
+      if (!returnStatus && result.status) returnStatus = result.status;
+    } catch (e) {
+      console.error("liqpay result pending confirm", e);
+    }
+  }
+
+  if (!paid && pending) {
+    const dbState = await getOrderPaidStateByLiqPayOrderId(pending.liqpayOrderId);
+    if (dbState.paid && dbState.orderNumber != null) {
+      paid = true;
+      orderNumber = dbState.orderNumber;
     }
   }
 
@@ -75,10 +101,13 @@ export default async function LiqPayResultPage({
     redirect(`/order/${orderNumber}?thanks=1&paid=1`);
   }
 
-  if (!dataB64 && !signature) {
+  const terminalFailure =
+    returnStatus != null && liqpayPaymentIsTerminalFailure(returnStatus);
+
+  if (!hasVerifiedReturn || !terminalFailure) {
     return (
       <LiqPayResultPending
-        orderNumber={pending?.orderNumber}
+        orderNumber={pending?.orderNumber ?? (orderNumberOk ? orderNumber : undefined)}
       />
     );
   }
@@ -86,7 +115,12 @@ export default async function LiqPayResultPage({
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6 sm:py-24">
       <h1 className="h-section">{te("paymentFailed")}</h1>
-      <p className="text-body-muted mt-4">{t("thanksPaidSub")}</p>
+      <p className="text-body-muted mt-4">{te("paymentFailedHint")}</p>
+      {orderNumberOk ? (
+        <p className="text-body-muted mt-2">
+          {t("thanksPaidLead", { orderNumber })}
+        </p>
+      ) : null}
       <Link href="/catalog/bouquets" className="btn-pill mt-10 inline-flex">
         До каталогу
       </Link>

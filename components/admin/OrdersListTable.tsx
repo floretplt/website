@@ -144,7 +144,7 @@ function OrderRow({
           </Badge>
         ) : (
           <Badge tone="neutral" className="whitespace-normal text-left leading-snug">
-            Оплатити зараз (LiqPay)
+            Оплата ініційована
           </Badge>
         )}
       </td>

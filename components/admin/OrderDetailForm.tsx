@@ -120,7 +120,7 @@ export function OrderDetailForm({ order }: { order: Order }) {
                 ) : order.payment_method === "reserve" ? (
                   <Badge tone="neutral">Забронювати — передзвонимо</Badge>
                 ) : (
-                  <Badge tone="neutral">Оплатити зараз (LiqPay)</Badge>
+                  <Badge tone="neutral">Оплата ініційована</Badge>
                 )}
               </span>
             }
@@ -222,7 +222,9 @@ export function OrderDetailForm({ order }: { order: Order }) {
               </Row>
               <Row label="Оплата">
                 {order.payment_method === "prepay"
-                  ? "Оплатити зараз (LiqPay)"
+                  ? paid
+                    ? "LiqPay (оплачено)"
+                    : "Оплата ініційована (LiqPay)"
                   : "Забронювати — передзвонимо"}
               </Row>
               {order.gift_message ? (

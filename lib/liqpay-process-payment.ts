@@ -25,15 +25,42 @@ export function liqpayPaymentNotifyTelegram(status: string | undefined): boolean
   return status === "success" || status === "sandbox";
 }
 
+/** LiqPay statuses where polling / retry will not help. */
+export function liqpayPaymentIsTerminalFailure(status: string | undefined): boolean {
+  return status === "failure" || status === "error" || status === "reversed";
+}
+
+/** Check DB paid state (e.g. callback arrived before browser return). */
+export async function getOrderPaidStateByLiqPayOrderId(
+  rawLiqpayOrderId: string | undefined,
+): Promise<{ paid: boolean; orderNumber: number | null }> {
+  if (!rawLiqpayOrderId) return { paid: false, orderNumber: null };
+
+  const orderId = orderIdFromLiqPayOrderId(rawLiqpayOrderId);
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("orders")
+    .select("order_number, paid")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (error || !data) return { paid: false, orderNumber: null };
+
+  const row = data as { order_number: number; paid: boolean };
+  return {
+    paid: row.paid === true,
+    orderNumber: row.order_number,
+  };
+}
+
 export function liqpayTransactionId(payload: LiqPayPaymentPayload): string | null {
   if (payload.transaction_id) return String(payload.transaction_id);
   if (payload.payment_id != null) return String(payload.payment_id);
   return null;
 }
 
-/** Defense-in-depth: signature already verified, but double-check the
- *  amount/currency LiqPay reports against what we stored for the order. */
-async function liqpayPayloadMatchesOrder(
+/** Log amount/currency drift; do not block marking paid when LiqPay status is success. */
+async function liqpayOrderExistsForPayload(
   admin: ReturnType<typeof createAdminClient>,
   orderId: string,
   payload: LiqPayPaymentPayload,
@@ -64,25 +91,22 @@ async function liqpayPayloadMatchesOrder(
 
   if (
     typeof payload.amount === "number" &&
-    Number.isFinite(payload.amount)
+    Number.isFinite(payload.amount) &&
+    Math.abs(payload.amount - expected) > 0.01
   ) {
-    if (Math.abs(payload.amount - expected) > 0.01) {
-      console.error("LiqPay amount mismatch", {
-        orderId,
-        expected,
-        got: payload.amount,
-      });
-      return false;
-    }
+    console.error("LiqPay amount mismatch (still marking paid)", {
+      orderId,
+      expected,
+      got: payload.amount,
+    });
   }
 
   if (typeof payload.currency === "string" && payload.currency !== row.currency) {
-    console.error("LiqPay currency mismatch", {
+    console.error("LiqPay currency mismatch (still marking paid)", {
       orderId,
       expected: row.currency,
       got: payload.currency,
     });
-    return false;
   }
 
   return true;
@@ -103,7 +127,7 @@ export async function processLiqPayPayment(
 
   const admin = createAdminClient();
 
-  if (!(await liqpayPayloadMatchesOrder(admin, orderId, payload))) {
+  if (!(await liqpayOrderExistsForPayload(admin, orderId, payload))) {
     return { orderNumber: null, markedPaid: false };
   }
 
