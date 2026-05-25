@@ -49,11 +49,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ redirectUrl: result.redirectUrl });
     }
 
-    void notifyPrepayCheckoutStarted(
-      orderId,
-      result.amount,
-      result.currency,
-    ).catch((e) => console.error("telegram prepay checkout", e));
+    try {
+      await notifyPrepayCheckoutStarted(
+        orderId,
+        result.amount,
+        result.currency,
+      );
+    } catch (e) {
+      console.error("telegram prepay checkout", e);
+    }
 
     return NextResponse.json({
       data: result.data,

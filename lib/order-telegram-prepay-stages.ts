@@ -28,7 +28,10 @@ async function loadOrder(orderId: string): Promise<OrderTelegramRow | null> {
     )
     .eq("id", orderId)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("telegram prepay loadOrder", { orderId, error: error?.message });
+    return null;
+  }
   return data as OrderTelegramRow;
 }
 
@@ -46,9 +49,9 @@ function totalDueUah(row: OrderTelegramRow): number {
 }
 
 /** Stage 1: prepay order created in DB (before LiqPay). */
-export async function notifyPrepayOrderCreated(orderId: string): Promise<void> {
+export async function notifyPrepayOrderCreated(orderId: string): Promise<boolean> {
   const row = await loadOrder(orderId);
-  if (!row || row.payment_method !== "prepay" || row.paid) return;
+  if (!row || row.payment_method !== "prepay" || row.paid) return false;
 
   const caption = buildPrepayAwaitingPaymentCaptionUk({
     orderNumber: row.order_number,
@@ -59,7 +62,9 @@ export async function notifyPrepayOrderCreated(orderId: string): Promise<void> {
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
   });
-  await sendTelegramMessage(caption);
+  const ok = await sendTelegramMessage(caption);
+  if (!ok) console.error("telegram prepay stage1 failed", { orderId });
+  return ok;
 }
 
 /** Stage 2: client redirected to LiqPay checkout. */
@@ -67,14 +72,16 @@ export async function notifyPrepayCheckoutStarted(
   orderId: string,
   amount: number,
   currency: "UAH" | "EUR",
-): Promise<void> {
+): Promise<boolean> {
   const row = await loadOrder(orderId);
-  if (!row || row.payment_method !== "prepay" || row.paid) return;
+  if (!row || row.payment_method !== "prepay" || row.paid) return false;
 
   const caption = buildPrepayCheckoutStartedCaptionUk({
     orderNumber: row.order_number,
     amount,
     currency,
   });
-  await sendTelegramMessage(caption);
+  const ok = await sendTelegramMessage(caption);
+  if (!ok) console.error("telegram prepay stage2 failed", { orderId });
+  return ok;
 }

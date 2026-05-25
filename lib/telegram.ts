@@ -26,11 +26,12 @@ async function telegramPost(method: string, body: Record<string, unknown>) {
   return { ok: true as const, json: (await res.json()) as unknown };
 }
 
-export async function sendTelegramMessage(text: string) {
+/** @returns true if Telegram accepted the message */
+export async function sendTelegramMessage(text: string): Promise<boolean> {
   const { token, chatId } = telegramEnv();
   if (!token || !chatId) {
     console.warn("Telegram not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID)");
-    return;
+    return false;
   }
   const res = await telegramPost("sendMessage", {
     chat_id: chatId,
@@ -39,7 +40,9 @@ export async function sendTelegramMessage(text: string) {
   });
   if (!res.ok && !("skipped" in res && res.skipped)) {
     console.error("Telegram sendMessage failed", res);
+    return false;
   }
+  return res.ok;
 }
 
 /**

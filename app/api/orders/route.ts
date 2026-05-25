@@ -346,9 +346,11 @@ export async function POST(req: Request) {
     const totalDue = Number(data.price_paid) + del + pc;
 
     if (data.payment_method === "prepay") {
-      void notifyPrepayOrderCreated(row.id).catch((e) =>
-        console.error("telegram prepay created", e),
-      );
+      try {
+        await notifyPrepayOrderCreated(row.id);
+      } catch (e) {
+        console.error("telegram prepay created", e);
+      }
     } else {
       const caption = buildNewOrderTelegramCaptionUk({
         data,
